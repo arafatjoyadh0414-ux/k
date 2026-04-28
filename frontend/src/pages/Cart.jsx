@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Layout from "../components/Layout";
 import { useCart } from "../context/CartContext";
 import api, { fmtBDT } from "../lib/api";
-import { Trash2, Package, CreditCard, Truck } from "lucide-react";
+import { Trash2, Package, CreditCard, Truck, Globe2 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -33,6 +33,19 @@ const Cart = () => {
     if (!creditOk) { toast.error("Insufficient credit."); return; }
     setPlacing(true);
     try {
+      if (paymentMethod === "online") {
+        // Stripe Checkout flow
+        const { data } = await api.post("/checkout/create", {
+          items: items.map((x) => ({ product_id: x.product_id, quantity: x.quantity })),
+          shipping_address: shipping,
+          notes,
+          origin_url: window.location.origin,
+        });
+        clear();
+        // Redirect to Stripe
+        window.location.href = data.url;
+        return;
+      }
       const { data } = await api.post("/orders", {
         items: items.map((x) => ({ product_id: x.product_id, quantity: x.quantity })),
         payment_method: paymentMethod,
@@ -100,6 +113,13 @@ const Cart = () => {
               <div>
                 <div className="overline mb-2">Payment</div>
                 <div className="space-y-2">
+                  <label className={`flex items-start gap-3 border p-3 rounded-sm cursor-pointer ${paymentMethod==="online" ? "border-[#E11D48] bg-rose-50" : "border-slate-200"}`}>
+                    <input type="radio" name="pm" data-testid="pm-online" checked={paymentMethod==="online"} onChange={() => setPaymentMethod("online")} />
+                    <div className="flex-1">
+                      <div className="text-sm font-semibold flex items-center gap-2"><Globe2 className="w-4 h-4" /> Pay Online (Card)</div>
+                      <div className="text-xs text-slate-500 mt-0.5">Secure card checkout via Stripe · Instant confirmation</div>
+                    </div>
+                  </label>
                   <label className={`flex items-start gap-3 border p-3 rounded-sm cursor-pointer ${paymentMethod==="credit" ? "border-[#E11D48] bg-rose-50" : "border-slate-200"}`}>
                     <input type="radio" name="pm" data-testid="pm-credit" checked={paymentMethod==="credit"} onChange={() => setPaymentMethod("credit")} />
                     <div className="flex-1">

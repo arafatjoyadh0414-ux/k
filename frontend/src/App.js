@@ -14,6 +14,8 @@ import Cart from "@/pages/Cart";
 import Orders from "@/pages/Orders";
 import OrderDetail from "@/pages/OrderDetail";
 import Profile from "@/pages/Profile";
+import Kits from "@/pages/Kits";
+import PaymentReturn from "@/pages/PaymentReturn";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminWorkshops from "@/pages/AdminWorkshops";
 import AdminWorkshopDetail from "@/pages/AdminWorkshopDetail";
@@ -33,11 +35,13 @@ const AppRouter = () => {
       <Route path="/auth/callback" element={<AuthCallback />} />
 
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/kits" element={<ProtectedRoute><Kits /></ProtectedRoute>} />
       <Route path="/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
       <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
       <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
       <Route path="/orders/:id" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+      <Route path="/payment/return" element={<ProtectedRoute><PaymentReturn /></ProtectedRoute>} />
 
       <Route path="/admin" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
       <Route path="/admin/workshops" element={<ProtectedRoute adminOnly><AdminWorkshops /></ProtectedRoute>} />

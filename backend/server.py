@@ -10,6 +10,9 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime, timezone, timedelta
+from emergentintegrations.payments.stripe.checkout import (
+    StripeCheckout, CheckoutSessionRequest, CheckoutSessionResponse, CheckoutStatusResponse,
+)
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -20,6 +23,8 @@ db = client[os.environ['DB_NAME']]
 
 EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY")
 ADMIN_EMAILS = [e.strip().lower() for e in os.environ.get("ADMIN_EMAILS", "").split(",") if e.strip()]
+STRIPE_API_KEY = os.environ.get("STRIPE_API_KEY")
+USD_TO_BDT = float(os.environ.get("USD_TO_BDT", "120"))
 
 STORAGE_URL = "https://integrations.emergentagent.com/objstore/api/v1/storage"
 APP_NAME = "joyautomart"
@@ -99,6 +104,10 @@ class Product(BaseModel):
     moq: int = 1
     stock: int = 100
     brand: str = ""
+    is_kit: bool = False
+    kit_tier: str = ""  # entry | mass | special | premium | flagship
+    kit_features: List[str] = []
+    gallery: List[str] = []
     created_at: str
 
 class CartItem(BaseModel):
@@ -360,6 +369,10 @@ class ProductCreate(BaseModel):
     moq: int = 1
     stock: int = 100
     brand: str = ""
+    is_kit: bool = False
+    kit_tier: str = ""
+    kit_features: List[str] = []
+    gallery: List[str] = []
 
 @api_router.post("/admin/products")
 async def admin_create_product(payload: ProductCreate, request: Request):
@@ -607,6 +620,181 @@ async def admin_stats(request: Request):
     }
 
 
+# ============= Kits =============
+@api_router.get("/kits")
+async def list_kits():
+    items = await db.products.find({"is_kit": True}, {"_id": 0}).to_list(50)
+    # Sort by tier order: entry, mass, special, premium, flagship
+    order = {"entry": 1, "mass": 2, "special": 3, "premium": 4, "flagship": 5}
+    items.sort(key=lambda x: order.get(x.get("kit_tier", ""), 99))
+    return items
+
+
+# ============= Stripe =============
+PAYMENT_METHODS = ["credit", "cod", "online"]
+
+
+class StripeCheckoutCreate(BaseModel):
+    items: List[CartItem]
+    shipping_address: str
+    notes: str = ""
+    origin_url: str  # frontend origin (window.location.origin)
+
+
+@api_router.post("/checkout/create")
+async def create_stripe_checkout(payload: StripeCheckoutCreate, request: Request):
+    user = await require_user(request)
+    ws = await db.workshops.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not ws:
+        raise HTTPException(403, "Workshop only")
+    if ws["kyc_status"] != "approved":
+        raise HTTPException(403, "KYC must be approved before placing orders")
+
+    # Build line items + total ENTIRELY on backend (never trust frontend amounts)
+    total_bdt = 0.0
+    line_items = []
+    for ci in payload.items:
+        p = await db.products.find_one({"product_id": ci.product_id}, {"_id": 0})
+        if not p:
+            raise HTTPException(400, f"Invalid product: {ci.product_id}")
+        if ci.quantity < p.get("moq", 1):
+            raise HTTPException(400, f"{p['name']} MOQ is {p['moq']}")
+        line_total = p["price_bdt"] * ci.quantity
+        total_bdt += line_total
+        line_items.append({
+            "product_id": p["product_id"], "name": p["name"], "sku": p["sku"],
+            "image_url": p.get("image_url", ""), "price_bdt": p["price_bdt"],
+            "quantity": ci.quantity, "line_total": line_total,
+        })
+
+    # Convert BDT -> USD (Stripe doesn't natively support BDT in standard accounts)
+    amount_usd = round(total_bdt / USD_TO_BDT, 2)
+    if amount_usd < 1:
+        amount_usd = 1.0  # Stripe minimum
+
+    # Create draft order (status pending_payment) BEFORE redirecting
+    order_id = f"ORD-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+    now = datetime.now(timezone.utc)
+    draft_order = {
+        "order_id": order_id,
+        "user_id": user["user_id"],
+        "workshop_id": ws["workshop_id"],
+        "company_name": ws["company_name"],
+        "items": line_items,
+        "total_bdt": total_bdt,
+        "payment_method": "online",
+        "payment_status": "unpaid",
+        "due_date": None,
+        "shipping_address": payload.shipping_address,
+        "notes": payload.notes,
+        "status": "pending_payment",
+        "status_history": [{"status": "pending_payment", "at": now.isoformat(), "note": "Awaiting online payment"}],
+        "created_at": now.isoformat(),
+    }
+    await db.orders.insert_one(dict(draft_order))
+
+    success_url = f"{payload.origin_url}/payment/return?session_id={{CHECKOUT_SESSION_ID}}"
+    cancel_url = f"{payload.origin_url}/cart"
+    host_url = str(request.base_url)
+    webhook_url = f"{host_url}api/webhook/stripe"
+    stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
+    sess_req = CheckoutSessionRequest(
+        amount=float(amount_usd), currency="usd",
+        success_url=success_url, cancel_url=cancel_url,
+        metadata={"order_id": order_id, "user_id": user["user_id"], "workshop_id": ws["workshop_id"]},
+    )
+    session: CheckoutSessionResponse = await stripe_checkout.create_checkout_session(sess_req)
+
+    # Record transaction
+    await db.payment_transactions.insert_one({
+        "transaction_id": f"txn_{uuid.uuid4().hex[:12]}",
+        "session_id": session.session_id,
+        "order_id": order_id,
+        "user_id": user["user_id"],
+        "amount_bdt": total_bdt,
+        "amount_usd": amount_usd,
+        "currency": "usd",
+        "metadata": {"order_id": order_id, "user_id": user["user_id"]},
+        "payment_status": "initiated",
+        "status": "pending",
+        "created_at": now.isoformat(),
+    })
+
+    return {"url": session.url, "session_id": session.session_id, "order_id": order_id}
+
+
+@api_router.get("/checkout/status/{session_id}")
+async def stripe_checkout_status(session_id: str, request: Request):
+    user = await require_user(request)
+    txn = await db.payment_transactions.find_one({"session_id": session_id}, {"_id": 0})
+    if not txn:
+        raise HTTPException(404, "Transaction not found")
+    if txn["user_id"] != user["user_id"]:
+        raise HTTPException(403, "Forbidden")
+
+    # If already finalized, return cached
+    if txn["payment_status"] == "paid":
+        return {"payment_status": "paid", "status": "complete", "order_id": txn["order_id"]}
+
+    host_url = str(request.base_url)
+    webhook_url = f"{host_url}api/webhook/stripe"
+    stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
+    status: CheckoutStatusResponse = await stripe_checkout.get_checkout_status(session_id)
+
+    new_payment_status = status.payment_status
+    new_status = status.status
+    update = {"payment_status": new_payment_status, "status": new_status}
+    await db.payment_transactions.update_one({"session_id": session_id}, {"$set": update})
+
+    # If paid and order not yet finalized, finalize once
+    if new_payment_status == "paid" and txn["payment_status"] != "paid":
+        order = await db.orders.find_one({"order_id": txn["order_id"]}, {"_id": 0})
+        if order and order.get("status") == "pending_payment":
+            now = datetime.now(timezone.utc).isoformat()
+            await db.orders.update_one(
+                {"order_id": txn["order_id"]},
+                {
+                    "$set": {"status": "placed", "payment_status": "paid"},
+                    "$push": {"status_history": {"status": "placed", "at": now, "note": "Online payment received"}},
+                },
+            )
+
+    return {"payment_status": new_payment_status, "status": new_status, "order_id": txn["order_id"]}
+
+
+@api_router.post("/webhook/stripe")
+async def stripe_webhook(request: Request):
+    body = await request.body()
+    signature = request.headers.get("Stripe-Signature")
+    host_url = str(request.base_url)
+    webhook_url = f"{host_url}api/webhook/stripe"
+    stripe_checkout = StripeCheckout(api_key=STRIPE_API_KEY, webhook_url=webhook_url)
+    try:
+        event = await stripe_checkout.handle_webhook(body, signature)
+    except Exception as e:
+        logger.error(f"Webhook error: {e}")
+        raise HTTPException(400, "Invalid webhook")
+
+    if event.payment_status == "paid":
+        txn = await db.payment_transactions.find_one({"session_id": event.session_id}, {"_id": 0})
+        if txn and txn["payment_status"] != "paid":
+            await db.payment_transactions.update_one(
+                {"session_id": event.session_id},
+                {"$set": {"payment_status": "paid", "status": "complete"}},
+            )
+            order = await db.orders.find_one({"order_id": txn["order_id"]}, {"_id": 0})
+            if order and order.get("status") == "pending_payment":
+                now = datetime.now(timezone.utc).isoformat()
+                await db.orders.update_one(
+                    {"order_id": txn["order_id"]},
+                    {
+                        "$set": {"status": "placed", "payment_status": "paid"},
+                        "$push": {"status_history": {"status": "placed", "at": now, "note": "Online payment received (webhook)"}},
+                    },
+                )
+    return {"ok": True}
+
+
 # ============= Seed =============
 SEED_PRODUCTS = [
     {"name": "Brake Disc Rotor (Front)", "sku": "JA-BRK-001", "category": "Brake", "brand": "JoyOEM",
@@ -645,6 +833,141 @@ SEED_PRODUCTS = [
     {"name": "Engine Oil 5W-30 (4L)", "sku": "JA-FLD-001", "category": "Fluids", "brand": "FlowLab",
      "description": "Synthetic engine oil 5W-30, 4L jug.", "image_url": "https://images.unsplash.com/photo-1635771053408-7e6a5be37b3a?w=600",
      "price_bdt": 2400, "moq": 4, "stock": 300},
+
+    # ===== Modifications =====
+    {"name": "Cold Air Intake Kit", "sku": "JA-MOD-001", "category": "Modifications", "brand": "TurboFlow",
+     "description": "High-flow cold air intake. Adds 8-12 hp on most 1.5L-2.5L engines.",
+     "image_url": "https://images.unsplash.com/photo-1580414155951-8de2588a1d8c?w=600",
+     "price_bdt": 18500, "moq": 1, "stock": 50},
+    {"name": "Cat-Back Exhaust System", "sku": "JA-MOD-002", "category": "Modifications", "brand": "RoarTech",
+     "description": "Stainless steel cat-back with twin tip. Deep aggressive note.",
+     "image_url": "https://images.unsplash.com/photo-1635073908681-b4dfd1f01b03?w=600",
+     "price_bdt": 42000, "moq": 1, "stock": 25},
+
+    # ===== Performance =====
+    {"name": "ECU Stage 1 Tune", "sku": "JA-PRF-001", "category": "Performance", "brand": "JoyTune",
+     "description": "Custom Stage 1 ECU tune. +20% torque, dyno-validated.",
+     "image_url": "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=600",
+     "price_bdt": 28000, "moq": 1, "stock": 100},
+    {"name": "Performance Brake Caliper (4-Pot)", "sku": "JA-PRF-002", "category": "Performance", "brand": "ApexBrake",
+     "description": "Forged 4-piston caliper with 330mm rotor kit.",
+     "image_url": "https://images.unsplash.com/photo-1530027621759-29e6f5d28848?w=600",
+     "price_bdt": 87000, "moq": 1, "stock": 15},
+
+    # ===== Accessories =====
+    {"name": "Premium Floor Mats (Set of 5)", "sku": "JA-ACC-001", "category": "Accessories", "brand": "JoyHome",
+     "description": "All-weather TPE floor mats, custom-fit per model.",
+     "image_url": "https://images.unsplash.com/photo-1542362567-b07e54358753?w=600",
+     "price_bdt": 5800, "moq": 1, "stock": 200},
+    {"name": "Dashcam 4K Front + Rear", "sku": "JA-ACC-002", "category": "Accessories", "brand": "EyeRoad",
+     "description": "4K UHD dashcam with parking mode, GPS and 64GB storage.",
+     "image_url": "https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=600",
+     "price_bdt": 14500, "moq": 1, "stock": 80},
+
+    # ===== Lighting =====
+    {"name": "LED Headlight Conversion (Pair)", "sku": "JA-LGT-001", "category": "Lighting", "brand": "BrightLine",
+     "description": "Plug-and-play LED H4 conversion, 6500K, 12000 lumens.",
+     "image_url": "https://images.unsplash.com/photo-1601362840469-51e4d8d58785?w=600",
+     "price_bdt": 6800, "moq": 1, "stock": 120},
+    {"name": "LED Light Bar 32-inch", "sku": "JA-LGT-002", "category": "Lighting", "brand": "TrailBeam",
+     "description": "Off-road combo beam light bar with wiring kit.",
+     "image_url": "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=600",
+     "price_bdt": 12500, "moq": 1, "stock": 60},
+
+    # ===== Tyres & Wheels =====
+    {"name": "Alloy Wheel 18-inch (BKU Style)", "sku": "JA-WHL-001", "category": "Tyres & Wheels", "brand": "BKU",
+     "description": "18-inch forged alloy wheel, gloss black. Sold individually.",
+     "image_url": "https://images.unsplash.com/photo-1626387346567-68d0c692648d?w=600",
+     "price_bdt": 18500, "moq": 4, "stock": 80},
+    {"name": "All-Season Tyre 215/55R17", "sku": "JA-TYR-001", "category": "Tyres & Wheels", "brand": "GripPro",
+     "description": "All-season touring tyre, 215/55R17. Quiet, long-life compound.",
+     "image_url": "https://images.unsplash.com/photo-1486754735734-325b5831c3ad?w=600",
+     "price_bdt": 9500, "moq": 4, "stock": 200},
+
+    # ===== Tools =====
+    {"name": "Hydraulic Floor Jack 3-Ton", "sku": "JA-TOL-001", "category": "Tools", "brand": "HeavyLift",
+     "description": "Low-profile 3-ton hydraulic jack with quick lift.",
+     "image_url": "https://images.unsplash.com/photo-1632823469850-1b7b1e8b7e1c?w=600",
+     "price_bdt": 11500, "moq": 1, "stock": 40},
+    {"name": "OBD2 Diagnostic Scanner", "sku": "JA-TOL-002", "category": "Tools", "brand": "DiagPro",
+     "description": "Multi-brand OBD2 scanner with live data and code reset.",
+     "image_url": "https://images.unsplash.com/photo-1632823469850-1b7b1e8b7e1c?w=600",
+     "price_bdt": 8500, "moq": 1, "stock": 60},
+
+    # ===== Audio =====
+    {"name": "Android Head Unit 10-inch", "sku": "JA-AUD-001", "category": "Audio", "brand": "BeatBox",
+     "description": "10-inch Android head unit with CarPlay/Auto, 4+64GB.",
+     "image_url": "https://images.unsplash.com/photo-1531104985437-d790bb43c9b6?w=600",
+     "price_bdt": 22500, "moq": 1, "stock": 50},
+    {"name": "6.5-inch Coaxial Speakers (Pair)", "sku": "JA-AUD-002", "category": "Audio", "brand": "BeatBox",
+     "description": "200W peak coaxial speakers, silk dome tweeter.",
+     "image_url": "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=600",
+     "price_bdt": 4800, "moq": 1, "stock": 100},
+]
+
+# ===== Signature Body Kits =====
+KIT_OVERVIEW_IMG = "https://customer-assets.emergentagent.com/job_workshop-dashboard-1/artifacts/4zbzw2t5_file_00000000f52c7207a61592d53fb54486.png"
+KIT_SHADOW_IMG = "https://customer-assets.emergentagent.com/job_workshop-dashboard-1/artifacts/ftktdb9d_file_00000000e5c471fa9c15918ce1b6db0d.png"
+KIT_STEALTH_ALT = "https://customer-assets.emergentagent.com/job_workshop-dashboard-1/artifacts/3110uf3f_file_00000000ddac71fa9cf015d8a30d68ef.png"
+KIT_STEALTH_IMG = "https://customer-assets.emergentagent.com/job_workshop-dashboard-1/artifacts/b4d78cfy_file_00000000246c7207bd9ecb2d202ccfd3.png"
+KIT_BASE_IMG = "https://customer-assets.emergentagent.com/job_workshop-dashboard-1/artifacts/1eis8km7_file_000000000e8072079096c123f02b91a0.png"
+
+SEED_KITS = [
+    {
+        "name": "Shadow GT Body Kit", "sku": "JA-KIT-SHADOW", "category": "Body Kits", "brand": "Joy Performance",
+        "description": "Sporty, balanced — the entry-performance hero. Aggressive without shouting.",
+        "image_url": KIT_SHADOW_IMG, "price_bdt": 300000, "moq": 1, "stock": 12,
+        "is_kit": True, "kit_tier": "entry",
+        "kit_features": [
+            "Aggressive GT Style", "Large Front Splitter", "Wide Fenders",
+            "Side Skirts Extensions", "Rear Diffuser", "Roof Spoiler", "Carbon Accents",
+        ],
+        "gallery": [KIT_SHADOW_IMG, KIT_OVERVIEW_IMG, KIT_BASE_IMG],
+    },
+    {
+        "name": "Stealth V2 Body Kit", "sku": "JA-KIT-STEALTH", "category": "Body Kits", "brand": "Joy Performance",
+        "description": "Clean, aggressive, BD-roads friendly. The mass-market flagship for daily drivers.",
+        "image_url": KIT_STEALTH_IMG, "price_bdt": 350000, "moq": 1, "stock": 18,
+        "is_kit": True, "kit_tier": "mass",
+        "kit_features": [
+            "Stealth Fighter Look", "Angular Bumper Design", "Vented Wide Fenders",
+            "Sharp Side Skirts", "Vented Hood", "Carbon Mirror Caps", "Rear Wing Spoiler",
+        ],
+        "gallery": [KIT_STEALTH_IMG, KIT_STEALTH_ALT, KIT_OVERVIEW_IMG],
+    },
+    {
+        "name": "Badland X Body Kit", "sku": "JA-KIT-BADLAND", "category": "Body Kits", "brand": "Joy Performance",
+        "description": "Off-road + rugged. Built for SUV lovers and adventure buyers.",
+        "image_url": KIT_STEALTH_ALT, "price_bdt": 425000, "moq": 1, "stock": 8,
+        "is_kit": True, "kit_tier": "special",
+        "kit_features": [
+            "Off-Road Widebody", "Rugged Bumper Design", "Bolt-On Fender Flares",
+            "Rocker Panel Guards", "Roof Spoiler", "Rear Bumper Guard", "Matte Carbon Accents",
+        ],
+        "gallery": [KIT_STEALTH_ALT, KIT_OVERVIEW_IMG, KIT_BASE_IMG],
+    },
+    {
+        "name": "Luxe VIP Body Kit", "sku": "JA-KIT-LUXE", "category": "Body Kits", "brand": "Joy Performance",
+        "description": "Rich, smooth, black-on-black. The premium-seller for business class — Gulshan, Banani, Uttara.",
+        "image_url": KIT_OVERVIEW_IMG, "price_bdt": 500000, "moq": 1, "stock": 6,
+        "is_kit": True, "kit_tier": "premium",
+        "kit_features": [
+            "VIP Luxury Style", "Smooth Widebody Lines", "Chrome Delete",
+            "Low Front Lip", "Extended Side Skirts", "Integrated Rear Lip", "Gloss Carbon Accents",
+        ],
+        "gallery": [KIT_OVERVIEW_IMG, KIT_STEALTH_IMG, KIT_BASE_IMG],
+    },
+    {
+        "name": "Cyber Beast Body Kit", "sku": "JA-KIT-CYBER", "category": "Body Kits", "brand": "Joy Performance",
+        "description": "Crazy. Aggressive. Viral. The flagship marketing weapon — show cars, influencers, launch campaigns.",
+        "image_url": KIT_OVERVIEW_IMG, "price_bdt": 800000, "moq": 1, "stock": 3,
+        "is_kit": True, "kit_tier": "flagship",
+        "kit_features": [
+            "Futuristic Cyber Look", "Geometric Body Lines", "Extreme Wide Flares",
+            "Layered Side Skirts", "Rear Diffuser Blade", "Roof Wing", "Carbon Fiber Everywhere",
+        ],
+        "gallery": [KIT_OVERVIEW_IMG, KIT_STEALTH_IMG, KIT_SHADOW_IMG],
+    },
 ]
 
 
@@ -656,14 +979,28 @@ async def startup():
     except Exception as e:
         logger.error(f"Storage init failed: {e}")
 
-    if await db.products.count_documents({}) == 0:
-        for p in SEED_PRODUCTS:
-            await db.products.insert_one({
-                **p,
-                "product_id": f"prd_{uuid.uuid4().hex[:10]}",
-                "created_at": datetime.now(timezone.utc).isoformat()
-            })
-        logger.info(f"Seeded {len(SEED_PRODUCTS)} products")
+    # Idempotent seed: only insert SKUs not already in DB
+    existing_skus = set()
+    async for d in db.products.find({}, {"_id": 0, "sku": 1}):
+        existing_skus.add(d["sku"])
+
+    inserted = 0
+    for p in SEED_PRODUCTS + SEED_KITS:
+        if p["sku"] in existing_skus:
+            continue
+        doc = {
+            **p,
+            "is_kit": p.get("is_kit", False),
+            "kit_tier": p.get("kit_tier", ""),
+            "kit_features": p.get("kit_features", []),
+            "gallery": p.get("gallery", []),
+            "product_id": f"prd_{uuid.uuid4().hex[:10]}",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        await db.products.insert_one(doc)
+        inserted += 1
+    if inserted:
+        logger.info(f"Seeded {inserted} new products/kits")
 
 
 @api_router.get("/")

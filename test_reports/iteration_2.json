@@ -1,0 +1,42 @@
+{
+  "summary": "Phase 2 backend testing for Joy Automart B2B portal complete. All 51 pytest cases pass (100%) — 18 new Phase 2 tests + 33 Phase 1 regression. Verified GET /api/kits returns 5 body kits ordered by tier (entry, mass, special, premium, flagship) with kit_features/gallery/image_url; GET /api/products returns 31 products spanning all 14 categories including the 8 new ones (Body Kits, Modifications, Performance, Accessories, Lighting, Tyres & Wheels, Tools, Audio); category and search filters work (Body Kits => 5, q=stealth => Stealth V2). Stripe online checkout end-to-end: POST /api/checkout/create as approved workshop returns {url, session_id, order_id} with a real test Stripe session URL; payment_transactions doc created with payment_status='initiated'/status='pending', order doc created with status='pending_payment'/payment_method='online'/payment_status='unpaid'; BDT->USD conversion uses USD_TO_BDT=120; credit_used is NOT touched on online checkout. Negative paths verified: 401 unauthenticated, 403 KYC-not-approved, 400 invalid product_id, 404 unknown session, 403 ownership enforcement on status. Webhook returns 400 for invalid signature (no 5xx). Seed is idempotent (no duplicate SKUs). COD/credit/admin regression endpoints still work.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/checkout/create", "issue": "If Stripe upstream raises (network/rate limit), the draft order with status='pending_payment' is left orphaned in DB because the order is inserted BEFORE the StripeCheckout call. Wrap StripeCheckout.create_checkout_session in try/except and rollback (delete) the draft order on failure, otherwise users may see ghost pending_payment orders in /api/orders that can never be paid."},
+      {"endpoint": "/api/checkout/status/{session_id}", "issue": "On every poll the route calls Stripe even after a session is finalized as expired/canceled (only short-circuits on 'paid'). Consider also short-circuiting on terminal non-paid states ('expired') to reduce upstream calls."},
+      {"endpoint": "/api/webhook/stripe", "issue": "Webhook is not idempotent across distinct event ids — relies on payment_transactions.payment_status check. If Stripe re-sends the same event after a partial failure, we depend on order being in status='pending_payment'. Add an event_id de-dup collection for hardening."},
+      {"endpoint": "/api/checkout/create", "issue": "Order has payment_status='unpaid' while payment_transactions has payment_status='initiated' for the same logical state. Consider aligning vocabulary (e.g. both 'initiated' or both 'unpaid') for easier reporting."}
+    ]
+  },
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_phase2_checkout.py",
+    "/app/backend/tests/test_api.py",
+    "/app/backend/tests/conftest.py",
+    "/app/test_reports/pytest/phase2_results.xml",
+    "/app/test_reports/pytest/all_results.xml"
+  ],
+  "action_items": [
+    "Wrap StripeCheckout.create_checkout_session in try/except inside POST /api/checkout/create and DELETE the draft order if Stripe fails, to avoid orphaned pending_payment orders.",
+    "Optional: add idempotency on Stripe webhook by tracking processed event_ids.",
+    "Optional: align order.payment_status ('unpaid') with payment_transactions.payment_status ('initiated') vocabulary."
+  ],
+  "critical_code_review_comments": [
+    "server.py is now ~1025 lines — past the 700-line guideline. Strongly recommend splitting into modules: products_kits.py, checkout.py (Stripe), orders.py, admin.py, auth.py.",
+    "Draft-order-before-Stripe-call pattern in /api/checkout/create can leak orphaned pending_payment orders if Stripe call raises. Either create the order AFTER session creation, or roll back on failure.",
+    "STRIPE_API_KEY is read at module import (assumed) — ensure load_dotenv runs before StripeCheckout is constructed; currently each request constructs StripeCheckout(...) which re-reads from module var, which is fine, but webhook_url is built from request.base_url every time (correct but creates a new client per request — acceptable performance-wise).",
+    "/api/kits and /api/products both expose is_kit/kit_features/gallery; the legacy 12 Phase 1 products will return empty kit_features=[] and gallery=[] — the get-products handler uses `.get(..., [])` which is fine, but the seed back-fills only newly inserted docs, not the 12 pre-existing ones. The schema response ought to default-fill when reading too (already does in /api/kits via {'is_kit':True} filter).",
+    "Webhook handler raises HTTPException(400) on any exception — including unrelated bugs in handle_webhook. Consider catching signature errors specifically and returning 500 for unexpected exceptions to surface real bugs in monitoring."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_phase2_checkout.py"
+  ],
+  "success_rate": {"backend": "100% (51/51)", "frontend": "not tested"},
+  "test_credentials": "Same as iteration_1: per-session MongoDB-seeded test users (TEST_-prefixed). Phase 2 KYC-pending test creates its own ephemeral pending workshop because the shared workshop_pending_session fixture gets approved during test_api.py admin tests.",
+  "seed_data_creation": "Reused conftest fixtures (workshop, workshop_pending, admin) plus per-test ephemeral docs (one extra pending workshop, one fake payment_transactions row for ownership test). All cleaned up post-test.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Phase 2 backend tests live at /app/backend/tests/test_phase2_checkout.py. Important: do NOT use the shared workshop_pending_session fixture for KYC-not-approved checks if test_api.py runs in the same session — its KYC will be flipped to 'approved' by TestAdmin.test_kyc_decision_approved. Stripe sandbox key sk_test_emergent works from this pod and returns real cs_test_* sessions; the success path test creates and then deletes the resulting order/payment_transactions. To run only Phase 2: `pytest /app/backend/tests/test_phase2_checkout.py -v`. To run all: `pytest /app/backend/tests/ -v` (~60s).",
+  "rca of the issue": "N/A - all tests passing. One transient flake fixed during this iteration: shared workshop_pending fixture being approved by Phase 1 admin tests caused the Phase 2 KYC-403 test to fail when running the full suite; resolved by minting an isolated pending workshop within the test."
+}

@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import {
   LayoutDashboard, Package, ShoppingCart, ClipboardList, UserCircle2,
-  Shield, LogOut, Wrench
+  Shield, LogOut, Wrench, Sparkles
 } from "lucide-react";
 
 const LOGO = "https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg";
@@ -48,6 +48,7 @@ const Layout = ({ children }) => {
           {!isAdmin && (
             <>
               <NavItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" testid="nav-dashboard" />
+              <NavItem to="/kits" icon={Sparkles} label="Signature Kits" testid="nav-kits" />
               <NavItem to="/products" icon={Package} label="Products" testid="nav-products" />
               <NavItem to="/cart" icon={ShoppingCart} label={`Cart${count ? ` (${count})` : ""}`} testid="nav-cart" />
               <NavItem to="/orders" icon={ClipboardList} label="Orders" testid="nav-orders" />

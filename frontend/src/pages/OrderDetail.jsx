@@ -20,6 +20,7 @@ const OrderDetail = () => {
   if (!order) return <Layout><div className="overline">Loading…</div></Layout>;
 
   const currentIdx = FLOW.indexOf(order.status);
+  const isPendingPayment = order.status === "pending_payment";
 
   return (
     <Layout>
@@ -47,6 +48,10 @@ const OrderDetail = () => {
           <div className="overline mb-4">Tracking</div>
           {order.status === "cancelled" ? (
             <div className="text-sm text-red-600">This order was cancelled.</div>
+          ) : isPendingPayment ? (
+            <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 p-3 rounded-sm">
+              Awaiting online payment. Tracking begins once payment is received.
+            </div>
           ) : (
             <div className="flex items-start justify-between gap-2">
               {FLOW.map((s, i) => {

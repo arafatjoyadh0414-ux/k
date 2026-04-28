@@ -5,7 +5,7 @@ import { useCart } from "../context/CartContext";
 import { Search, Plus, Package } from "lucide-react";
 import { toast } from "sonner";
 
-const CATEGORIES = ["All", "Brake", "Engine", "Suspension", "Electrical", "Drivetrain", "Fluids"];
+const CATEGORIES = ["All", "Body Kits", "Brake", "Engine", "Suspension", "Electrical", "Drivetrain", "Fluids", "Modifications", "Performance", "Accessories", "Lighting", "Tyres & Wheels", "Tools", "Audio"];
 
 const ProductCard = ({ p, onAdd }) => {
   const [qty, setQty] = useState(p.moq || 1);
