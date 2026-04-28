@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../components/Layout";
 import api, { fmtBDT, statusColor } from "../lib/api";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { RefreshCw } from "lucide-react";
+import { useCart } from "../context/CartContext";
+import { toast } from "sonner";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
+  const { add } = useCart();
+  const navigate = useNavigate();
 
   useEffect(() => {
     (async () => {
@@ -16,6 +21,20 @@ const Orders = () => {
       setLoading(false);
     })();
   }, [filter]);
+
+  const reorder = async (e, orderId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const { data } = await api.get(`/orders/${orderId}`);
+    data.items.forEach((it) => {
+      add({
+        product_id: it.product_id, name: it.name, sku: it.sku,
+        image_url: it.image_url, price_bdt: it.price_bdt, moq: 1,
+      }, it.quantity);
+    });
+    toast.success(`Reordered ${data.items.length} item${data.items.length > 1 ? "s" : ""}`);
+    navigate("/cart");
+  };
 
   return (
     <Layout>
@@ -49,6 +68,7 @@ const Orders = () => {
                   <th className="text-left px-5 py-3 overline">Total</th>
                   <th className="text-left px-5 py-3 overline">Status</th>
                   <th className="text-left px-5 py-3 overline">Payment</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -60,6 +80,12 @@ const Orders = () => {
                     <td className="px-5 py-3 font-semibold">{fmtBDT(o.total_bdt)}</td>
                     <td className="px-5 py-3"><span className={`text-xs px-2 py-0.5 border rounded-sm ${statusColor(o.status)}`}>{o.status}</span></td>
                     <td className="px-5 py-3 text-xs uppercase">{o.payment_method} · <span className={statusColor(o.payment_status)}>{o.payment_status}</span></td>
+                    <td className="px-5 py-3 text-right">
+                      <button onClick={(e) => reorder(e, o.order_id)} data-testid={`reorder-${o.order_id}`}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-[#E11D48] transition-colors duration-200">
+                        <RefreshCw className="w-3 h-3" /> Reorder
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

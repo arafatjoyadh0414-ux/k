@@ -3,7 +3,9 @@ import Layout from "../components/Layout";
 import api, { fmtBDT, statusColor } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
-import { ShieldAlert, Wallet, ArrowUpRight, Package, ShoppingCart, Sparkles } from "lucide-react";
+import { ShieldAlert, Wallet, ArrowUpRight, Package, ShoppingCart, Sparkles, Zap, Search } from "lucide-react";
+import { useCart } from "../context/CartContext";
+import { toast } from "sonner";
 
 const KycBanner = ({ status, onSubmit }) => {
   if (status === "approved") return null;
@@ -33,6 +35,75 @@ const StatBlock = ({ label, value, sub }) => (
     {sub && <div className="text-xs text-slate-500 mt-1">{sub}</div>}
   </div>
 );
+
+const QuickAddBySku = () => {
+  const [q, setQ] = useState("");
+  const [results, setResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const { add } = useCart();
+
+  useEffect(() => {
+    if (q.length < 2) { setResults([]); return; }
+    const t = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const { data } = await api.get("/products", { params: { q } });
+        setResults(data.slice(0, 5));
+      } finally { setSearching(false); }
+    }, 200);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  const quickAdd = (p) => {
+    add(p, p.moq || 1);
+    toast.success(`+${p.moq || 1} × ${p.name}`);
+    setQ(""); setResults([]);
+  };
+
+  return (
+    <div className="industrial-card p-5">
+      <div className="flex items-center gap-2 mb-3">
+        <Zap className="w-4 h-4 text-[#E11D48]" />
+        <div className="overline">Quick Add by SKU or Name</div>
+      </div>
+      <div className="relative">
+        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+        <input
+          data-testid="quick-add-input"
+          type="text" value={q} onChange={(e) => setQ(e.target.value)}
+          placeholder="Type SKU like JA-BRK-001 or 'brake'…"
+          className="w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-sm text-sm focus:outline-none focus:ring-2 focus:ring-[#E11D48]"
+        />
+      </div>
+      {results.length > 0 && (
+        <div className="mt-2 border border-slate-200 rounded-sm overflow-hidden divide-y divide-slate-100">
+          {results.map((p) => (
+            <button
+              key={p.product_id} onClick={() => quickAdd(p)}
+              data-testid={`quick-add-${p.sku}`}
+              className="w-full flex items-center gap-3 p-3 hover:bg-slate-50 text-left transition-colors duration-150"
+            >
+              <div className="w-10 h-10 bg-slate-100 border border-slate-200 overflow-hidden shrink-0">
+                {p.image_url && <img src={p.image_url} alt="" className="w-full h-full object-cover" />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold truncate">{p.name}</div>
+                <div className="text-xs text-slate-500 font-mono">{p.sku} · {p.category}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-sm font-semibold">{fmtBDT(p.price_bdt)}</div>
+                <div className="text-xs text-[#E11D48]">+{p.moq || 1}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+      {q.length >= 2 && results.length === 0 && !searching && (
+        <div className="mt-2 text-xs text-slate-500 italic">No matches. Try a different keyword.</div>
+      )}
+    </div>
+  );
+};
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -152,6 +223,9 @@ const Dashboard = () => {
           <StatBlock label="Total Orders" value={orders.length} sub="lifetime" />
           <StatBlock label="In Progress" value={orders.filter(o => !["delivered","cancelled"].includes(o.status)).length} sub="active orders" />
         </div>
+
+        {/* Quick Add by SKU */}
+        {ws?.kyc_status === "approved" && <QuickAddBySku />}
 
         {/* Recent orders */}
         <div className="industrial-card">

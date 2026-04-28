@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
 import api, { fmtBDT, statusColor } from "../lib/api";
-import { ArrowLeft, CheckCircle2, Circle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Circle, RefreshCw, Printer } from "lucide-react";
+import { useCart } from "../context/CartContext";
+import { toast } from "sonner";
 
 const FLOW = ["placed", "confirmed", "packed", "shipped", "delivered"];
 
 const OrderDetail = () => {
   const { id } = useParams();
   const [order, setOrder] = useState(null);
+  const { add } = useCart();
+  const navigate = useNavigate();
 
   useEffect(() => {
     (async () => {
@@ -21,6 +25,24 @@ const OrderDetail = () => {
 
   const currentIdx = FLOW.indexOf(order.status);
   const isPendingPayment = order.status === "pending_payment";
+
+  const reorder = async () => {
+    let added = 0;
+    for (const it of order.items) {
+      const p = {
+        product_id: it.product_id, name: it.name, sku: it.sku,
+        image_url: it.image_url, price_bdt: it.price_bdt, moq: 1,
+      };
+      add(p, it.quantity);
+      added += 1;
+    }
+    toast.success(`Reordered ${added} item${added > 1 ? "s" : ""} → check Cart`);
+    navigate("/cart");
+  };
+
+  const printInvoice = () => {
+    window.print();
+  };
 
   return (
     <Layout>
@@ -35,11 +57,19 @@ const OrderDetail = () => {
             <h1 className="font-display text-3xl mt-1 font-mono">{order.order_id}</h1>
             <div className="text-xs text-slate-500 mt-1">Placed {new Date(order.created_at).toLocaleString()}</div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
             <span className={`text-xs px-3 py-1.5 border rounded-sm ${statusColor(order.status)}`}>{order.status}</span>
             <span className={`text-xs px-3 py-1.5 border rounded-sm ${statusColor(order.payment_status)}`}>
               {order.payment_method.toUpperCase()} · {order.payment_status}
             </span>
+            <button onClick={reorder} data-testid="reorder-button"
+              className="print:hidden inline-flex items-center gap-2 bg-slate-900 hover:bg-[#E11D48] text-white text-sm font-semibold px-4 py-2 rounded-sm transition-colors duration-200">
+              <RefreshCw className="w-4 h-4" /> Reorder
+            </button>
+            <button onClick={printInvoice} data-testid="print-invoice-button"
+              className="print:hidden inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-slate-900 text-sm font-semibold px-4 py-2 rounded-sm transition-colors duration-200">
+              <Printer className="w-4 h-4" /> Invoice
+            </button>
           </div>
         </div>
 
@@ -101,7 +131,15 @@ const OrderDetail = () => {
           <div className="space-y-5">
             <div className="industrial-card p-5">
               <div className="overline">Total</div>
-              <div className="font-display text-3xl mt-1">{fmtBDT(order.total_bdt)}</div>
+              {order.discount_amount_bdt > 0 ? (
+                <>
+                  <div className="text-sm text-slate-500 mt-2">Subtotal: {fmtBDT(order.subtotal_bdt)}</div>
+                  <div className="text-sm text-emerald-700">{order.discount_label} ({(order.discount_pct * 100).toFixed(0)}%): -{fmtBDT(order.discount_amount_bdt)}</div>
+                  <div className="font-display text-3xl mt-2">{fmtBDT(order.total_bdt)}</div>
+                </>
+              ) : (
+                <div className="font-display text-3xl mt-1">{fmtBDT(order.total_bdt)}</div>
+              )}
               {order.due_date && (
                 <div className="text-xs text-slate-500 mt-2">Due: {new Date(order.due_date).toLocaleDateString()}</div>
               )}
