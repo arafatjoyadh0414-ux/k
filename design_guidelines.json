@@ -1,0 +1,106 @@
+{
+  "theme": {
+    "mode": "light",
+    "archetype": "Archetype 4 (Swiss & High-Contrast)",
+    "description": "Joy Automart B2B Portal. Industrial, authoritative, and practical. Takes inspiration from automotive dashboards and industrial control panels. Built for auto repair workshop owners in Bangladesh. Prioritizes legibility, high contrast, and dense data presentation."
+  },
+  "colors": {
+    "primary": "#E11D48",
+    "primary_hover": "#BE123C",
+    "secondary": "#475569",
+    "background": "#FFFFFF",
+    "surface_main": "#F8FAFC",
+    "surface_secondary": "#F1F5F9",
+    "border": "#E2E8F0",
+    "text_primary": "#0F172A",
+    "text_secondary": "#64748B",
+    "status": {
+      "success": "#16A34A",
+      "warning": "#EAB308",
+      "error": "#DC2626",
+      "info": "#2563EB"
+    },
+    "metallic_accents": {
+      "light": "#CBD5E1",
+      "dark": "#94A3B8"
+    }
+  },
+  "typography": {
+    "heading_font": "Cabinet Grotesk, sans-serif",
+    "body_font": "IBM Plex Sans, sans-serif",
+    "rules": [
+      "Headings must use tight letter spacing (tracking-tight).",
+      "Overlines and small labels must be uppercase with wide spacing (tracking-[0.2em]).",
+      "Max heading size for H1 is text-5xl.",
+      "Never use generic fonts like Inter for headings. Keep it industrial."
+    ]
+  },
+  "spacing_and_layout": {
+    "system": "Tailwind standard scale with a preference for generous padding inside components.",
+    "dashboard_grid": "Control Room layout: Dense, grid-cols-1 md:grid-cols-3 lg:grid-cols-4. gap-4 or gap-6. Every pixel utilized.",
+    "ecommerce_grid": "Strict product grid. Clean, aligned left, no jagged bottoms.",
+    "borders": "Expose the skeleton. Use 1px borders (border-border) for cards and sections. Cardless look preferred with subtle dividers.",
+    "radius": "Minimal. Use rounded-sm (2px) or rounded-md (6px) maximum. No soft pills."
+  },
+  "surfaces_and_components": {
+    "cards": "Flat solid background. 1px border. NO soft shadows. Hover state: slight -translate-y-[1px] and shadow-sm.",
+    "header": "Solid background with a hard bottom border. If using sticky, z-50 and pure white background.",
+    "buttons": "Square or very slightly rounded. High contrast text. Hover must change background and explicitly set text color.",
+    "inputs": "Shadcn defaults customized to have 1px borders, square corners, and solid focus rings (ring-2 ring-primary).",
+    "modals": "Solid white background, sharp edges, dark backdrop overlay (bg-slate-900/80)."
+  },
+  "motion": {
+    "philosophy": "Minimalist and snappy. No parallax or heavy 3D for the dashboard. Use micro-interactions for feedback.",
+    "transitions": "transition-colors duration-200 for hovers. transition-transform duration-200 for lifts.",
+    "loading": "Fast, mechanical feeling loaders (like a progress bar or simple spinner). No bouncy soft animations."
+  },
+  "media": {
+    "logo": {
+      "url": "https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg",
+      "description": "Joy Automart Company Logo. Red and silver brake disc rotor visual."
+    },
+    "login_background": {
+      "url": "https://images.pexels.com/photos/11687360/pexels-photo-11687360.jpeg",
+      "description": "Silver metallic tread plate background for the login/auth page to give a strong automotive/industrial feel."
+    },
+    "dashboard_hero": {
+      "url": "https://images.pexels.com/photos/8986132/pexels-photo-8986132.jpeg",
+      "description": "Mechanic on a lift, for dashboard welcome banner or empty states."
+    },
+    "products": [
+      {
+        "url": "https://images.unsplash.com/photo-1760317890314-e964ffd7e6a6",
+        "description": "Brake Rotor close-up"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1769218401073-71a5b1020c9b",
+        "description": "Suspension parts"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1760317890322-364a810cd4da",
+        "description": "Performance brake system"
+      }
+    ]
+  },
+  "icons": {
+    "library": "lucide-react",
+    "stroke_width": 2,
+    "size": "w-5 h-5 for standard, w-4 h-4 for small metrics."
+  },
+  "accessibility_and_testing": {
+    "contrast": "Ensure APCA/WCAG AA contrast. Text on primary red must be white.",
+    "testing": "All interactive elements MUST include data-testid attributes (e.g., data-testid='login-button', data-testid='product-card-add-to-cart')."
+  },
+  "instructions_to_main_agent": [
+    "CREATE COMPONENTS USING .js OR .jsx ONLY. DO NOT USE .tsx OR TYPESCRIPT.",
+    "Use BDT (৳) for all currency formatting. Example format: ৳ 15,000.",
+    "Implement the layout with pure HTML/Tailwind for structural containers and Shadcn components for complex interactive logic.",
+    "Theme is Industrial B2B. Do not use soft purples, teals, or overly rounded elements. Stick to red/silver/grayscale high-contrast elements.",
+    "Use the exact logo URL provided in media.logo.",
+    "Ensure 'Pay on Credit' and 'COD' are the explicit checkout payment options.",
+    "Incorporate KYC statuses (Pending, Approved, Rejected) prominently in the dashboard.",
+    "Do NOT use placeholder text or dummy image URLs. Use the provided media URLs.",
+    "Import Cabinet Grotesk from Fontshare (https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,500,700,800,900&display=swap) and IBM Plex Sans from Google Fonts in index.html.",
+    "Override Shadcn component styles to match the industrial theme (e.g., remove large border radii, replace soft shadows with solid borders)."
+  ]
+}
