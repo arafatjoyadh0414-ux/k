@@ -3,7 +3,7 @@ import Layout from "../components/Layout";
 import api, { fmtBDT, statusColor } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
-import { ShieldAlert, Wallet, ArrowUpRight, Package, ShoppingCart } from "lucide-react";
+import { ShieldAlert, Wallet, ArrowUpRight, Package, ShoppingCart, Sparkles } from "lucide-react";
 
 const KycBanner = ({ status, onSubmit }) => {
   if (status === "approved") return null;
@@ -38,17 +38,20 @@ const Dashboard = () => {
   const { user } = useAuth();
   const [ws, setWs] = useState(null);
   const [orders, setOrders] = useState([]);
+  const [featured, setFeatured] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       try {
-        const [w, o] = await Promise.all([
+        const [w, o, f] = await Promise.all([
           api.get("/workshop/me"),
           api.get("/orders"),
+          api.get("/featured-kit").catch(() => ({ data: null })),
         ]);
         setWs(w.data.workshop);
         setOrders(o.data || []);
+        setFeatured(f.data);
       } finally { setLoading(false); }
     })();
   }, []);
@@ -77,6 +80,49 @@ const Dashboard = () => {
         </div>
 
         <KycBanner status={ws?.kyc_status || "not_submitted"} />
+
+        {/* Featured Kit of the Month */}
+        {featured && ws?.kyc_status === "approved" && (
+          <Link to="/kits" data-testid="featured-kit-banner" className="block group">
+            <div className="relative overflow-hidden border border-slate-200 rounded-sm bg-slate-950 text-white">
+              <div className="grid grid-cols-1 lg:grid-cols-12">
+                <div className="lg:col-span-5 relative min-h-[220px] overflow-hidden">
+                  <img src={featured.image_url} alt={featured.name} className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/40 to-transparent" />
+                </div>
+                <div className="lg:col-span-7 p-6 lg:p-8 flex flex-col justify-center">
+                  <span className="inline-flex items-center gap-2 self-start text-[10px] font-semibold uppercase tracking-[0.2em] px-3 py-1.5 rounded-sm bg-[#E11D48] text-white w-fit">
+                    <Sparkles className="w-3.5 h-3.5" /> {featured.featured_label || "Featured Kit"}
+                  </span>
+                  <h3 className="font-display text-3xl lg:text-4xl mt-3 leading-none">{featured.name}</h3>
+                  <p className="text-sm text-slate-300 mt-2 max-w-md">{featured.description}</p>
+
+                  <div className="mt-5 flex items-end gap-6">
+                    <div>
+                      <div className="overline" style={{color: "#94a3b8"}}>Workshop Price</div>
+                      <div className="font-display text-3xl text-[#E11D48] mt-1">{fmtBDT(featured.workshop_price_bdt)}</div>
+                    </div>
+                    <div className="pb-1">
+                      <div className="overline" style={{color: "#94a3b8"}}>Was</div>
+                      <div className="text-sm line-through text-slate-400 mt-1">{fmtBDT(featured.price_bdt)}</div>
+                    </div>
+                    {featured.featured_discount_pct > 0 && (
+                      <div className="pb-1">
+                        <span className="text-xs font-semibold bg-emerald-500 text-white px-2 py-1 rounded-sm">
+                          Save {(featured.featured_discount_pct * 100).toFixed(0)}%
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-white group-hover:text-[#E11D48] transition-colors">
+                    View kit details <ArrowUpRight className="w-4 h-4" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Link>
+        )}
 
         {/* Credit summary */}
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">

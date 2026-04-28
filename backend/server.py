@@ -108,6 +108,9 @@ class Product(BaseModel):
     kit_tier: str = ""  # entry | mass | special | premium | flagship
     kit_features: List[str] = []
     gallery: List[str] = []
+    is_featured: bool = False
+    featured_discount_pct: float = 0.0  # e.g. 0.10 = 10% off for workshops
+    featured_label: str = ""  # e.g. "Featured Kit · February"
     created_at: str
 
 class CartItem(BaseModel):
@@ -656,6 +659,58 @@ async def list_kits():
     return items
 
 
+@api_router.get("/featured-kit")
+async def get_featured_kit():
+    """Returns the currently featured kit with workshop pricing."""
+    kit = await db.products.find_one({"is_kit": True, "is_featured": True}, {"_id": 0})
+    if not kit:
+        kit = await db.products.find_one({"is_kit": True, "kit_tier": "flagship"}, {"_id": 0})
+        if kit:
+            kit["is_featured"] = True
+            kit["featured_discount_pct"] = 0.10
+            kit["featured_label"] = "Featured Kit · This Month"
+    if not kit:
+        return None
+    discount_pct = float(kit.get("featured_discount_pct", 0.0))
+    original = float(kit["price_bdt"])
+    workshop_price = round(original * (1 - discount_pct), 2)
+    return {
+        **kit,
+        "workshop_price_bdt": workshop_price,
+        "savings_bdt": round(original - workshop_price, 2),
+    }
+
+
+class FeaturedKitUpdate(BaseModel):
+    sku: str
+    discount_pct: float
+    label: str = ""
+
+
+@api_router.put("/admin/featured-kit")
+async def admin_set_featured(payload: FeaturedKitUpdate, request: Request):
+    await require_admin(request)
+    if payload.discount_pct < 0 or payload.discount_pct > 0.5:
+        raise HTTPException(400, "discount_pct must be between 0 and 0.5")
+    # Clear previous featured
+    await db.products.update_many(
+        {"is_kit": True, "is_featured": True},
+        {"$set": {"is_featured": False, "featured_discount_pct": 0.0, "featured_label": ""}},
+    )
+    # Set new
+    res = await db.products.update_one(
+        {"sku": payload.sku, "is_kit": True},
+        {"$set": {
+            "is_featured": True,
+            "featured_discount_pct": payload.discount_pct,
+            "featured_label": payload.label or "Featured Kit · This Month",
+        }},
+    )
+    if res.matched_count == 0:
+        raise HTTPException(404, "Kit not found")
+    return await db.products.find_one({"sku": payload.sku}, {"_id": 0})
+
+
 # ============= Stripe =============
 PAYMENT_METHODS = ["credit", "cod", "online"]
 
@@ -1189,6 +1244,19 @@ async def startup():
         inserted += 1
     if inserted:
         logger.info(f"Seeded {inserted} new products/kits")
+
+    # Auto-flag Cyber Beast as featured if no featured kit exists
+    has_featured = await db.products.count_documents({"is_kit": True, "is_featured": True})
+    if has_featured == 0:
+        await db.products.update_one(
+            {"sku": "JA-KIT-CYBER"},
+            {"$set": {
+                "is_featured": True,
+                "featured_discount_pct": 0.10,
+                "featured_label": "Featured Kit · This Month",
+            }},
+        )
+        logger.info("Flagged Cyber Beast as featured kit")
 
 
 @api_router.get("/")
