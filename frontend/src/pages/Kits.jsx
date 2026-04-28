@@ -3,7 +3,7 @@ import Layout from "../components/Layout";
 import api, { fmtBDT } from "../lib/api";
 import { useCart } from "../context/CartContext";
 import { Link } from "react-router-dom";
-import { Check, Flame, Sparkles, Mountain, Crown, Zap, ShoppingCart, ArrowRight } from "lucide-react";
+import { Check, Flame, Sparkles, Mountain, Crown, Zap, ShoppingCart, ArrowRight, Phone } from "lucide-react";
 import { toast } from "sonner";
 
 const TIER_BADGE = {
@@ -59,13 +59,22 @@ const KitCard = ({ kit, onAdd, isAlt }) => {
             <div className="font-display text-3xl mt-1">{fmtBDT(kit.price_bdt)}</div>
             <div className="text-xs text-slate-500 mt-0.5">+ ৳50k–1L installation</div>
           </div>
-          <button
-            onClick={() => onAdd(kit)}
-            data-testid={`add-kit-${kit.sku}`}
-            className="inline-flex items-center gap-2 bg-slate-900 hover:bg-[#E11D48] text-white text-sm font-semibold px-4 py-2.5 rounded-sm transition-colors duration-200"
-          >
-            <ShoppingCart className="w-4 h-4" /> Add to Cart
-          </button>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => onAdd(kit)}
+              data-testid={`add-kit-${kit.sku}`}
+              className="inline-flex items-center gap-2 bg-slate-900 hover:bg-[#E11D48] text-white text-sm font-semibold px-4 py-2.5 rounded-sm transition-colors duration-200"
+            >
+              <ShoppingCart className="w-4 h-4" /> Add to Cart
+            </button>
+            <Link
+              to={`/inquire/${kit.sku}`}
+              data-testid={`inquire-kit-${kit.sku}`}
+              className="inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-[#E11D48] hover:text-[#E11D48] text-xs font-semibold px-4 py-2 rounded-sm transition-colors duration-200"
+            >
+              <Phone className="w-3.5 h-3.5" /> Schedule Install
+            </Link>
+          </div>
         </div>
       </div>
     </div>

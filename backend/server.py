@@ -114,6 +114,22 @@ class CartItem(BaseModel):
     product_id: str
     quantity: int
 
+
+# Volume discount tiers (subtotal in BDT -> discount %)
+DISCOUNT_TIERS = [
+    (300000, 0.10),  # ≥3 lakh => 10%
+    (100000, 0.07),  # ≥1 lakh => 7%
+    (50000, 0.05),   # ≥50k   => 5%
+]
+
+
+def calc_discount(subtotal: float) -> tuple:
+    """Returns (discount_pct, discount_amount, tier_label)"""
+    for threshold, pct in DISCOUNT_TIERS:
+        if subtotal >= threshold:
+            return pct, round(subtotal * pct, 2), f"Volume tier · ৳{int(threshold):,}+"
+    return 0.0, 0.0, ""
+
 class OrderCreate(BaseModel):
     items: List[CartItem]
     payment_method: str  # credit | cod
@@ -429,9 +445,13 @@ async def create_order(payload: OrderCreate, request: Request):
             "line_total": line_total
         })
 
+    # Apply volume-discount
+    discount_pct, discount_amount, tier_label = calc_discount(total)
+    grand_total = round(total - discount_amount, 2)
+
     if payload.payment_method == "credit":
         available = ws["credit_limit"] - ws["credit_used"]
-        if total > available:
+        if grand_total > available:
             raise HTTPException(400, f"Insufficient credit. Available: ৳{available:.2f}")
 
     order_id = f"ORD-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
@@ -444,7 +464,11 @@ async def create_order(payload: OrderCreate, request: Request):
         "workshop_id": ws["workshop_id"],
         "company_name": ws["company_name"],
         "items": line_items,
-        "total_bdt": total,
+        "subtotal_bdt": total,
+        "discount_pct": discount_pct,
+        "discount_amount_bdt": discount_amount,
+        "discount_label": tier_label,
+        "total_bdt": grand_total,
         "payment_method": payload.payment_method,
         "payment_status": "unpaid",
         "due_date": due_date,
@@ -459,7 +483,7 @@ async def create_order(payload: OrderCreate, request: Request):
     if payload.payment_method == "credit":
         await db.workshops.update_one(
             {"workshop_id": ws["workshop_id"]},
-            {"$inc": {"credit_used": total}}
+            {"$inc": {"credit_used": grand_total}}
         )
 
     order.pop("_id", None)
@@ -604,6 +628,7 @@ async def admin_stats(request: Request):
     total_orders = await db.orders.count_documents({})
     pending_orders = await db.orders.count_documents({"status": {"$in": ["placed", "confirmed", "packed"]}})
     products_count = await db.products.count_documents({})
+    new_inquiries = await db.inquiries.count_documents({"status": "new"})
 
     pipeline = [{"$group": {"_id": None, "total": {"$sum": "$total_bdt"}}}]
     revenue_doc = await db.orders.aggregate(pipeline).to_list(1)
@@ -616,6 +641,7 @@ async def admin_stats(request: Request):
         "total_orders": total_orders,
         "pending_orders": pending_orders,
         "products_count": products_count,
+        "new_inquiries": new_inquiries,
         "total_revenue_bdt": revenue
     }
 
@@ -667,8 +693,12 @@ async def create_stripe_checkout(payload: StripeCheckoutCreate, request: Request
             "quantity": ci.quantity, "line_total": line_total,
         })
 
+    # Apply volume discount
+    discount_pct, discount_amount, tier_label = calc_discount(total_bdt)
+    grand_total = round(total_bdt - discount_amount, 2)
+
     # Convert BDT -> USD (Stripe doesn't natively support BDT in standard accounts)
-    amount_usd = round(total_bdt / USD_TO_BDT, 2)
+    amount_usd = round(grand_total / USD_TO_BDT, 2)
     if amount_usd < 1:
         amount_usd = 1.0  # Stripe minimum
 
@@ -681,7 +711,11 @@ async def create_stripe_checkout(payload: StripeCheckoutCreate, request: Request
         "workshop_id": ws["workshop_id"],
         "company_name": ws["company_name"],
         "items": line_items,
-        "total_bdt": total_bdt,
+        "subtotal_bdt": total_bdt,
+        "discount_pct": discount_pct,
+        "discount_amount_bdt": discount_amount,
+        "discount_label": tier_label,
+        "total_bdt": grand_total,
         "payment_method": "online",
         "payment_status": "unpaid",
         "due_date": None,
@@ -717,7 +751,7 @@ async def create_stripe_checkout(payload: StripeCheckoutCreate, request: Request
         "session_id": session.session_id,
         "order_id": order_id,
         "user_id": user["user_id"],
-        "amount_bdt": total_bdt,
+        "amount_bdt": grand_total,
         "amount_usd": amount_usd,
         "currency": "usd",
         "metadata": {"order_id": order_id, "user_id": user["user_id"]},
@@ -727,6 +761,154 @@ async def create_stripe_checkout(payload: StripeCheckoutCreate, request: Request
     })
 
     return {"url": session.url, "session_id": session.session_id, "order_id": order_id}
+
+
+# ============= Quote / Discount =============
+class QuoteRequest(BaseModel):
+    items: List[CartItem]
+
+
+@api_router.post("/quote")
+async def quote_cart(payload: QuoteRequest, request: Request):
+    """Live cart preview with applied volume discount tier."""
+    await require_user(request)
+    subtotal = 0.0
+    for ci in payload.items:
+        p = await db.products.find_one({"product_id": ci.product_id}, {"_id": 0})
+        if not p:
+            continue
+        subtotal += p["price_bdt"] * ci.quantity
+    discount_pct, discount_amount, tier_label = calc_discount(subtotal)
+    grand_total = round(subtotal - discount_amount, 2)
+    return {
+        "subtotal_bdt": subtotal,
+        "discount_pct": discount_pct,
+        "discount_amount_bdt": discount_amount,
+        "discount_label": tier_label,
+        "total_bdt": grand_total,
+        "tiers": [
+            {"threshold_bdt": t, "discount_pct": p, "label": f"৳{int(t):,}+"} for t, p in DISCOUNT_TIERS
+        ],
+    }
+
+
+# ============= Kit Inquiries (public) =============
+class KitInquiry(BaseModel):
+    name: str
+    phone: str
+    email: str = ""
+    city: str = ""
+    car_make_model: str
+    kit_sku: str
+    message: str = ""
+
+
+@api_router.post("/inquiries")
+async def submit_inquiry(payload: KitInquiry):
+    """Public endpoint - retail customers submit kit install inquiries."""
+    if not payload.name.strip() or not payload.phone.strip() or not payload.car_make_model.strip():
+        raise HTTPException(400, "Name, phone, and car make/model required")
+    kit = await db.products.find_one({"sku": payload.kit_sku, "is_kit": True}, {"_id": 0})
+    inquiry_id = f"INQ-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+    doc = {
+        "inquiry_id": inquiry_id,
+        "name": payload.name.strip(),
+        "phone": payload.phone.strip(),
+        "email": payload.email.strip(),
+        "city": payload.city.strip(),
+        "car_make_model": payload.car_make_model.strip(),
+        "kit_sku": payload.kit_sku,
+        "kit_name": kit["name"] if kit else payload.kit_sku,
+        "message": payload.message.strip(),
+        "status": "new",  # new | contacted | scheduled | converted | closed
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.inquiries.insert_one(dict(doc))
+    return {"inquiry_id": inquiry_id, "ok": True}
+
+
+@api_router.get("/admin/inquiries")
+async def admin_list_inquiries(request: Request, status: str = ""):
+    await require_admin(request)
+    flt = {}
+    if status:
+        flt["status"] = status
+    items = await db.inquiries.find(flt, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return items
+
+
+class InquiryStatusUpdate(BaseModel):
+    status: str
+    admin_note: str = ""
+
+
+@api_router.patch("/admin/inquiries/{inquiry_id}")
+async def admin_update_inquiry(inquiry_id: str, payload: InquiryStatusUpdate, request: Request):
+    await require_admin(request)
+    valid = ["new", "contacted", "scheduled", "converted", "closed"]
+    if payload.status not in valid:
+        raise HTTPException(400, f"Invalid status. Use: {valid}")
+    await db.inquiries.update_one(
+        {"inquiry_id": inquiry_id},
+        {"$set": {"status": payload.status, "admin_note": payload.admin_note}},
+    )
+    return await db.inquiries.find_one({"inquiry_id": inquiry_id}, {"_id": 0})
+
+
+# ============= Bulk CSV product import =============
+@api_router.post("/admin/products/bulk-csv")
+async def admin_bulk_csv_import(request: Request, file: UploadFile = File(...)):
+    """Admin bulk-import products via CSV.
+    Required headers: name,sku,category,price_bdt
+    Optional: description,image_url,moq,stock,brand
+    """
+    await require_admin(request)
+    import csv
+    import io
+    raw = await file.read()
+    try:
+        text = raw.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        raise HTTPException(400, "File must be UTF-8 CSV")
+
+    reader = csv.DictReader(io.StringIO(text))
+    required = {"name", "sku", "category", "price_bdt"}
+    if not reader.fieldnames or not required.issubset(set(h.strip() for h in reader.fieldnames)):
+        raise HTTPException(400, f"CSV missing required headers: {sorted(required)}")
+
+    inserted, updated, errors = 0, 0, []
+    for i, row in enumerate(reader, start=2):
+        try:
+            name = row.get("name", "").strip()
+            sku = row.get("sku", "").strip()
+            category = row.get("category", "").strip()
+            price_str = row.get("price_bdt", "").strip()
+            if not (name and sku and category and price_str):
+                errors.append({"row": i, "error": "missing required field"})
+                continue
+            doc = {
+                "name": name, "sku": sku, "category": category,
+                "description": (row.get("description") or "").strip(),
+                "image_url": (row.get("image_url") or "").strip(),
+                "price_bdt": float(price_str),
+                "moq": int(row.get("moq") or 1),
+                "stock": int(row.get("stock") or 100),
+                "brand": (row.get("brand") or "").strip(),
+                "is_kit": False, "kit_tier": "", "kit_features": [], "gallery": [],
+            }
+            existing = await db.products.find_one({"sku": sku}, {"_id": 0})
+            if existing:
+                await db.products.update_one({"sku": sku}, {"$set": doc})
+                updated += 1
+            else:
+                doc["product_id"] = f"prd_{uuid.uuid4().hex[:10]}"
+                doc["created_at"] = datetime.now(timezone.utc).isoformat()
+                await db.products.insert_one(doc)
+                inserted += 1
+        except Exception as e:
+            errors.append({"row": i, "error": str(e)})
+
+    return {"inserted": inserted, "updated": updated, "errors": errors[:20], "total_errors": len(errors)}
 
 
 @api_router.get("/checkout/status/{session_id}")

@@ -64,8 +64,12 @@ const Landing = () => {
                 <svg className="w-5 h-5" viewBox="0 0 48 48"><path fill="#fff" d="M24 9.5c3.4 0 6.4 1.2 8.8 3.4l6.6-6.6C35.4 2.6 30 .5 24 .5 14.7.5 6.7 5.8 2.9 13.6l7.7 6c1.8-5.5 6.9-9.6 13.4-9.6z"/><path fill="#fff" opacity=".8" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.4 5.5-5 7.2l7.7 6c4.5-4.2 7.1-10.4 7.1-17.7z"/><path fill="#fff" opacity=".6" d="M10.6 28.4c-.5-1.4-.8-2.9-.8-4.4s.3-3 .8-4.4l-7.7-6C1.3 17 0 20.4 0 24s1.3 7 2.9 10.4l7.7-6z"/><path fill="#fff" opacity=".9" d="M24 47.5c6 0 11.4-2 15.4-5.4l-7.7-6c-2.1 1.4-4.8 2.3-7.7 2.3-6.5 0-11.6-4.1-13.4-9.6l-7.7 6C6.7 42.2 14.7 47.5 24 47.5z"/></svg>
                 Continue with Google
               </button>
+              <a href="/inquire" data-testid="hero-inquire-link"
+                 className="inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-slate-900 text-slate-900 px-6 py-3 rounded-sm font-semibold transition-colors duration-200">
+                Schedule a Kit Install
+              </a>
               <a href="https://www.joyautomart.com" target="_blank" rel="noreferrer"
-                 className="text-sm font-semibold text-slate-700 hover:text-[#E11D48] underline-offset-4 hover:underline">
+                className="text-sm font-semibold text-slate-700 hover:text-[#E11D48] underline-offset-4 hover:underline">
                 Visit retail site →
               </a>
             </div>

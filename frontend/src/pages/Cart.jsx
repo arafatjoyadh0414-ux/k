@@ -13,6 +13,7 @@ const Cart = () => {
   const [shipping, setShipping] = useState("");
   const [notes, setNotes] = useState("");
   const [placing, setPlacing] = useState(false);
+  const [quote, setQuote] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,9 +24,25 @@ const Cart = () => {
     })();
   }, []);
 
+  // Fetch volume-discount quote whenever cart changes
+  useEffect(() => {
+    if (items.length === 0) { setQuote(null); return; }
+    const t = setTimeout(async () => {
+      try {
+        const { data } = await api.post("/quote", {
+          items: items.map((x) => ({ product_id: x.product_id, quantity: x.quantity })),
+        });
+        setQuote(data);
+      } catch (e) { /* ignore */ }
+    }, 250);
+    return () => clearTimeout(t);
+  }, [items]);
+
+  const grandTotal = quote?.total_bdt ?? total;
+
   const available = (ws?.credit_limit || 0) - (ws?.credit_used || 0);
   const kycOk = ws?.kyc_status === "approved";
-  const creditOk = paymentMethod !== "credit" || total <= available;
+  const creditOk = paymentMethod !== "credit" || grandTotal <= available;
 
   const place = async () => {
     if (!kycOk) { toast.error("KYC must be approved first."); return; }
@@ -107,7 +124,28 @@ const Cart = () => {
             <div className="industrial-card p-5 h-fit space-y-5">
               <div>
                 <div className="overline">Subtotal</div>
-                <div className="font-display text-3xl mt-1" data-testid="cart-subtotal">{fmtBDT(total)}</div>
+                <div className="font-display text-2xl mt-1" data-testid="cart-subtotal">{fmtBDT(total)}</div>
+              </div>
+
+              {quote && quote.discount_pct > 0 && (
+                <div className="border border-emerald-200 bg-emerald-50 p-3 rounded-sm" data-testid="discount-applied">
+                  <div className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">{quote.discount_label}</div>
+                  <div className="flex items-baseline justify-between mt-1">
+                    <div className="text-sm text-emerald-700">Volume discount {(quote.discount_pct * 100).toFixed(0)}%</div>
+                    <div className="font-semibold text-emerald-700">-{fmtBDT(quote.discount_amount_bdt)}</div>
+                  </div>
+                </div>
+              )}
+
+              {quote && quote.discount_pct === 0 && quote.tiers?.length > 0 && (
+                <div className="text-xs text-slate-500 border border-slate-200 p-2 rounded-sm">
+                  💡 Add {fmtBDT(quote.tiers[2].threshold_bdt - total)} more to unlock <span className="font-semibold text-slate-900">{(quote.tiers[2].discount_pct * 100).toFixed(0)}% off</span>
+                </div>
+              )}
+
+              <div className="border-t border-slate-200 pt-4">
+                <div className="overline">Grand Total</div>
+                <div className="font-display text-3xl mt-1" data-testid="cart-grand-total">{fmtBDT(grandTotal)}</div>
               </div>
 
               <div>
@@ -163,7 +201,7 @@ const Cart = () => {
                 data-testid="place-order-button"
                 className="w-full bg-[#E11D48] hover:bg-[#BE123C] disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-sm transition-colors duration-200"
               >
-                {placing ? "Placing order…" : `Place Order · ${fmtBDT(total)}`}
+                {placing ? "Placing order…" : `Place Order · ${fmtBDT(grandTotal)}`}
               </button>
             </div>
           </div>

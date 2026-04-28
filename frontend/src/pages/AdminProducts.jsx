@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../components/Layout";
 import api, { fmtBDT } from "../lib/api";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Upload as UploadIcon } from "lucide-react";
 import { toast } from "sonner";
 
 const empty = {
@@ -42,6 +42,18 @@ const AdminProducts = () => {
     toast.success("Deleted");
   };
 
+  const uploadCsv = async (file) => {
+    const fd = new FormData();
+    fd.append("file", file);
+    try {
+      const { data } = await api.post("/admin/products/bulk-csv", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      await load();
+      toast.success(`CSV imported · ${data.inserted} new, ${data.updated} updated${data.total_errors ? `, ${data.total_errors} errors` : ""}`);
+    } catch (e) { toast.error(e.response?.data?.detail || "CSV import failed"); }
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -50,10 +62,17 @@ const AdminProducts = () => {
             <div className="overline">Catalog</div>
             <h1 className="font-display text-3xl lg:text-4xl mt-1">Products</h1>
           </div>
-          <button onClick={startNew} data-testid="new-product-button"
-            className="inline-flex items-center gap-2 bg-[#E11D48] hover:bg-[#BE123C] text-white text-sm font-semibold px-4 py-2 rounded-sm">
-            <Plus className="w-4 h-4" /> Add Product
-          </button>
+          <div className="flex items-center gap-2">
+            <label className="cursor-pointer inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-slate-900 text-sm font-semibold px-4 py-2 rounded-sm transition-colors duration-200" data-testid="upload-csv-label">
+              <UploadIcon className="w-4 h-4" /> Bulk CSV Import
+              <input type="file" accept=".csv" className="hidden" data-testid="upload-csv-input"
+                onChange={(e) => { if (e.target.files?.[0]) uploadCsv(e.target.files[0]); e.target.value = ""; }} />
+            </label>
+            <button onClick={startNew} data-testid="new-product-button"
+              className="inline-flex items-center gap-2 bg-[#E11D48] hover:bg-[#BE123C] text-white text-sm font-semibold px-4 py-2 rounded-sm">
+              <Plus className="w-4 h-4" /> Add Product
+            </button>
+          </div>
         </div>
 
         {editing && (

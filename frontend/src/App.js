@@ -15,8 +15,10 @@ import Orders from "@/pages/Orders";
 import OrderDetail from "@/pages/OrderDetail";
 import Profile from "@/pages/Profile";
 import Kits from "@/pages/Kits";
+import Inquire from "@/pages/Inquire";
 import PaymentReturn from "@/pages/PaymentReturn";
 import AdminDashboard from "@/pages/AdminDashboard";
+import AdminInquiries from "@/pages/AdminInquiries";
 import AdminWorkshops from "@/pages/AdminWorkshops";
 import AdminWorkshopDetail from "@/pages/AdminWorkshopDetail";
 import AdminOrders from "@/pages/AdminOrders";
@@ -33,6 +35,8 @@ const AppRouter = () => {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
+      <Route path="/inquire" element={<Inquire />} />
+      <Route path="/inquire/:sku" element={<Inquire />} />
 
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/kits" element={<ProtectedRoute><Kits /></ProtectedRoute>} />
@@ -49,6 +53,7 @@ const AppRouter = () => {
       <Route path="/admin/orders" element={<ProtectedRoute adminOnly><AdminOrders /></ProtectedRoute>} />
       <Route path="/admin/orders/:id" element={<ProtectedRoute adminOnly><AdminOrderDetail /></ProtectedRoute>} />
       <Route path="/admin/products" element={<ProtectedRoute adminOnly><AdminProducts /></ProtectedRoute>} />
+      <Route path="/admin/inquiries" element={<ProtectedRoute adminOnly><AdminInquiries /></ProtectedRoute>} />
     </Routes>
   );
 };

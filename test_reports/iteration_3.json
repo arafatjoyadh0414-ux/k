@@ -1,0 +1,49 @@
+{
+  "summary": "Phase 3 backend testing for Joy Automart B2B portal complete. All 30 new Phase 3 pytest cases pass plus full regression: 81/81 (100%) across Phase 1 (33) + Phase 2 (18) + Phase 3 (30). Verified: (1) POST /api/quote returns subtotal/discount_pct/discount_amount/discount_label/total/tiers and applies the correct tier at all 6 boundary thresholds (49999=>0%, 50000=>5%, 99999=>5%, 100000=>7%, 299999=>7%, 300000=>10%) and rejects unauth with 401. (2) POST /api/orders auto-applies the volume discount, persists subtotal_bdt/discount_pct/discount_amount_bdt/discount_label/total_bdt correctly, and increments workshops.credit_used by the POST-DISCOUNT total (verified directly in MongoDB). (3) Credit limit check uses post-discount: a workshop with limit=50000 successfully placed an order with subtotal=50001 because the 5% discount brought the total to 47500.95; same workshop is correctly rejected (400) when post-discount total exceeds the limit. (4) POST /api/inquiries is fully public (no Authorization header), returns inquiry_id starting with INQ-, resolves kit_name from kit_sku, and rejects 400 when name/phone/car_make_model are missing or whitespace-only. (5) GET /api/admin/inquiries is admin-only (workshop=>403, anon=>401), returns sorted desc by created_at, supports ?status filter. (6) PATCH /api/admin/inquiries/{id} accepts new|contacted|scheduled|converted|closed with admin_note, rejects 400 for invalid status, requires admin (workshop=>403). (7) POST /api/admin/products/bulk-csv requires admin (workshop=>403), inserts new SKUs and updates existing ones, returns {inserted,updated,errors,total_errors}, rejects 400 for missing required headers and for non-UTF-8 bodies, partial-success (continues past per-row failures and reports errors). (8) GET /api/admin/stats now includes integer new_inquiries field. Full Phase 1+2 regression still green.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/inquiries", "issue": "kit_sku is not validated against existing kits — submitting an unknown kit_sku silently stores kit_name = the raw sku string. Consider rejecting 400 for unknown kit_sku, or at least flagging it on admin list to avoid junk leads."},
+      {"endpoint": "POST /api/inquiries", "issue": "No rate limiting / captcha on the public endpoint — a script can flood db.inquiries. Recommend adding IP-based throttling (e.g., slowapi) since this endpoint is unauthenticated."},
+      {"endpoint": "POST /api/admin/products/bulk-csv", "issue": "is_kit/kit_tier/kit_features/gallery are hard-set to False/empty on UPDATE as well — bulk re-import of an existing kit SKU would wipe its kit metadata. Fix: only set is_kit/kit_tier/etc on insert, or use $set with a narrower projection on update."},
+      {"endpoint": "POST /api/admin/products/bulk-csv", "issue": "No file-size cap (KYC upload caps at 10MB; CSV import does not). A 200MB CSV would be fully read into memory. Add max content-length guard."},
+      {"endpoint": "PATCH /api/admin/inquiries/{id}", "issue": "Returns 200 with the updated doc even when inquiry_id does not exist (find_one returns None and FastAPI serializes null). Should 404 for unknown inquiry_id."},
+      {"endpoint": "POST /api/orders", "issue": "Float arithmetic for BDT money (e.g., credit_used 47500.95). Recommend storing money as int paisa or using Decimal to avoid IEEE-754 drift over many orders."}
+    ]
+  },
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_phase3.py",
+    "/app/backend/tests/test_phase2_checkout.py",
+    "/app/backend/tests/test_api.py",
+    "/app/backend/tests/conftest.py",
+    "/app/test_reports/pytest/phase3_results.xml",
+    "/app/test_reports/pytest/all_results.xml"
+  ],
+  "action_items": [
+    "Optional: bulk-csv UPDATE branch should preserve existing is_kit/kit_tier/kit_features/gallery instead of clobbering to False/empty.",
+    "Optional: PATCH /api/admin/inquiries/{id} should 404 when inquiry_id is unknown.",
+    "Optional: validate POST /api/inquiries.kit_sku against products(is_kit=True) and 400 on unknown.",
+    "Optional: rate-limit POST /api/inquiries (public) to prevent spam.",
+    "Optional: add max-size guard on bulk-csv upload (mirroring 10MB cap on KYC upload)."
+  ],
+  "critical_code_review_comments": [
+    "server.py is now ~1200 lines — well past the 700-line guideline. Strongly recommend splitting into modules (auth.py, products.py, orders.py, checkout.py, inquiries.py, admin.py).",
+    "calc_discount() is correctly implemented and shared by /api/quote, /api/orders, /api/checkout/create — single source of truth for discount logic. Good.",
+    "Bulk CSV update path in admin_bulk_csv_import builds `doc` with is_kit=False, kit_tier='', kit_features=[], gallery=[] then $set's the entire dict on UPDATE — this would silently strip kit fields if a kit SKU is re-uploaded. Either branch on existing.is_kit, or restrict $set keys.",
+    "PATCH /api/admin/inquiries/{id} doesn't check existence before update_one; non-existent IDs return 200 with null body. Add a find_one + 404 check.",
+    "POST /api/inquiries does not validate or sanitize email/phone format; could store malformed data. Pydantic EmailStr would help.",
+    "Float money: subtotal/discount_amount/total are floats. For 50001 BDT order, post-discount = 47500.95 — fine here but at scale, paisa-based integers (or Decimal) avoid rounding drift especially in credit_used summation.",
+    "Public /api/inquiries lacks any throttling — trivial to abuse. Add slowapi or basic IP-based rate limit since admin@joyautomart.com will receive every spam lead."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_phase3.py"
+  ],
+  "success_rate": {"backend": "100% (81/81)", "frontend": "not tested"},
+  "test_credentials": "Reused conftest fixtures (workshop_session, admin_session, workshop_pending_session) plus two new per-test fixtures: big_credit_workshop (limit=1,000,000) and limit50k_workshop (limit=50,000), and a unit_product fixture (price=1.0 BDT, moq=1) to hit precise discount-tier boundaries.",
+  "seed_data_creation": "Per-test ephemeral docs in MongoDB: one TEST unit-priced product (price=1.0), two extra workshops (high-credit + 50k-limit), several TEST inquiry rows (cleaned up in finally blocks), TEST CSV-imported products (cleaned up by SKU). All TEST_-prefixed and removed in fixture teardown.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Phase 3 backend tests live at /app/backend/tests/test_phase3.py. Full suite runs in ~54s. To run only Phase 3: `pytest backend/tests/test_phase3.py -v`. To run all: `pytest backend/tests/ -v`. The unit_product fixture (price=1.0 BDT) is critical for hitting exact discount-tier boundaries — quantity == subtotal in BDT. limit50k_workshop fixture proves the post-discount credit-check claim (50001 subtotal succeeds because 5% discount brings total to 47500.95 ≤ 50000 limit). Bulk CSV non-UTF8 test uses raw 0xff/0xfe/0xfd bytes; kit_sku resolution test relies on seed kit JA-KIT-SHADOW being present.",
+  "rca of the issue": "N/A — all 81 tests pass on first run. Only minor enhancement opportunities reported (CSV update wiping kit fields, missing 404 on inquiry PATCH, public endpoint rate-limiting, money float precision)."
+}

@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import {
   LayoutDashboard, Package, ShoppingCart, ClipboardList, UserCircle2,
-  Shield, LogOut, Wrench, Sparkles
+  Shield, LogOut, Wrench, Sparkles, Inbox
 } from "lucide-react";
 
 const LOGO = "https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg";
@@ -60,6 +60,7 @@ const Layout = ({ children }) => {
               <NavItem to="/admin" icon={Shield} label="Admin Console" testid="nav-admin" />
               <NavItem to="/admin/workshops" icon={Wrench} label="Workshops" testid="nav-admin-workshops" />
               <NavItem to="/admin/orders" icon={ClipboardList} label="Orders" testid="nav-admin-orders" />
+              <NavItem to="/admin/inquiries" icon={Inbox} label="Inquiries" testid="nav-admin-inquiries" />
               <NavItem to="/admin/products" icon={Package} label="Products" testid="nav-admin-products" />
             </>
           )}
