@@ -46,6 +46,28 @@
 **Testing**
 - 33 backend pytest cases — all passing (100%)
 
+## Phase 2 — Catalog Expansion + Online Checkout (2026-02-09)
+**Backend additions**
+- New endpoint `GET /api/kits` returning the 5 signature body kits ordered by tier
+- Stripe Checkout integration via emergentintegrations: `POST /api/checkout/create`, `GET /api/checkout/status/{session_id}`, `POST /api/webhook/stripe`
+- BDT→USD conversion at checkout (`USD_TO_BDT=120` env)
+- Product schema extended: `is_kit`, `kit_tier`, `kit_features[]`, `gallery[]`
+- Idempotent seed (only inserts SKUs not in DB)
+- Orphaned-draft-order rollback if Stripe call fails
+- Expanded SEED_PRODUCTS with 14 extra parts across new categories
+- 5 Signature body kits seeded: Shadow GT (entry), Stealth V2 (mass), Badland X (special), Luxe VIP (premium), Cyber Beast (flagship)
+
+**Frontend additions**
+- `/kits` Signature Series showcase page with hero (Before/After), 5 tier-badged kit cards with feature lists and Add-to-Cart
+- `/payment/return` polls Stripe checkout status and redirects to order page on success
+- Cart now has 3 payment options: **Pay Online (Card)**, Pay on Credit, COD
+- Sidebar nav adds "Signature Kits" entry
+- Catalog filter expanded with 14 categories (Body Kits, Modifications, Performance, Accessories, Lighting, Tyres & Wheels, Tools, Audio + originals)
+- Order detail handles `pending_payment` status
+
+**Testing**
+- 51/51 backend tests pass (18 new Phase 2 + 33 Phase 1 regression)
+
 ## Backlog (Prioritized)
 **P0**
 - Online payment gateway (bKash / SSLCommerz / Stripe) for online prepay option

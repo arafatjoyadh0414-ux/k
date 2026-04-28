@@ -703,7 +703,13 @@ async def create_stripe_checkout(payload: StripeCheckoutCreate, request: Request
         success_url=success_url, cancel_url=cancel_url,
         metadata={"order_id": order_id, "user_id": user["user_id"], "workshop_id": ws["workshop_id"]},
     )
-    session: CheckoutSessionResponse = await stripe_checkout.create_checkout_session(sess_req)
+    try:
+        session: CheckoutSessionResponse = await stripe_checkout.create_checkout_session(sess_req)
+    except Exception as e:
+        # Roll back orphaned draft order so /api/orders doesn't show ghost entries
+        await db.orders.delete_one({"order_id": order_id})
+        logger.error(f"Stripe session creation failed for order {order_id}: {e}")
+        raise HTTPException(status_code=502, detail="Payment gateway unavailable. Please try again.")
 
     # Record transaction
     await db.payment_transactions.insert_one({
