@@ -661,12 +661,24 @@ async def admin_list_workshops(request: Request, kyc_status: str = ""):
     flt = {}
     if kyc_status:
         flt["kyc_status"] = kyc_status
-    items = await db.workshops.find(flt, {"_id": 0}).sort("created_at", -1).to_list(1000)
-    # attach user email
-    for w in items:
-        u = await db.users.find_one({"user_id": w["user_id"]}, {"_id": 0})
-        w["email"] = u["email"] if u else ""
-        w["owner_name"] = u["name"] if u else ""
+    pipeline = [
+        {"$match": flt} if flt else {"$match": {}},
+        {"$sort": {"created_at": -1}},
+        {"$limit": 1000},
+        {"$lookup": {
+            "from": "users",
+            "localField": "user_id",
+            "foreignField": "user_id",
+            "as": "user",
+        }},
+        {"$unwind": {"path": "$user", "preserveNullAndEmptyArrays": True}},
+        {"$addFields": {
+            "email": {"$ifNull": ["$user.email", ""]},
+            "owner_name": {"$ifNull": ["$user.name", ""]},
+        }},
+        {"$project": {"_id": 0, "user": 0}},
+    ]
+    items = await db.workshops.aggregate(pipeline).to_list(1000)
     return items
 
 
