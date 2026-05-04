@@ -91,12 +91,32 @@
 
 **Testing**: backend lint clean. UI verified via screenshots (Products with Gold-tier pricing, Request Any Part, Suppliers, Reports).
 
+## Phase 5 — Service Packs + Delivery Management (2026-05-04)
+**Backend additions**
+- `GET /api/service-packs` — public endpoint returning all bundle products with tier-priced `your_price_bdt`/`retail_price_bdt` and resolved `bundle_items_resolved[]` (name + sku + quantity per child)
+- 5 seeded JOY service packs (idempotent at startup): JA-PACK-BASIC, JA-PACK-PREMIUM, JA-PACK-BRAKE, JA-PACK-SUSP, JA-PACK-LIGHT — each composed of existing SKUs
+- Delivery Persons CRUD (`GET/POST/PUT/DELETE /api/admin/delivery-persons`) with `name/phone/nid_no/vehicle_type/vehicle_no/coverage_areas/status/notes` + `active_assignments` count per rider (orders in packed/shipped). Returns 404 for unknown IDs; rejects deletes when active assignments exist.
+- `PATCH /api/admin/orders/{order_id}/delivery` — assigns rider (denormalises name/phone/vehicle onto order), sets delivery fee (Optional[float]; partial PATCH preserves existing fee), sets `expected_delivery_date`. Auto-adjusts `total_bdt` and `profit_bdt` by fee delta and credit-used by same delta when order is unpaid credit. Rejects negative fees with 400.
+
+**Frontend additions**
+- `/service-packs` workshop page with hero + 3-col responsive grid of pack cards. Tier discount visible (struck-through retail + savings badge). Add-to-cart for each pack.
+- `/admin/delivery-persons` admin CRUD page with form, vehicle/area chips, active-assignments count, edit/delete actions
+- `AdminOrderDetail` now has Delivery card: rider select, fee input, expected-date input, save button. Header shows assigned rider info. Order total auto-updates with fee.
+- Workshop `OrderDetail` shows "Out for Delivery" card when admin has assigned a rider
+- Sidebar nav: workshop gets "Service Packs" item; admin gets "Delivery Team" item
+
+**Testing**: 18/18 Phase 4 backend pytest cases pass + e2e frontend flows validated. Action items addressed: Optional[float] fee semantics, negative-fee 400, 404 on unknown delivery_person_id, defensive option text.
+
 ## Backlog (Prioritized)
 **P0**
 - Online payment gateway (bKash / SSLCommerz / Stripe) for online prepay option
 - Transactional email/SMS notifications (KYC approved, order status changes)
 
 **P1**
+- "Make My Car" AI wizard (skipped this iteration per user direction)
+- Chatbot assistant (skipped this iteration per user direction)
+- Bulk-order CSV upload for workshops
+- Search log tracking ("zero-result" insights)
 - Bangla language toggle (UI strings)
 - Product variants (e.g., size, fitment) and images gallery
 - Bulk CSV product import for admin
@@ -110,6 +130,9 @@
 - Mobile app (React Native)
 - Analytics dashboards (revenue trends, top SKUs, ageing receivables)
 - Wishlist / saved-quotes
+- **Refactor `server.py` (~1850 lines) into `/app/backend/routes/*.py` modules**
+- Decimal/paisa-int money refactor
+- Batch resolve for /service-packs bundle children ($lookup) to remove N+1
 
 ## Tech Decisions
 - Emergent Google Auth (no app passwords) → simpler, secure

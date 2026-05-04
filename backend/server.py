@@ -1391,16 +1391,23 @@ async def admin_create_delivery_person(payload: DeliveryPerson, request: Request
 @api_router.put("/admin/delivery-persons/{delivery_person_id}")
 async def admin_update_delivery_person(delivery_person_id: str, payload: DeliveryPerson, request: Request):
     await require_admin(request)
-    await db.delivery_persons.update_one(
+    res = await db.delivery_persons.update_one(
         {"delivery_person_id": delivery_person_id},
         {"$set": payload.model_dump()}
     )
+    if res.matched_count == 0:
+        raise HTTPException(404, "Delivery person not found")
     return await db.delivery_persons.find_one({"delivery_person_id": delivery_person_id}, {"_id": 0})
 
 
 @api_router.delete("/admin/delivery-persons/{delivery_person_id}")
 async def admin_delete_delivery_person(delivery_person_id: str, request: Request):
     await require_admin(request)
+    existing = await db.delivery_persons.find_one(
+        {"delivery_person_id": delivery_person_id}, {"_id": 0, "delivery_person_id": 1}
+    )
+    if not existing:
+        raise HTTPException(404, "Delivery person not found")
     inflight = await db.orders.count_documents({
         "delivery_person_id": delivery_person_id,
         "status": {"$in": ["packed", "shipped"]}
@@ -1414,7 +1421,7 @@ async def admin_delete_delivery_person(delivery_person_id: str, request: Request
 # ============= Order: Assign Delivery & Fee =============
 class DeliveryAssignment(BaseModel):
     delivery_person_id: str = ""
-    delivery_fee_bdt: float = 0.0
+    delivery_fee_bdt: Optional[float] = None
     expected_delivery_date: str = ""
     note: str = ""
 
@@ -1438,7 +1445,9 @@ async def admin_assign_delivery(order_id: str, payload: DeliveryAssignment, requ
         update["delivery_person_phone"] = dp["phone"]
         update["delivery_vehicle_no"] = dp.get("vehicle_no", "")
         history_note = f"Delivery assigned to {dp['name']} ({dp['phone']})"
-    if payload.delivery_fee_bdt is not None and payload.delivery_fee_bdt >= 0:
+    if payload.delivery_fee_bdt is not None:
+        if payload.delivery_fee_bdt < 0:
+            raise HTTPException(400, "delivery_fee_bdt must be >= 0")
         # Adjust order total: remove previous fee, add new fee
         prev_fee = order.get("delivery_fee_bdt", 0.0)
         delta = payload.delivery_fee_bdt - prev_fee

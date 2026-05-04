@@ -160,7 +160,7 @@ const AdminOrderDetail = () => {
                       <option value="">— Select —</option>
                       {riders.map((r) => (
                         <option key={r.delivery_person_id} value={r.delivery_person_id}>
-                          {r.name} · {r.vehicle_type}{r.vehicle_no ? ` (${r.vehicle_no})` : ""}
+                          {`${r.name} · ${r.vehicle_type}${r.vehicle_no ? ` (${r.vehicle_no})` : ""}`}
                         </option>
                       ))}
                     </select>
