@@ -9,12 +9,14 @@ const AdminWorkshopDetail = () => {
   const { id } = useParams();
   const [ws, setWs] = useState(null);
   const [creditLimit, setCreditLimit] = useState(0);
+  const [tier, setTier] = useState("silver");
   const [remark, setRemark] = useState("");
 
   const load = async () => {
     const { data } = await api.get(`/admin/workshops/${id}`);
     setWs(data);
     setCreditLimit(data.credit_limit);
+    setTier(data.pricing_tier || "silver");
   };
   useEffect(() => { load(); }, [id]);
 
@@ -34,6 +36,14 @@ const AdminWorkshopDetail = () => {
       await api.patch(`/admin/workshops/${id}/credit`, { credit_limit: parseFloat(creditLimit) });
       await load();
       toast.success("Credit limit updated");
+    } catch (e) { toast.error("Failed"); }
+  };
+
+  const setTierRequest = async () => {
+    try {
+      await api.patch(`/admin/workshops/${id}/tier`, { pricing_tier: tier });
+      await load();
+      toast.success(`Tier set to ${tier}`);
     } catch (e) { toast.error("Failed"); }
   };
 
@@ -117,6 +127,21 @@ const AdminWorkshopDetail = () => {
           </div>
 
           <div className="space-y-5">
+            <div className="industrial-card p-5">
+              <div className="overline mb-2">Pricing Tier</div>
+              <select value={tier} onChange={(e) => setTier(e.target.value)} data-testid="tier-select"
+                className="w-full border border-slate-200 px-3 py-2 text-sm rounded-sm bg-white">
+                <option value="retail">Retail (0% off)</option>
+                <option value="silver">Silver (5% off)</option>
+                <option value="gold">Gold (10% off)</option>
+                <option value="platinum">Platinum (15% off)</option>
+                <option value="custom">Custom</option>
+              </select>
+              <button onClick={setTierRequest} data-testid="set-tier-button"
+                className="mt-3 w-full bg-slate-900 hover:bg-[#E11D48] text-white text-sm font-semibold py-2 rounded-sm transition-colors duration-200">
+                Update Tier
+              </button>
+            </div>
             <div className="industrial-card p-5">
               <div className="overline mb-2">Credit</div>
               <div className="text-xs text-slate-500">Used</div>

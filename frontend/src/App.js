@@ -16,9 +16,14 @@ import OrderDetail from "@/pages/OrderDetail";
 import Profile from "@/pages/Profile";
 import Kits from "@/pages/Kits";
 import Inquire from "@/pages/Inquire";
+import PartRequest from "@/pages/PartRequest";
+import ProductDetail from "@/pages/ProductDetail";
 import PaymentReturn from "@/pages/PaymentReturn";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminInquiries from "@/pages/AdminInquiries";
+import AdminPartRequests from "@/pages/AdminPartRequests";
+import AdminSuppliers from "@/pages/AdminSuppliers";
+import AdminReports from "@/pages/AdminReports";
 import AdminWorkshops from "@/pages/AdminWorkshops";
 import AdminWorkshopDetail from "@/pages/AdminWorkshopDetail";
 import AdminOrders from "@/pages/AdminOrders";
@@ -41,6 +46,8 @@ const AppRouter = () => {
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/kits" element={<ProtectedRoute><Kits /></ProtectedRoute>} />
       <Route path="/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
+      <Route path="/products/:id" element={<ProtectedRoute><ProductDetail /></ProtectedRoute>} />
+      <Route path="/part-requests" element={<ProtectedRoute><PartRequest /></ProtectedRoute>} />
       <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
       <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
       <Route path="/orders/:id" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
@@ -54,6 +61,9 @@ const AppRouter = () => {
       <Route path="/admin/orders/:id" element={<ProtectedRoute adminOnly><AdminOrderDetail /></ProtectedRoute>} />
       <Route path="/admin/products" element={<ProtectedRoute adminOnly><AdminProducts /></ProtectedRoute>} />
       <Route path="/admin/inquiries" element={<ProtectedRoute adminOnly><AdminInquiries /></ProtectedRoute>} />
+      <Route path="/admin/part-requests" element={<ProtectedRoute adminOnly><AdminPartRequests /></ProtectedRoute>} />
+      <Route path="/admin/suppliers" element={<ProtectedRoute adminOnly><AdminSuppliers /></ProtectedRoute>} />
+      <Route path="/admin/reports" element={<ProtectedRoute adminOnly><AdminReports /></ProtectedRoute>} />
     </Routes>
   );
 };

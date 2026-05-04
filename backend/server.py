@@ -91,7 +91,17 @@ class Workshop(BaseModel):
     credit_limit: float = 0.0
     credit_used: float = 0.0
     documents: List[dict] = []  # [{type, path, filename}]
+    pricing_tier: str = "silver"  # retail | silver | gold | platinum | custom
     created_at: str
+
+
+# Global tier discount map (percentage off retail)
+TIER_DISCOUNTS = {"retail": 0.0, "silver": 0.05, "gold": 0.10, "platinum": 0.15}
+
+
+def tier_price(retail_price: float, tier: str) -> float:
+    disc = TIER_DISCOUNTS.get(tier, 0.05)
+    return round(retail_price * (1 - disc), 2)
 
 class Product(BaseModel):
     product_id: str
@@ -100,7 +110,8 @@ class Product(BaseModel):
     category: str
     description: str = ""
     image_url: str = ""
-    price_bdt: float
+    price_bdt: float  # retail price
+    cost_price_bdt: float = 0.0  # admin-only, for profit calc
     moq: int = 1
     stock: int = 100
     brand: str = ""
@@ -111,6 +122,11 @@ class Product(BaseModel):
     is_featured: bool = False
     featured_discount_pct: float = 0.0  # e.g. 0.10 = 10% off for workshops
     featured_label: str = ""  # e.g. "Featured Kit · February"
+    # Car compatibility: list of {brand, model, year_from, year_to, engine}
+    car_fits: List[dict] = []
+    # Bundles: if is_bundle=True, bundle_items = [{product_id, quantity}]
+    is_bundle: bool = False
+    bundle_items: List[dict] = []
     created_at: str
 
 class CartItem(BaseModel):
@@ -356,7 +372,8 @@ async def serve_file(path: str, request: Request):
 
 # ============= Products =============
 @api_router.get("/products")
-async def list_products(q: str = "", category: str = ""):
+async def list_products(request: Request, q: str = "", category: str = "",
+                        car_brand: str = "", car_model: str = "", car_year: int = 0):
     flt = {}
     if q:
         flt["$or"] = [
@@ -366,15 +383,57 @@ async def list_products(q: str = "", category: str = ""):
         ]
     if category:
         flt["category"] = category
+    if car_brand:
+        flt["car_fits.brand"] = {"$regex": f"^{car_brand}$", "$options": "i"}
+    if car_model:
+        flt["car_fits.model"] = {"$regex": car_model, "$options": "i"}
     items = await db.products.find(flt, {"_id": 0}).to_list(500)
+    if car_year:
+        items = [p for p in items if any(
+            (f.get("year_from", 0) <= car_year <= f.get("year_to", 9999))
+            for f in p.get("car_fits", [])
+        ) or not p.get("car_fits")]
+
+    # Apply workshop tier pricing if authenticated as workshop
+    user = await get_current_user(request)
+    tier = "retail"
+    if user and user.get("role") == "workshop":
+        ws = await db.workshops.find_one({"user_id": user["user_id"]}, {"_id": 0})
+        if ws:
+            tier = ws.get("pricing_tier", "silver")
+
+    for p in items:
+        p["retail_price_bdt"] = p["price_bdt"]
+        p["your_price_bdt"] = tier_price(p["price_bdt"], tier)
+        p["your_tier"] = tier
+        p.pop("cost_price_bdt", None)  # Hide cost price from non-admins
     return items
 
 
 @api_router.get("/products/{product_id}")
-async def get_product(product_id: str):
+async def get_product(product_id: str, request: Request):
     p = await db.products.find_one({"product_id": product_id}, {"_id": 0})
     if not p:
         raise HTTPException(404, "Not found")
+    user = await get_current_user(request)
+    tier = "retail"
+    if user and user.get("role") == "workshop":
+        ws = await db.workshops.find_one({"user_id": user["user_id"]}, {"_id": 0})
+        if ws:
+            tier = ws.get("pricing_tier", "silver")
+    p["retail_price_bdt"] = p["price_bdt"]
+    p["your_price_bdt"] = tier_price(p["price_bdt"], tier)
+    p["your_tier"] = tier
+    if not (user and user.get("role") == "admin"):
+        p.pop("cost_price_bdt", None)
+    # Resolve bundle items
+    if p.get("is_bundle") and p.get("bundle_items"):
+        resolved = []
+        for bi in p["bundle_items"]:
+            child = await db.products.find_one({"product_id": bi["product_id"]}, {"_id": 0})
+            if child:
+                resolved.append({**bi, "name": child["name"], "sku": child["sku"], "image_url": child.get("image_url", "")})
+        p["bundle_items_resolved"] = resolved
     return p
 
 
@@ -385,6 +444,7 @@ class ProductCreate(BaseModel):
     description: str = ""
     image_url: str = ""
     price_bdt: float
+    cost_price_bdt: float = 0.0
     moq: int = 1
     stock: int = 100
     brand: str = ""
@@ -392,6 +452,9 @@ class ProductCreate(BaseModel):
     kit_tier: str = ""
     kit_features: List[str] = []
     gallery: List[str] = []
+    car_fits: List[dict] = []
+    is_bundle: bool = False
+    bundle_items: List[dict] = []
 
 @api_router.post("/admin/products")
 async def admin_create_product(payload: ProductCreate, request: Request):
@@ -427,8 +490,9 @@ async def create_order(payload: OrderCreate, request: Request):
     if ws["kyc_status"] != "approved":
         raise HTTPException(403, "KYC must be approved before placing orders")
 
-    # Build order items
+    tier = ws.get("pricing_tier", "silver")
     total = 0.0
+    cost_total = 0.0
     line_items = []
     for ci in payload.items:
         p = await db.products.find_one({"product_id": ci.product_id}, {"_id": 0})
@@ -436,14 +500,18 @@ async def create_order(payload: OrderCreate, request: Request):
             raise HTTPException(400, f"Invalid product: {ci.product_id}")
         if ci.quantity < p.get("moq", 1):
             raise HTTPException(400, f"{p['name']} MOQ is {p['moq']}")
-        line_total = p["price_bdt"] * ci.quantity
+        unit_price = tier_price(p["price_bdt"], tier)
+        line_total = unit_price * ci.quantity
+        cost_total += p.get("cost_price_bdt", 0.0) * ci.quantity
         total += line_total
         line_items.append({
             "product_id": p["product_id"],
             "name": p["name"],
             "sku": p["sku"],
             "image_url": p.get("image_url", ""),
-            "price_bdt": p["price_bdt"],
+            "price_bdt": unit_price,
+            "retail_price_bdt": p["price_bdt"],
+            "cost_price_bdt": p.get("cost_price_bdt", 0.0),
             "quantity": ci.quantity,
             "line_total": line_total
         })
@@ -466,12 +534,15 @@ async def create_order(payload: OrderCreate, request: Request):
         "user_id": user["user_id"],
         "workshop_id": ws["workshop_id"],
         "company_name": ws["company_name"],
+        "pricing_tier": tier,
         "items": line_items,
         "subtotal_bdt": total,
+        "cost_total_bdt": cost_total,
         "discount_pct": discount_pct,
         "discount_amount_bdt": discount_amount,
         "discount_label": tier_label,
         "total_bdt": grand_total,
+        "profit_bdt": round(grand_total - cost_total, 2),
         "payment_method": payload.payment_method,
         "payment_status": "unpaid",
         "due_date": due_date,
@@ -621,6 +692,240 @@ async def admin_set_credit(workshop_id: str, payload: CreditUpdate, request: Req
     return await db.workshops.find_one({"workshop_id": workshop_id}, {"_id": 0})
 
 
+class TierUpdate(BaseModel):
+    pricing_tier: str  # retail | silver | gold | platinum | custom
+
+@api_router.patch("/admin/workshops/{workshop_id}/tier")
+async def admin_set_tier(workshop_id: str, payload: TierUpdate, request: Request):
+    await require_admin(request)
+    if payload.pricing_tier not in ["retail", "silver", "gold", "platinum", "custom"]:
+        raise HTTPException(400, "Invalid tier")
+    await db.workshops.update_one(
+        {"workshop_id": workshop_id},
+        {"$set": {"pricing_tier": payload.pricing_tier}}
+    )
+    return await db.workshops.find_one({"workshop_id": workshop_id}, {"_id": 0})
+
+
+@api_router.get("/tiers")
+async def get_tiers():
+    return {"tiers": TIER_DISCOUNTS}
+
+
+# ============= Part Requests (Sourcing) =============
+class PartRequestCreate(BaseModel):
+    car_brand: str
+    car_model: str
+    car_year: int = 0
+    vin_chassis: str = ""
+    part_name: str
+    part_number: str = ""
+    quantity: int = 1
+    urgency: str = "normal"
+    budget_bdt: float = 0.0
+    notes: str = ""
+    photo_urls: List[str] = []
+
+
+@api_router.post("/part-requests")
+async def create_part_request(payload: PartRequestCreate, request: Request):
+    user = await require_user(request)
+    ws = await db.workshops.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not ws:
+        raise HTTPException(403, "Workshop only")
+    if not payload.car_brand.strip() or not payload.part_name.strip():
+        raise HTTPException(400, "Car brand and part name required")
+    req_id = f"PRT-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+    now = datetime.now(timezone.utc).isoformat()
+    doc = {
+        "request_id": req_id, "user_id": user["user_id"], "workshop_id": ws["workshop_id"],
+        "company_name": ws["company_name"],
+        "car_brand": payload.car_brand.strip(), "car_model": payload.car_model.strip(),
+        "car_year": payload.car_year, "vin_chassis": payload.vin_chassis.strip(),
+        "part_name": payload.part_name.strip(), "part_number": payload.part_number.strip(),
+        "quantity": payload.quantity, "urgency": payload.urgency, "budget_bdt": payload.budget_bdt,
+        "notes": payload.notes.strip(), "photo_urls": payload.photo_urls,
+        "status": "new",
+        "status_history": [{"status": "new", "at": now, "note": "Request submitted"}],
+        "quote_bdt": 0.0, "quote_lead_time_days": 0,
+        "supplier_note": "", "admin_note": "", "order_id": "",
+        "created_at": now,
+    }
+    await db.part_requests.insert_one(dict(doc))
+    return {"request_id": req_id, "ok": True}
+
+
+@api_router.get("/part-requests")
+async def list_my_part_requests(request: Request, status: str = ""):
+    user = await require_user(request)
+    flt = {}
+    if user.get("role") == "workshop":
+        flt["user_id"] = user["user_id"]
+    if status:
+        flt["status"] = status
+    items = await db.part_requests.find(flt, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return items
+
+
+@api_router.get("/part-requests/{request_id}")
+async def get_part_request(request_id: str, request: Request):
+    user = await require_user(request)
+    r = await db.part_requests.find_one({"request_id": request_id}, {"_id": 0})
+    if not r:
+        raise HTTPException(404, "Not found")
+    if user.get("role") != "admin" and r["user_id"] != user["user_id"]:
+        raise HTTPException(403, "Forbidden")
+    return r
+
+
+@api_router.get("/admin/part-requests")
+async def admin_list_part_requests(request: Request, status: str = ""):
+    await require_admin(request)
+    flt = {}
+    if status:
+        flt["status"] = status
+    items = await db.part_requests.find(flt, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return items
+
+
+class PartRequestUpdate(BaseModel):
+    status: str = ""
+    quote_bdt: float = 0.0
+    quote_lead_time_days: int = 0
+    supplier_note: str = ""
+    admin_note: str = ""
+    note: str = ""
+
+
+@api_router.patch("/admin/part-requests/{request_id}")
+async def admin_update_part_request(request_id: str, payload: PartRequestUpdate, request: Request):
+    await require_admin(request)
+    valid = ["new", "checking", "quoted", "confirmed", "ordered", "delivered", "cancelled"]
+    update = {}
+    if payload.quote_bdt > 0:
+        update["quote_bdt"] = payload.quote_bdt
+    if payload.quote_lead_time_days > 0:
+        update["quote_lead_time_days"] = payload.quote_lead_time_days
+    if payload.supplier_note:
+        update["supplier_note"] = payload.supplier_note
+    if payload.admin_note:
+        update["admin_note"] = payload.admin_note
+    push = {}
+    if payload.status:
+        if payload.status not in valid:
+            raise HTTPException(400, f"Invalid status. Use: {valid}")
+        update["status"] = payload.status
+        push["status_history"] = {"status": payload.status,
+                                  "at": datetime.now(timezone.utc).isoformat(), "note": payload.note}
+    ops = {}
+    if update:
+        ops["$set"] = update
+    if push:
+        ops["$push"] = push
+    if ops:
+        await db.part_requests.update_one({"request_id": request_id}, ops)
+    return await db.part_requests.find_one({"request_id": request_id}, {"_id": 0})
+
+
+# ============= Suppliers =============
+class SupplierCreate(BaseModel):
+    name: str
+    country: str = ""
+    contact_person: str = ""
+    phone_whatsapp: str = ""
+    email: str = ""
+    categories: List[str] = []
+    moq: str = ""
+    lead_time_days: int = 0
+    payment_terms: str = ""
+    rating: int = 0
+    notes: str = ""
+
+
+@api_router.get("/admin/suppliers")
+async def admin_list_suppliers(request: Request):
+    await require_admin(request)
+    items = await db.suppliers.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return items
+
+
+@api_router.post("/admin/suppliers")
+async def admin_create_supplier(payload: SupplierCreate, request: Request):
+    await require_admin(request)
+    if not payload.name.strip():
+        raise HTTPException(400, "Name required")
+    sid = f"sup_{uuid.uuid4().hex[:10]}"
+    doc = {**payload.model_dump(), "supplier_id": sid, "created_at": datetime.now(timezone.utc).isoformat()}
+    await db.suppliers.insert_one(dict(doc))
+    doc.pop("_id", None)
+    return doc
+
+
+@api_router.put("/admin/suppliers/{supplier_id}")
+async def admin_update_supplier(supplier_id: str, payload: SupplierCreate, request: Request):
+    await require_admin(request)
+    await db.suppliers.update_one({"supplier_id": supplier_id}, {"$set": payload.model_dump()})
+    return await db.suppliers.find_one({"supplier_id": supplier_id}, {"_id": 0})
+
+
+@api_router.delete("/admin/suppliers/{supplier_id}")
+async def admin_delete_supplier(supplier_id: str, request: Request):
+    await require_admin(request)
+    await db.suppliers.delete_one({"supplier_id": supplier_id})
+    return {"ok": True}
+
+
+# ============= Reports =============
+@api_router.get("/admin/reports/summary")
+async def admin_reports_summary(request: Request):
+    await require_admin(request)
+    sales_pipe = [{"$group": {"_id": None, "revenue": {"$sum": "$total_bdt"},
+                              "profit": {"$sum": "$profit_bdt"}, "count": {"$sum": 1}}}]
+    s = await db.orders.aggregate(sales_pipe).to_list(1)
+    revenue = s[0]["revenue"] if s else 0.0
+    profit = s[0].get("profit", 0.0) if s else 0.0
+    order_count = s[0]["count"] if s else 0
+    top_pipe = [
+        {"$unwind": "$items"},
+        {"$group": {"_id": "$items.sku", "name": {"$first": "$items.name"},
+                    "quantity": {"$sum": "$items.quantity"},
+                    "revenue": {"$sum": "$items.line_total"}}},
+        {"$sort": {"quantity": -1}}, {"$limit": 20},
+    ]
+    top_skus = await db.orders.aggregate(top_pipe).to_list(20)
+    top_skus = [{"sku": x["_id"], "name": x["name"], "quantity": x["quantity"], "revenue": x["revenue"]}
+                for x in top_skus]
+    ws_pipe = [
+        {"$group": {"_id": "$workshop_id", "company_name": {"$first": "$company_name"},
+                    "orders": {"$sum": 1}, "revenue": {"$sum": "$total_bdt"}}},
+        {"$sort": {"revenue": -1}}, {"$limit": 20},
+    ]
+    top_workshops = await db.orders.aggregate(ws_pipe).to_list(20)
+    top_workshops = [{"workshop_id": x["_id"], "company_name": x["company_name"],
+                      "orders": x["orders"], "revenue": x["revenue"]} for x in top_workshops]
+    cat_pipe = [
+        {"$unwind": "$items"},
+        {"$lookup": {"from": "products", "localField": "items.product_id",
+                     "foreignField": "product_id", "as": "prod"}},
+        {"$unwind": "$prod"},
+        {"$group": {"_id": "$prod.category", "revenue": {"$sum": "$items.line_total"},
+                    "quantity": {"$sum": "$items.quantity"}}},
+        {"$sort": {"revenue": -1}},
+    ]
+    by_category = await db.orders.aggregate(cat_pipe).to_list(20)
+    by_category = [{"category": x["_id"], "revenue": x["revenue"], "quantity": x["quantity"]}
+                   for x in by_category]
+    low_stock = await db.products.find({"stock": {"$lt": 10}},
+                                       {"_id": 0, "name": 1, "sku": 1, "stock": 1}).to_list(50)
+    return {
+        "revenue_bdt": revenue, "profit_bdt": profit, "order_count": order_count,
+        "gross_margin_pct": round((profit / revenue * 100) if revenue else 0.0, 2),
+        "top_skus": top_skus, "top_workshops": top_workshops,
+        "by_category": by_category, "low_stock": low_stock,
+    }
+
+
+
 # ============= Admin: Stats =============
 @api_router.get("/admin/stats")
 async def admin_stats(request: Request):
@@ -632,6 +937,7 @@ async def admin_stats(request: Request):
     pending_orders = await db.orders.count_documents({"status": {"$in": ["placed", "confirmed", "packed"]}})
     products_count = await db.products.count_documents({})
     new_inquiries = await db.inquiries.count_documents({"status": "new"})
+    new_part_requests = await db.part_requests.count_documents({"status": "new"})
 
     pipeline = [{"$group": {"_id": None, "total": {"$sum": "$total_bdt"}}}]
     revenue_doc = await db.orders.aggregate(pipeline).to_list(1)
@@ -645,6 +951,7 @@ async def admin_stats(request: Request):
         "pending_orders": pending_orders,
         "products_count": products_count,
         "new_inquiries": new_inquiries,
+        "new_part_requests": new_part_requests,
         "total_revenue_bdt": revenue
     }
 

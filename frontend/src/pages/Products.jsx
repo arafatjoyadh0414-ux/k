@@ -1,46 +1,43 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import Layout from "../components/Layout";
 import api, { fmtBDT } from "../lib/api";
 import { useCart } from "../context/CartContext";
-import { Search, Plus, Package } from "lucide-react";
+import { Search, Plus, Package, Car, X } from "lucide-react";
 import { toast } from "sonner";
 
 const CATEGORIES = ["All", "Body Kits", "Brake", "Engine", "Suspension", "Electrical", "Drivetrain", "Fluids", "Modifications", "Performance", "Accessories", "Lighting", "Tyres & Wheels", "Tools", "Audio"];
 
 const ProductCard = ({ p, onAdd }) => {
   const [qty, setQty] = useState(p.moq || 1);
+  const showSaving = p.your_price_bdt && p.retail_price_bdt && p.your_price_bdt < p.retail_price_bdt;
   return (
     <div className="industrial-card overflow-hidden flex flex-col" data-testid={`product-card-${p.sku}`}>
-      <div className="aspect-[4/3] bg-slate-100 overflow-hidden border-b border-slate-200">
+      <Link to={`/products/${p.product_id}`} className="aspect-[4/3] bg-slate-100 overflow-hidden border-b border-slate-200 block">
         {p.image_url ? (
-          <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
+          <img src={p.image_url} alt={p.name} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
         ) : (
           <div className="w-full h-full grid place-items-center text-slate-400"><Package className="w-10 h-10" /></div>
         )}
-      </div>
+      </Link>
       <div className="p-4 flex-1 flex flex-col">
         <div className="overline">{p.category} · {p.brand}</div>
-        <div className="font-display text-base mt-1 leading-tight">{p.name}</div>
+        <Link to={`/products/${p.product_id}`} className="font-display text-base mt-1 leading-tight hover:text-[#E11D48]">{p.name}</Link>
         <div className="text-xs text-slate-500 mt-1 font-mono">{p.sku}</div>
-
         <div className="mt-auto pt-4 flex items-end justify-between">
           <div>
-            <div className="overline">Wholesale</div>
-            <div className="font-display text-xl">{fmtBDT(p.price_bdt)}</div>
+            <div className="overline">{p.your_tier && p.your_tier !== "retail" ? `${p.your_tier} price` : "Retail"}</div>
+            <div className="font-display text-xl">{fmtBDT(p.your_price_bdt || p.price_bdt)}</div>
+            {showSaving && <div className="text-xs text-slate-400 line-through">{fmtBDT(p.retail_price_bdt)}</div>}
             <div className="text-xs text-slate-500">MOQ: {p.moq}</div>
           </div>
           <div className="flex flex-col items-end gap-2">
-            <input
-              type="number" min={p.moq} value={qty}
+            <input type="number" min={p.moq} value={qty}
               onChange={(e) => setQty(Math.max(p.moq, parseInt(e.target.value) || p.moq))}
               data-testid={`product-qty-${p.sku}`}
-              className="w-20 border border-slate-200 px-2 py-1 text-sm rounded-sm focus:outline-none focus:ring-2 focus:ring-[#E11D48]"
-            />
-            <button
-              onClick={() => onAdd(p, qty)}
-              data-testid={`add-to-cart-${p.sku}`}
-              className="inline-flex items-center gap-1 bg-slate-900 hover:bg-[#E11D48] text-white text-xs font-semibold px-3 py-2 rounded-sm transition-colors duration-200"
-            >
+              className="w-20 border border-slate-200 px-2 py-1 text-sm rounded-sm focus:outline-none focus:ring-2 focus:ring-[#E11D48]" />
+            <button onClick={() => onAdd(p, qty)} data-testid={`add-to-cart-${p.sku}`}
+              className="inline-flex items-center gap-1 bg-slate-900 hover:bg-[#E11D48] text-white text-xs font-semibold px-3 py-2 rounded-sm transition-colors duration-200">
               <Plus className="w-3.5 h-3.5" /> Add
             </button>
           </div>
@@ -54,6 +51,9 @@ const Products = () => {
   const [items, setItems] = useState([]);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("All");
+  const [carBrand, setCarBrand] = useState("");
+  const [carModel, setCarModel] = useState("");
+  const [carYear, setCarYear] = useState("");
   const [loading, setLoading] = useState(true);
   const { add } = useCart();
 
@@ -63,17 +63,23 @@ const Products = () => {
       const params = {};
       if (q) params.q = q;
       if (cat && cat !== "All") params.category = cat;
+      if (carBrand) params.car_brand = carBrand;
+      if (carModel) params.car_model = carModel;
+      if (carYear) params.car_year = parseInt(carYear);
       const { data } = await api.get("/products", { params });
       setItems(data || []);
       setLoading(false);
     })();
-  }, [q, cat]);
+  }, [q, cat, carBrand, carModel, carYear]);
 
   const handleAdd = (p, qty) => {
     if (qty < p.moq) { toast.error(`Minimum order quantity is ${p.moq}`); return; }
-    add(p, qty);
+    const itemForCart = { ...p, price_bdt: p.your_price_bdt || p.price_bdt };
+    add(itemForCart, qty);
     toast.success(`Added ${qty} × ${p.name}`);
   };
+
+  const clearCar = () => { setCarBrand(""); setCarModel(""); setCarYear(""); };
 
   return (
     <Layout>
@@ -83,27 +89,40 @@ const Products = () => {
           <h1 className="font-display text-3xl lg:text-4xl mt-1">Auto Parts & Consumables</h1>
         </div>
 
+        <div className="industrial-card p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Car className="w-4 h-4 text-[#E11D48]" />
+            <div className="overline">Find parts for your car</div>
+            {(carBrand || carModel || carYear) && (
+              <button onClick={clearCar} data-testid="clear-car-filter"
+                className="ml-auto text-xs text-slate-500 hover:text-[#E11D48] flex items-center gap-1">
+                <X className="w-3 h-3" /> clear
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <input data-testid="car-brand-filter" type="text" value={carBrand} onChange={(e) => setCarBrand(e.target.value)} placeholder="Brand (Toyota / BYD…)"
+              className="border border-slate-200 px-3 py-2 text-sm rounded-sm focus:outline-none focus:ring-2 focus:ring-[#E11D48]" />
+            <input data-testid="car-model-filter" type="text" value={carModel} onChange={(e) => setCarModel(e.target.value)} placeholder="Model (Harrier / Sealion…)"
+              className="border border-slate-200 px-3 py-2 text-sm rounded-sm focus:outline-none focus:ring-2 focus:ring-[#E11D48]" />
+            <input data-testid="car-year-filter" type="number" value={carYear} onChange={(e) => setCarYear(e.target.value)} placeholder="Year (2020)"
+              className="border border-slate-200 px-3 py-2 text-sm rounded-sm focus:outline-none focus:ring-2 focus:ring-[#E11D48]" />
+          </div>
+        </div>
+
         <div className="flex flex-col lg:flex-row lg:items-center gap-4">
           <div className="relative flex-1 max-w-xl">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              data-testid="product-search"
-              type="text" placeholder="Search by name, SKU, or brand…"
+            <input data-testid="product-search" type="text" placeholder="Search by name, SKU, or brand…"
               value={q} onChange={(e) => setQ(e.target.value)}
-              className="w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-[#E11D48]"
-            />
+              className="w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-[#E11D48]" />
           </div>
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map((c) => (
-              <button
-                key={c} onClick={() => setCat(c)}
-                data-testid={`filter-${c.toLowerCase()}`}
+              <button key={c} onClick={() => setCat(c)} data-testid={`filter-${c.toLowerCase()}`}
                 className={`text-xs font-semibold px-3 py-2 rounded-sm border transition-colors duration-200 ${
-                  cat === c
-                    ? "bg-slate-900 text-white border-slate-900"
-                    : "bg-white text-slate-600 border-slate-200 hover:border-slate-900"
-                }`}
-              >{c}</button>
+                  cat === c ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-600 border-slate-200 hover:border-slate-900"
+                }`}>{c}</button>
             ))}
           </div>
         </div>
@@ -111,7 +130,13 @@ const Products = () => {
         {loading ? (
           <div className="overline">Loading products…</div>
         ) : items.length === 0 ? (
-          <div className="text-center py-12 text-slate-500">No products found.</div>
+          <div className="text-center py-12">
+            <div className="text-slate-500 mb-4">No products matching your filters.</div>
+            <Link to="/part-requests" data-testid="request-any-part-cta"
+              className="inline-flex items-center gap-2 bg-[#E11D48] hover:bg-[#BE123C] text-white text-sm font-semibold px-5 py-2.5 rounded-sm transition-colors duration-200">
+              Request this part from our sourcing team →
+            </Link>
+          </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {items.map((p) => <ProductCard key={p.product_id} p={p} onAdd={handleAdd} />)}
