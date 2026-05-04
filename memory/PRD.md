@@ -123,10 +123,23 @@
 
 **Testing**: 29/29 Phase 5 backend pytest cases pass + full e2e frontend flows validated. Notification skip-logging confirmed. Refund proration applied (post-testing fix).
 
+## Phase 7 — Commercial Polish (2026-05-04)
+**Production hardening (no new features)**
+- Removed hardcoded "Made with Emergent" badge from `frontend/public/index.html`. Belt-and-suspenders CSS + JS DOM observer in `index.css`/`index.js` to keep it gone if re-injected.
+- Replaced placeholder `<title>` with **"JOY Automart · B2B Workshop Portal · Bangladesh"**; added Open Graph + Twitter card meta + JOY logo as favicon/apple-touch-icon.
+- Footer rebuilt on Landing — 4-col grid (about + contact, Portal links, Legal links, Sign-off). Email/web links throughout.
+- New static pages: `/terms` and `/privacy` (full Bangladesh-jurisdiction copy with KYC, credit, returns, sourcing, liability sections). Branded shell with header/footer.
+- Catch-all `*` → branded 404 page (data-testid=not-found-page).
+- MongoDB indexes added on startup for hot paths: `users.email`, `user_sessions.session_token` (TTL on `expires_at`), `workshops.user_id`, `products.sku/category/is_bundle`, `orders.user_id+created_at`, `orders.status+created_at`, `returns.user_id+created_at`, `delivery_persons`, `suppliers`. Idempotent.
+- Cleaned dummy/test orders, returns, delivery persons left over from QA iterations.
+- Footer link in Layout topbar now respects en/bn toggle.
+
+**Status: COMMERCIAL READY** — pending only customer-supplied Resend/bKash/SSLCommerz keys for live notifications and online payments.
+
 ## Backlog (Prioritized)
-**P0**
-- Real Resend API key + go-live for email notifications
-- Online payment gateway (bKash / SSLCommerz live keys)
+**P0 — needs customer keys**
+- `RESEND_API_KEY` for live email notifications (scaffolding done)
+- bKash / SSLCommerz merchant keys for online payment go-live
 
 **P1**
 - Expand i18n dictionary to Orders/Cart/Returns/PartRequest pages + toast strings

@@ -22,6 +22,7 @@ import PartRequest from "@/pages/PartRequest";
 import Returns from "@/pages/Returns";
 import ProductDetail from "@/pages/ProductDetail";
 import PaymentReturn from "@/pages/PaymentReturn";
+import { Terms, Privacy, NotFound } from "@/pages/Legal";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminInquiries from "@/pages/AdminInquiries";
 import AdminPartRequests from "@/pages/AdminPartRequests";
@@ -47,6 +48,8 @@ const AppRouter = () => {
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/inquire" element={<Inquire />} />
       <Route path="/inquire/:sku" element={<Inquire />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/privacy" element={<Privacy />} />
 
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/kits" element={<ProtectedRoute><Kits /></ProtectedRoute>} />
@@ -73,6 +76,8 @@ const AppRouter = () => {
       <Route path="/admin/delivery-persons" element={<ProtectedRoute adminOnly><AdminDeliveryPersons /></ProtectedRoute>} />
       <Route path="/admin/returns" element={<ProtectedRoute adminOnly><AdminReturns /></ProtectedRoute>} />
       <Route path="/admin/reports" element={<ProtectedRoute adminOnly><AdminReports /></ProtectedRoute>} />
+
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

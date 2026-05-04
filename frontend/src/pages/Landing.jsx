@@ -1,6 +1,6 @@
 import React from "react";
 import { useAuth } from "../context/AuthContext";
-import { Navigate } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
 import { ArrowRight, ShieldCheck, Wallet, Truck, PackageSearch } from "lucide-react";
 
 const LOGO = "https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg";
@@ -156,10 +156,46 @@ const Landing = () => {
         </div>
       </section>
 
-      <footer className="border-t border-slate-200">
-        <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between text-xs text-slate-500">
-          <div>© {new Date().getFullYear()} Joy Automart · Dhaka, Bangladesh</div>
-          <a href="https://www.joyautomart.com" className="hover:text-[#E11D48]">www.joyautomart.com</a>
+      <footer className="border-t border-slate-200 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="md:col-span-2">
+            <div className="font-display text-lg leading-none">JOY Automart</div>
+            <div className="overline mt-1">B2B Wholesale Portal · Bangladesh</div>
+            <p className="text-sm text-slate-600 mt-3 max-w-md">
+              Verified parts. Transparent B2B pricing. Credit-backed ordering. Built for the bay floor, not the boardroom.
+            </p>
+            <div className="text-xs text-slate-500 mt-4 space-y-0.5">
+              <div>Dhaka, Bangladesh</div>
+              <div>
+                <a href="mailto:sales@joyautomart.com" className="hover:text-[#E11D48]">sales@joyautomart.com</a>
+              </div>
+              <div>
+                <a href="https://www.joyautomart.com" target="_blank" rel="noreferrer" className="hover:text-[#E11D48]">www.joyautomart.com</a>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div className="overline mb-3">Portal</div>
+            <ul className="space-y-2 text-sm text-slate-600">
+              <li><a href="/" className="hover:text-[#E11D48]">Sign in</a></li>
+              <li><Link to="/inquire" className="hover:text-[#E11D48]">Inquire about kits</Link></li>
+              <li><a href="https://www.joyautomart.com" target="_blank" rel="noreferrer" className="hover:text-[#E11D48]">Retail website</a></li>
+            </ul>
+          </div>
+          <div>
+            <div className="overline mb-3">Legal</div>
+            <ul className="space-y-2 text-sm text-slate-600">
+              <li><Link to="/terms" className="hover:text-[#E11D48]" data-testid="footer-terms-link">Terms of Service</Link></li>
+              <li><Link to="/privacy" className="hover:text-[#E11D48]" data-testid="footer-privacy-link">Privacy Policy</Link></li>
+              <li><a href="mailto:support@joyautomart.com" className="hover:text-[#E11D48]">Contact support</a></li>
+            </ul>
+          </div>
+        </div>
+        <div className="border-t border-slate-200">
+          <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-slate-500">
+            <div>© {new Date().getFullYear()} JOY Automart. All rights reserved.</div>
+            <div>Made in Dhaka with grit and grease.</div>
+          </div>
         </div>
       </footer>
     </div>

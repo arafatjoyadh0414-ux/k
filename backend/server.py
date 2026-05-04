@@ -2048,6 +2048,32 @@ async def startup():
     except Exception as e:
         logger.error(f"Storage init failed: {e}")
 
+    # Indexes (idempotent — Mongo creates if missing)
+    try:
+        await db.users.create_index("email", unique=True)
+        await db.users.create_index("user_id", unique=True)
+        await db.user_sessions.create_index("session_token", unique=True)
+        await db.user_sessions.create_index("expires_at", expireAfterSeconds=0)
+        await db.workshops.create_index("user_id", unique=True)
+        await db.workshops.create_index("workshop_id", unique=True)
+        await db.products.create_index("product_id", unique=True)
+        await db.products.create_index("sku", unique=True, sparse=True)
+        await db.products.create_index([("category", 1), ("is_kit", 1)])
+        await db.products.create_index([("is_bundle", 1)])
+        await db.orders.create_index("order_id", unique=True)
+        await db.orders.create_index([("user_id", 1), ("created_at", -1)])
+        await db.orders.create_index([("status", 1), ("created_at", -1)])
+        await db.part_requests.create_index("request_id", unique=True)
+        await db.part_requests.create_index([("user_id", 1), ("created_at", -1)])
+        await db.delivery_persons.create_index("delivery_person_id", unique=True)
+        await db.suppliers.create_index("supplier_id", unique=True)
+        await db.returns.create_index("return_id", unique=True)
+        await db.returns.create_index([("user_id", 1), ("created_at", -1)])
+        await db.returns.create_index([("status", 1), ("created_at", -1)])
+        logger.info("Indexes ensured")
+    except Exception as e:
+        logger.warning(f"Index creation warning: {e}")
+
     # Idempotent seed: only insert SKUs not already in DB
     existing_skus = set()
     async for d in db.products.find({}, {"_id": 0, "sku": 1}):
