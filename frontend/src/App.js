@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AuthCallback from "@/components/AuthCallback";
 
@@ -18,6 +19,7 @@ import Kits from "@/pages/Kits";
 import ServicePacks from "@/pages/ServicePacks";
 import Inquire from "@/pages/Inquire";
 import PartRequest from "@/pages/PartRequest";
+import Returns from "@/pages/Returns";
 import ProductDetail from "@/pages/ProductDetail";
 import PaymentReturn from "@/pages/PaymentReturn";
 import AdminDashboard from "@/pages/AdminDashboard";
@@ -25,6 +27,7 @@ import AdminInquiries from "@/pages/AdminInquiries";
 import AdminPartRequests from "@/pages/AdminPartRequests";
 import AdminSuppliers from "@/pages/AdminSuppliers";
 import AdminDeliveryPersons from "@/pages/AdminDeliveryPersons";
+import AdminReturns from "@/pages/AdminReturns";
 import AdminReports from "@/pages/AdminReports";
 import AdminWorkshops from "@/pages/AdminWorkshops";
 import AdminWorkshopDetail from "@/pages/AdminWorkshopDetail";
@@ -54,6 +57,7 @@ const AppRouter = () => {
       <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
       <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
       <Route path="/orders/:id" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
+      <Route path="/returns" element={<ProtectedRoute><Returns /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="/payment/return" element={<ProtectedRoute><PaymentReturn /></ProtectedRoute>} />
 
@@ -67,6 +71,7 @@ const AppRouter = () => {
       <Route path="/admin/part-requests" element={<ProtectedRoute adminOnly><AdminPartRequests /></ProtectedRoute>} />
       <Route path="/admin/suppliers" element={<ProtectedRoute adminOnly><AdminSuppliers /></ProtectedRoute>} />
       <Route path="/admin/delivery-persons" element={<ProtectedRoute adminOnly><AdminDeliveryPersons /></ProtectedRoute>} />
+      <Route path="/admin/returns" element={<ProtectedRoute adminOnly><AdminReturns /></ProtectedRoute>} />
       <Route path="/admin/reports" element={<ProtectedRoute adminOnly><AdminReports /></ProtectedRoute>} />
     </Routes>
   );
@@ -77,10 +82,12 @@ function App() {
     <div className="App">
       <BrowserRouter>
         <AuthProvider>
-          <CartProvider>
-            <AppRouter />
-            <Toaster richColors position="top-right" />
-          </CartProvider>
+          <LanguageProvider>
+            <CartProvider>
+              <AppRouter />
+              <Toaster richColors position="top-right" />
+            </CartProvider>
+          </LanguageProvider>
         </AuthProvider>
       </BrowserRouter>
     </div>

@@ -29,6 +29,20 @@ export const statusColor = (s) => {
     not_submitted: "bg-slate-100 text-slate-700 border-slate-200",
     paid: "bg-emerald-100 text-emerald-800 border-emerald-200",
     unpaid: "bg-amber-100 text-amber-800 border-amber-200",
+    requested: "bg-amber-100 text-amber-800 border-amber-200",
+    completed: "bg-emerald-100 text-emerald-800 border-emerald-200",
   };
   return m[s] || "bg-slate-100 text-slate-700 border-slate-200";
+};
+
+export const downloadInvoice = async (orderId) => {
+  const res = await api.get(`/orders/${orderId}/invoice.pdf`, { responseType: "blob" });
+  const url = URL.createObjectURL(res.data);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `invoice-${orderId}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
 };

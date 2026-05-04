@@ -2,9 +2,10 @@ import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
+import { useLang } from "../context/LanguageContext";
 import {
   LayoutDashboard, Package, ShoppingCart, ClipboardList, UserCircle2,
-  Shield, LogOut, Wrench, Sparkles, Inbox, FileQuestion, Truck, BarChart3, Boxes, Bike
+  Shield, LogOut, Wrench, Sparkles, Inbox, FileQuestion, Truck, BarChart3, Boxes, Bike, RotateCcw, Globe
 } from "lucide-react";
 
 const LOGO = "https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg";
@@ -29,6 +30,7 @@ const NavItem = ({ to, icon: Icon, label, testid }) => (
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
   const { count } = useCart();
+  const { lang, t, toggle } = useLang();
   const navigate = useNavigate();
   const isAdmin = user?.role === "admin";
 
@@ -47,14 +49,15 @@ const Layout = ({ children }) => {
         <nav className="flex-1 py-4 space-y-0.5">
           {!isAdmin && (
             <>
-              <NavItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" testid="nav-dashboard" />
-              <NavItem to="/kits" icon={Sparkles} label="Signature Kits" testid="nav-kits" />
-              <NavItem to="/service-packs" icon={Boxes} label="Service Packs" testid="nav-service-packs" />
-              <NavItem to="/products" icon={Package} label="Products" testid="nav-products" />
-              <NavItem to="/part-requests" icon={FileQuestion} label="Request Any Part" testid="nav-part-requests" />
-              <NavItem to="/cart" icon={ShoppingCart} label={`Cart${count ? ` (${count})` : ""}`} testid="nav-cart" />
-              <NavItem to="/orders" icon={ClipboardList} label="Orders" testid="nav-orders" />
-              <NavItem to="/profile" icon={UserCircle2} label="Profile & KYC" testid="nav-profile" />
+              <NavItem to="/dashboard" icon={LayoutDashboard} label={t("nav.dashboard")} testid="nav-dashboard" />
+              <NavItem to="/kits" icon={Sparkles} label={t("nav.kits")} testid="nav-kits" />
+              <NavItem to="/service-packs" icon={Boxes} label={t("nav.service_packs")} testid="nav-service-packs" />
+              <NavItem to="/products" icon={Package} label={t("nav.products")} testid="nav-products" />
+              <NavItem to="/part-requests" icon={FileQuestion} label={t("nav.part_requests")} testid="nav-part-requests" />
+              <NavItem to="/cart" icon={ShoppingCart} label={`${t("nav.cart")}${count ? ` (${count})` : ""}`} testid="nav-cart" />
+              <NavItem to="/orders" icon={ClipboardList} label={t("nav.orders")} testid="nav-orders" />
+              <NavItem to="/returns" icon={RotateCcw} label={t("nav.returns")} testid="nav-returns" />
+              <NavItem to="/profile" icon={UserCircle2} label={t("nav.profile")} testid="nav-profile" />
             </>
           )}
           {isAdmin && (
@@ -62,6 +65,7 @@ const Layout = ({ children }) => {
               <NavItem to="/admin" icon={Shield} label="Admin Console" testid="nav-admin" />
               <NavItem to="/admin/workshops" icon={Wrench} label="Workshops" testid="nav-admin-workshops" />
               <NavItem to="/admin/orders" icon={ClipboardList} label="Orders" testid="nav-admin-orders" />
+              <NavItem to="/admin/returns" icon={RotateCcw} label="Returns" testid="nav-admin-returns" />
               <NavItem to="/admin/part-requests" icon={FileQuestion} label="Part Requests" testid="nav-admin-part-requests" />
               <NavItem to="/admin/inquiries" icon={Inbox} label="Inquiries" testid="nav-admin-inquiries" />
               <NavItem to="/admin/products" icon={Package} label="Products" testid="nav-admin-products" />
@@ -91,7 +95,7 @@ const Layout = ({ children }) => {
             onClick={logout}
             className="w-full flex items-center justify-center gap-2 text-sm py-2 border border-slate-200 hover:border-[#E11D48] hover:text-[#E11D48] transition-colors duration-200 rounded-sm"
           >
-            <LogOut className="w-4 h-4" /> Sign out
+            <LogOut className="w-4 h-4" /> {t("nav.signout")}
           </button>
         </div>
       </aside>
@@ -99,8 +103,19 @@ const Layout = ({ children }) => {
       {/* Main */}
       <main className="flex-1 min-w-0">
         <header className="h-14 border-b border-slate-200 px-6 flex items-center justify-between bg-white sticky top-0 z-10">
-          <div className="overline">{isAdmin ? "Admin Console" : "Workshop Portal"}</div>
-          <div className="text-xs text-slate-500">www.joyautomart.com</div>
+          <div className="overline">{isAdmin ? t("header.admin") : t("header.workshop")}</div>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={toggle}
+              data-testid="lang-toggle"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-[#E11D48] border border-slate-200 hover:border-[#E11D48] px-2.5 py-1 rounded-sm transition-colors duration-200"
+              title="Toggle language"
+            >
+              <Globe className="w-3.5 h-3.5" />
+              {lang === "en" ? t("lang.toggle_to_bn") : t("lang.toggle_to_en")}
+            </button>
+            <div className="text-xs text-slate-500">www.joyautomart.com</div>
+          </div>
         </header>
         <div className="p-6 lg:p-8">{children}</div>
       </main>

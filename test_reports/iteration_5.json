@@ -1,0 +1,50 @@
+{
+  "summary": "Phase 5 testing complete: Invoice PDF + Returns/RMA + Notifications gating. Backend: 29/29 pytest cases pass (100%). Frontend: all requested data-testids (nav-returns, nav-admin-returns, lang-toggle, download-invoice-button, admin-download-invoice-button, open-return-button, return-modal, return-item-row-*, return-qty-*, return-overall-reason, submit-return-button, filter-returns-all/requested/approved/rejected/completed) render and happy-path e2e validated end-to-end. Invoice PDF: correct Content-Type=application/pdf, Content-Disposition attachment, bytes start with '%PDF' (3032B). 401 anon, 404 unknown, 403 for a different workshop, 200 for owner and admin. Returns POST: 7-day window enforced (old_delivered_order @15d => 400), status must be delivered (pending => 400 'deliver'), qty>0, qty<=ordered, product must be in order, empty items => 400, unknown order => 404, not-your-order => 403, anon => 401. Happy path creates RMA-YYYYMMDD-XXXXXX with refund_total_bdt = price*qty. GET /api/returns: workshop sees only their own; admin sees all; status filter works. GET /api/returns/{id}: 403 for other, 404 unknown. PATCH /api/admin/returns/{id}: decision enum enforced (garbage => 400), refund_method enum enforced (bitcoin => 400), workshop cannot admin-decide (403), second decide after 'completed' => 400. Approval: product.stock += qty verified (10 -> 12). credit-back on credit order decrements credit_used by refund_total (5000 -> 4000 for refund=1000). credit-back on COD order does NOT touch credit_used (999 unchanged). Notifications: with RESEND_API_KEY empty, KYC approval PATCH returns 200 quickly and backend log shows '[email-skip] ... KYC Approved (RESEND_API_KEY not set)' - confirmed in /var/log/supervisor/backend.*.log. Frontend: Language toggle flips data-testid=nav-dashboard from 'Dashboard' to 'ড্যাশবোর্ড' (Bangla) and back. Workshop OrderDetail shows Invoice PDF + Request Return buttons; modal opens with item row/qty/overall reason/submit; qty=0 submit is blocked (modal stays open); qty=1 submit creates return, shows 'Return request submitted' toast, and navigates to /returns where RMA row appears. Admin Returns page shows all 5 filter chips. Admin OrderDetail renders admin-download-invoice-button.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "PATCH /api/admin/returns/{id}", "issue": "Spec says 'Rejecting an already approved/rejected/completed return returns 400', but code only blocks when current status is in {rejected, completed} (not 'approved'). So an already-approved return can still be re-decided (e.g., to rejected or completed). 'approved -> completed' is actually a valid workflow transition, so this may be intentional, but the spec wording is stricter than the impl. Recommend either tightening the guard or updating the spec."},
+      {"endpoint": "PATCH /api/admin/returns/{id}", "issue": "Approved-path stock restock has no idempotency guard besides the status check. If the same payload is replayed (decision=approved) against a return still in 'requested' state due to a race, stock could be incremented twice. Consider a findAndModify with status filter {status:'requested'} to atomically transition."},
+      {"endpoint": "POST /api/returns", "issue": "Refund total is computed from order item price only; it does NOT prorate discount_amount_bdt or delivery_fee_bdt. If the order had a volume discount, the refund over-refunds vs what the customer actually paid for those line items. Consider applying the order-level discount pct to each line refund."},
+      {"endpoint": "POST /api/returns", "issue": "Delivered-at detection falls back to order.created_at if no 'delivered' status_history entry exists. That means an order whose status is 'delivered' but missing history could be returnable far outside 7 days from actual delivery. Consider also storing delivered_at as a first-class field."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Topbar lang-toggle", "issues": ["Toggle only translates a limited set of nav labels (Dashboard confirmed EN<->BN). Customer-facing pages remain English on toggle per PRD ('incrementally translated') — flag for next iteration to expand dictionary coverage (Orders, Cart, Returns page body copy, toast messages like 'Return request submitted')."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_phase5_returns_invoice.py",
+    "/app/test_reports/pytest/phase5_results.xml"
+  ],
+  "action_items": [
+    "Optional: tighten PATCH /api/admin/returns/{id} to also block re-decide when status=='approved' (currently allowed); or update spec to match.",
+    "Optional: make return approval atomic (findAndModify with status='requested' filter) to prevent double-restock on race.",
+    "Optional: prorate order discount and/or delivery_fee when computing refund_total_bdt on POST /api/returns.",
+    "Optional: persist a first-class delivered_at timestamp on orders to avoid falling back to created_at for window checks.",
+    "Next iteration (PRD-tracked): expand i18n dictionary coverage to order/cart/returns pages and toasts.",
+    "Follow-up from iter 4 (still open): split server.py (now 2120 lines); fix <span> inside <option> hydration warning in AdminOrderDetail; return 404 on PUT/DELETE delivery-persons unknown id; make DeliveryAssignment.delivery_fee_bdt Optional[float]=None; reject negative delivery_fee_bdt; batch $in resolve in /api/service-packs."
+  ],
+  "critical_code_review_comments": [
+    "server.py grew from 1859 -> 2120 lines this iteration. Strongly recommend splitting into modules (auth, orders, returns, invoice, admin, packs, notifications) before next feature add.",
+    "Notification hooks are called inside try/except with broad Exception in create_order / admin_update_order_status / admin_kyc_decision / admin_assign_delivery — good defensive pattern, API unblocked on any Resend error, and when key is empty the function early-returns with a single log line. Verified log line format: '[email-skip] <to> | <subject> (RESEND_API_KEY not set)'.",
+    "Returns refund_total is computed from line price*qty only — does NOT account for order-level discount_pct/discount_amount_bdt or delivery_fee. Could over-refund on discounted orders (gold/silver tier pricing already baked into line price, but volume discount lives at order level).",
+    "PATCH /admin/returns re-decide check uses a membership test (if r['status'] in ['rejected','completed']) that leaves 'approved' re-decidable. Ambiguous against the spec wording.",
+    "Approval stock-restock is not atomic: status is read, then $inc stock, then $set status. In a concurrent re-approval this could double-increment. Use findOneAndUpdate with filter {status:'requested'} as guard.",
+    "invoice_pdf.render_invoice_pdf is called synchronously on the request path; reportlab generation is CPU-light (~3KB here) so fine for now but wrap in run_in_threadpool if volumes grow.",
+    "Float arithmetic for credit_used $inc with refund_total_bdt — same drift concern as iter 4; Decimal/paisa recommended."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_phase5_returns_invoice.py"
+  ],
+  "success_rate": {"backend": "100% (29/29 phase5)", "frontend": "100% (all data-testid + full e2e happy path + i18n toggle verified)"},
+  "test_credentials": "Re-used session fixtures from conftest.py (workshop_session / workshop_pending_session / admin_session). For FE, upserted idempotent seeds: workshop session_token='fe-tok-ws' (user_id=fe-ws-1, workshop_id=fe-ws-1, kyc=approved, pricing_tier=gold, credit_limit=100000); admin session_token='fe-tok-admin' (email fe-admin@joyautomart.com). Seed cookie name is 'session_token'.",
+  "seed_data_creation": "Per-test ephemeral docs cleaned by fixture teardown (TEST_ prefixed orders/products/returns/users/workshops/sessions). FE test seeds: product FE-PROD-1 left in DB (idempotent); order ORD-FE-DEL-1 and its spawned RMA row were deleted in final cleanup. FE users fe-ws-1 / fe-admin-1 intentionally left in DB (idempotent) for future FE re-runs (consistent with iter 4 convention).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Run Phase 5 alone: `pytest backend/tests/test_phase5_returns_invoice.py -v`. Full backend suite still has 5 pre-existing Phase 3 failures (tier_price in /api/orders subtotal - tracked in iter 4 action items, not a regression). Notifications are intentionally gated (RESEND_API_KEY=''); grep `/var/log/supervisor/backend.*.log` for '[email-skip]' to confirm. When setting RESEND_API_KEY for real, re-test notifications emission. FE lang-toggle currently only translates nav labels - PRD notes 'incrementally translated'. For FE re-runs, reuse cookie session_token='fe-tok-ws' or 'fe-tok-admin' and seed a delivered order within 7 days (see ORD-FE-DEL-1 pattern in iteration_5 report).",
+  "rca of the issue": "No defects blocking Phase 5. One spec-vs-impl ambiguity: PATCH /api/admin/returns/{id} allows re-decide on status=='approved' (code: if r['status'] in ['rejected','completed']), but the review request says rejecting an already-approved return should 400. Root cause: missing 'approved' in the disallowed-state set. Mitigation (if desired): change to `if r['status'] != 'requested'` to be strict, OR keep as-is to support the approved -> completed workflow and update the test spec. Current impl does support the approved->completed transition intentionally (common RMA workflow), so leaving as-is is defensible."
+}

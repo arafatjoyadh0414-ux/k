@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import Layout from "../components/Layout";
-import api, { fmtBDT, statusColor } from "../lib/api";
-import { ArrowLeft, Truck, User as UserIcon } from "lucide-react";
+import api, { fmtBDT, statusColor, downloadInvoice } from "../lib/api";
+import { ArrowLeft, Truck, User as UserIcon, Printer } from "lucide-react";
 import { toast } from "sonner";
 
 const FLOW = ["placed", "confirmed", "packed", "shipped", "delivered"];
@@ -92,6 +92,16 @@ const AdminOrderDetail = () => {
             <span className={`text-xs px-3 py-1.5 border rounded-sm ${statusColor(order.payment_status)}`}>
               {order.payment_method.toUpperCase()} · {order.payment_status}
             </span>
+            <button
+              onClick={async () => {
+                try { await downloadInvoice(order.order_id); }
+                catch { toast.error("Failed to download invoice"); }
+              }}
+              data-testid="admin-download-invoice-button"
+              className="inline-flex items-center gap-1.5 bg-white border border-slate-200 hover:border-slate-900 text-xs font-semibold px-3 py-1.5 rounded-sm transition-colors"
+            >
+              <Printer className="w-3.5 h-3.5" /> Invoice PDF
+            </button>
           </div>
         </div>
 

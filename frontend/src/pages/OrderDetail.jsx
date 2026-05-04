@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
-import api, { fmtBDT, statusColor } from "../lib/api";
-import { ArrowLeft, CheckCircle2, Circle, RefreshCw, Printer } from "lucide-react";
+import api, { fmtBDT, statusColor, downloadInvoice } from "../lib/api";
+import { ArrowLeft, CheckCircle2, Circle, RefreshCw, Printer, RotateCcw, X } from "lucide-react";
 import { useCart } from "../context/CartContext";
+import { useLang } from "../context/LanguageContext";
 import { toast } from "sonner";
 
 const FLOW = ["placed", "confirmed", "packed", "shipped", "delivered"];
@@ -11,15 +12,23 @@ const FLOW = ["placed", "confirmed", "packed", "shipped", "delivered"];
 const OrderDetail = () => {
   const { id } = useParams();
   const [order, setOrder] = useState(null);
+  const [showReturn, setShowReturn] = useState(false);
+  const [returnItems, setReturnItems] = useState({});
+  const [returnReason, setReturnReason] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const { add } = useCart();
+  const { t } = useLang();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    (async () => {
-      const { data } = await api.get(`/orders/${id}`);
-      setOrder(data);
-    })();
-  }, [id]);
+  const load = async () => {
+    const { data } = await api.get(`/orders/${id}`);
+    setOrder(data);
+    // initialise returnItems with 0s
+    const init = {};
+    (data.items || []).forEach((it) => { init[it.product_id] = { qty: 0, reason: "" }; });
+    setReturnItems(init);
+  };
+  useEffect(() => { load(); }, [id]);
 
   if (!order) return <Layout><div className="overline">Loading…</div></Layout>;
 
@@ -44,6 +53,44 @@ const OrderDetail = () => {
     window.print();
   };
 
+  const downloadPDF = async () => {
+    try {
+      await downloadInvoice(order.order_id);
+    } catch (e) {
+      toast.error("Failed to download invoice");
+    }
+  };
+
+  // Return-window check: 7 days after delivered
+  const deliveredAt = order?.status_history?.find((h) => h.status === "delivered")?.at;
+  const withinReturnWindow = (() => {
+    if (!deliveredAt) return false;
+    const days = (Date.now() - new Date(deliveredAt).getTime()) / 86400000;
+    return days <= 7;
+  })();
+  const canReturn = order?.status === "delivered" && withinReturnWindow;
+
+  const submitReturn = async () => {
+    const items = Object.entries(returnItems)
+      .filter(([, v]) => v.qty > 0)
+      .map(([product_id, v]) => ({ product_id, quantity: v.qty, reason: v.reason || "" }));
+    if (items.length === 0) {
+      toast.error("Pick at least one item & qty");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await api.post("/returns", { order_id: order.order_id, items, reason: returnReason });
+      toast.success("Return request submitted");
+      setShowReturn(false);
+      navigate("/returns");
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Failed");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -64,12 +111,18 @@ const OrderDetail = () => {
             </span>
             <button onClick={reorder} data-testid="reorder-button"
               className="print:hidden inline-flex items-center gap-2 bg-slate-900 hover:bg-[#E11D48] text-white text-sm font-semibold px-4 py-2 rounded-sm transition-colors duration-200">
-              <RefreshCw className="w-4 h-4" /> Reorder
+              <RefreshCw className="w-4 h-4" /> {t("order.reorder")}
             </button>
-            <button onClick={printInvoice} data-testid="print-invoice-button"
+            <button onClick={downloadPDF} data-testid="download-invoice-button"
               className="print:hidden inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-slate-900 text-sm font-semibold px-4 py-2 rounded-sm transition-colors duration-200">
-              <Printer className="w-4 h-4" /> Invoice
+              <Printer className="w-4 h-4" /> {t("order.invoice")} PDF
             </button>
+            {canReturn && (
+              <button onClick={() => setShowReturn(true)} data-testid="open-return-button"
+                className="print:hidden inline-flex items-center gap-2 bg-white border border-amber-300 text-amber-700 hover:bg-amber-50 text-sm font-semibold px-4 py-2 rounded-sm transition-colors duration-200">
+                <RotateCcw className="w-4 h-4" /> {t("order.request_return")}
+              </button>
+            )}
           </div>
         </div>
 
@@ -178,6 +231,115 @@ const OrderDetail = () => {
           </div>
         </div>
       </div>
+
+      {showReturn && (
+        <div
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 print:hidden"
+          data-testid="return-modal"
+          onClick={() => setShowReturn(false)}
+        >
+          <div
+            className="bg-white border border-slate-200 rounded-sm w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-5 border-b border-slate-200">
+              <div>
+                <div className="overline">RMA</div>
+                <div className="font-display text-xl mt-0.5">{t("returns.create_title")}</div>
+              </div>
+              <button
+                onClick={() => setShowReturn(false)}
+                className="text-slate-400 hover:text-slate-900"
+                data-testid="close-return-modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="text-xs text-slate-500">
+                {t("returns.window_note")} ({order.order_id})
+              </div>
+
+              <div className="space-y-2">
+                {order.items.map((it) => {
+                  const ri = returnItems[it.product_id] || { qty: 0, reason: "" };
+                  return (
+                    <div
+                      key={it.product_id}
+                      className="grid grid-cols-12 gap-3 items-center p-3 border border-slate-200 rounded-sm"
+                      data-testid={`return-item-row-${it.product_id}`}
+                    >
+                      <div className="col-span-5 min-w-0">
+                        <div className="font-semibold text-sm truncate">{it.name}</div>
+                        <div className="text-xs text-slate-500 font-mono">{it.sku} · {fmtBDT(it.price_bdt)} ea</div>
+                      </div>
+                      <div className="col-span-3">
+                        <label className="overline block mb-1">Qty (max {it.quantity})</label>
+                        <input
+                          type="number"
+                          min="0"
+                          max={it.quantity}
+                          value={ri.qty}
+                          data-testid={`return-qty-${it.product_id}`}
+                          onChange={(e) => {
+                            const q = Math.max(0, Math.min(parseInt(e.target.value) || 0, it.quantity));
+                            setReturnItems((prev) => ({ ...prev, [it.product_id]: { ...ri, qty: q } }));
+                          }}
+                          className="w-full border border-slate-200 px-2 py-1.5 text-sm rounded-sm"
+                        />
+                      </div>
+                      <div className="col-span-4">
+                        <label className="overline block mb-1">Reason</label>
+                        <input
+                          type="text"
+                          value={ri.reason}
+                          placeholder="Wrong fitment / damaged…"
+                          data-testid={`return-reason-${it.product_id}`}
+                          onChange={(e) =>
+                            setReturnItems((prev) => ({
+                              ...prev,
+                              [it.product_id]: { ...ri, reason: e.target.value },
+                            }))
+                          }
+                          className="w-full border border-slate-200 px-2 py-1.5 text-sm rounded-sm"
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div>
+                <label className="overline block mb-1.5">{t("returns.reason_label")}</label>
+                <textarea
+                  value={returnReason}
+                  data-testid="return-overall-reason"
+                  onChange={(e) => setReturnReason(e.target.value)}
+                  rows={2}
+                  placeholder="Optional overall note for admin"
+                  className="w-full border border-slate-200 px-3 py-2 text-sm rounded-sm"
+                />
+              </div>
+            </div>
+            <div className="p-5 border-t border-slate-200 flex justify-end gap-2 bg-slate-50">
+              <button
+                onClick={() => setShowReturn(false)}
+                className="bg-white border border-slate-200 text-sm font-semibold px-5 py-2 rounded-sm"
+              >
+                {t("common.cancel")}
+              </button>
+              <button
+                onClick={submitReturn}
+                disabled={submitting}
+                data-testid="submit-return-button"
+                className="bg-[#E11D48] hover:bg-[#BE123C] text-white text-sm font-semibold px-5 py-2 rounded-sm disabled:opacity-60 transition-colors"
+              >
+                {submitting ? "…" : t("returns.submit")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 };

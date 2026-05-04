@@ -15,6 +15,11 @@ from emergentintegrations.payments.stripe.checkout import (
     StripeCheckout, CheckoutSessionRequest, CheckoutSessionResponse, CheckoutStatusResponse,
 )
 from emergentintegrations.llm.chat import LlmChat, UserMessage
+from fastapi.responses import Response as FastAPIResponse
+from invoice_pdf import render_invoice_pdf
+from notifications import (
+    notify_kyc_decision, notify_order_placed, notify_order_status, notify_delivery_assigned,
+)
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -562,6 +567,12 @@ async def create_order(payload: OrderCreate, request: Request):
             {"$inc": {"credit_used": grand_total}}
         )
 
+    # Fire order-placed notification
+    try:
+        notify_order_placed(order, user.get("email", ""))
+    except Exception as e:
+        logger.warning(f"Order-placed notify failed: {e}")
+
     order.pop("_id", None)
     return order
 
@@ -615,7 +626,15 @@ async def admin_update_order_status(order_id: str, payload: OrderStatusUpdate, r
             {"workshop_id": order["workshop_id"]},
             {"$inc": {"credit_used": -order["total_bdt"]}}
         )
-    return await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+    fresh = await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+    # Fire status-change notification
+    try:
+        owner = await db.users.find_one({"user_id": fresh["user_id"]}, {"_id": 0})
+        if owner and owner.get("email"):
+            notify_order_status(fresh, owner["email"], payload.status)
+    except Exception as e:
+        logger.warning(f"Status notify failed: {e}")
+    return fresh
 
 
 @api_router.patch("/admin/orders/{order_id}/payment")
@@ -676,7 +695,16 @@ async def admin_kyc_decision(workshop_id: str, payload: KycDecision, request: Re
         {"workshop_id": workshop_id},
         {"$set": {"kyc_status": payload.decision, "kyc_remark": payload.remark}}
     )
-    return await db.workshops.find_one({"workshop_id": workshop_id}, {"_id": 0})
+    ws = await db.workshops.find_one({"workshop_id": workshop_id}, {"_id": 0})
+    # Fire notification (no-ops if Resend not configured)
+    if ws:
+        owner = await db.users.find_one({"user_id": ws["user_id"]}, {"_id": 0})
+        if owner and owner.get("email"):
+            try:
+                notify_kyc_decision(ws, owner["email"])
+            except Exception as e:
+                logger.warning(f"KYC notify failed: {e}")
+    return ws
 
 
 class CreditUpdate(BaseModel):
@@ -1475,7 +1503,228 @@ async def admin_assign_delivery(order_id: str, payload: DeliveryAssignment, requ
         }}
     if ops:
         await db.orders.update_one({"order_id": order_id}, ops)
-    return await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+    fresh = await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+    # Fire delivery-assigned notification (only when rider actually changed)
+    if payload.delivery_person_id and fresh and fresh.get("delivery_person_name"):
+        try:
+            owner = await db.users.find_one({"user_id": fresh["user_id"]}, {"_id": 0})
+            if owner and owner.get("email"):
+                notify_delivery_assigned(fresh, owner["email"])
+        except Exception as e:
+            logger.warning(f"Delivery notify failed: {e}")
+    return fresh
+
+
+# ============= Invoice PDF =============
+@api_router.get("/orders/{order_id}/invoice.pdf")
+async def download_invoice_pdf(order_id: str, request: Request):
+    user = await require_user(request)
+    order = await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(404, "Order not found")
+    if user.get("role") != "admin" and order["user_id"] != user["user_id"]:
+        raise HTTPException(403, "Forbidden")
+    workshop = await db.workshops.find_one(
+        {"workshop_id": order["workshop_id"]}, {"_id": 0}
+    ) or None
+    pdf_bytes = render_invoice_pdf(order, workshop)
+    return FastAPIResponse(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="invoice-{order_id}.pdf"',
+            "Cache-Control": "no-store",
+        },
+    )
+
+
+# ============= Returns / RMA =============
+RETURN_WINDOW_DAYS = 7
+
+
+class ReturnItem(BaseModel):
+    product_id: str
+    quantity: int
+    reason: str = ""
+
+
+class ReturnCreate(BaseModel):
+    order_id: str
+    items: List[ReturnItem]
+    reason: str = ""
+
+
+def _parse_iso(s) -> Optional[datetime]:
+    if not s:
+        return None
+    try:
+        if isinstance(s, str):
+            dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+        else:
+            dt = s
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except Exception:
+        return None
+
+
+@api_router.post("/returns")
+async def create_return(payload: ReturnCreate, request: Request):
+    user = await require_user(request)
+    ws = await db.workshops.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not ws:
+        raise HTTPException(403, "Workshop only")
+    order = await db.orders.find_one({"order_id": payload.order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(404, "Order not found")
+    if order["user_id"] != user["user_id"]:
+        raise HTTPException(403, "Not your order")
+    if order.get("status") != "delivered":
+        raise HTTPException(400, "Returns only allowed after delivery")
+    # Find delivered timestamp
+    delivered_at = None
+    for h in order.get("status_history", []):
+        if h.get("status") == "delivered":
+            delivered_at = _parse_iso(h.get("at"))
+    if not delivered_at:
+        delivered_at = _parse_iso(order.get("created_at"))
+    if delivered_at and (datetime.now(timezone.utc) - delivered_at).days > RETURN_WINDOW_DAYS:
+        raise HTTPException(400, f"Return window ({RETURN_WINDOW_DAYS} days) has passed")
+    if not payload.items:
+        raise HTTPException(400, "At least one item required")
+
+    # Validate items vs order; cap qty by order qty
+    order_lookup = {it["product_id"]: it for it in order.get("items", [])}
+    enriched = []
+    refund_total = 0.0
+    for ri in payload.items:
+        if ri.product_id not in order_lookup:
+            raise HTTPException(400, f"Item {ri.product_id} not in order")
+        if ri.quantity <= 0:
+            raise HTTPException(400, "Quantity must be > 0")
+        order_item = order_lookup[ri.product_id]
+        if ri.quantity > order_item.get("quantity", 0):
+            raise HTTPException(400, f"Quantity exceeds ordered for {order_item.get('name')}")
+        line_refund = order_item.get("price_bdt", 0.0) * ri.quantity
+        refund_total += line_refund
+        enriched.append({
+            "product_id": ri.product_id,
+            "sku": order_item.get("sku", ""),
+            "name": order_item.get("name", ""),
+            "image_url": order_item.get("image_url", ""),
+            "quantity": ri.quantity,
+            "price_bdt": order_item.get("price_bdt", 0.0),
+            "line_refund_bdt": round(line_refund, 2),
+            "reason": ri.reason or payload.reason or "",
+        })
+
+    return_id = f"RMA-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+    now = datetime.now(timezone.utc).isoformat()
+    doc = {
+        "return_id": return_id,
+        "order_id": order["order_id"],
+        "user_id": user["user_id"],
+        "workshop_id": ws["workshop_id"],
+        "company_name": ws.get("company_name", ""),
+        "items": enriched,
+        "reason": payload.reason or "",
+        "refund_total_bdt": round(refund_total, 2),
+        "refund_method": "",  # set on approval
+        "status": "requested",  # requested | approved | rejected | completed
+        "admin_note": "",
+        "status_history": [{"status": "requested", "at": now, "note": "Return requested"}],
+        "created_at": now,
+    }
+    await db.returns.insert_one(dict(doc))
+    return {"return_id": return_id, "ok": True}
+
+
+@api_router.get("/returns")
+async def list_my_returns(request: Request, status: str = ""):
+    user = await require_user(request)
+    flt = {}
+    if user.get("role") != "admin":
+        flt["user_id"] = user["user_id"]
+    if status:
+        flt["status"] = status
+    items = await db.returns.find(flt, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return items
+
+
+@api_router.get("/returns/{return_id}")
+async def get_return(return_id: str, request: Request):
+    user = await require_user(request)
+    r = await db.returns.find_one({"return_id": return_id}, {"_id": 0})
+    if not r:
+        raise HTTPException(404, "Not found")
+    if user.get("role") != "admin" and r["user_id"] != user["user_id"]:
+        raise HTTPException(403, "Forbidden")
+    return r
+
+
+class ReturnDecision(BaseModel):
+    decision: str  # approved | rejected | completed
+    refund_method: str = ""  # credit-back | reship | cash
+    admin_note: str = ""
+
+
+@api_router.patch("/admin/returns/{return_id}")
+async def admin_decide_return(return_id: str, payload: ReturnDecision, request: Request):
+    await require_admin(request)
+    r = await db.returns.find_one({"return_id": return_id}, {"_id": 0})
+    if not r:
+        raise HTTPException(404, "Return not found")
+    if payload.decision not in ["approved", "rejected", "completed"]:
+        raise HTTPException(400, "Invalid decision")
+    if r["status"] in ["rejected", "completed"]:
+        raise HTTPException(400, f"Return already {r['status']}")
+
+    update = {
+        "status": payload.decision,
+        "admin_note": payload.admin_note or r.get("admin_note", ""),
+    }
+    if payload.refund_method:
+        if payload.refund_method not in ["credit-back", "reship", "cash"]:
+            raise HTTPException(400, "Invalid refund_method")
+        update["refund_method"] = payload.refund_method
+
+    # On approval: restock, refund credit if applicable
+    if payload.decision == "approved" and r["status"] == "requested":
+        for it in r["items"]:
+            await db.products.update_one(
+                {"product_id": it["product_id"]},
+                {"$inc": {"stock": int(it["quantity"])}}
+            )
+        # If refund_method credit-back: decrement workshop's credit_used
+        order = await db.orders.find_one({"order_id": r["order_id"]}, {"_id": 0})
+        if (
+            payload.refund_method == "credit-back"
+            and order
+            and order.get("payment_method") == "credit"
+        ):
+            await db.workshops.update_one(
+                {"workshop_id": r["workshop_id"]},
+                {"$inc": {"credit_used": -r["refund_total_bdt"]}}
+            )
+
+    now = datetime.now(timezone.utc).isoformat()
+    history = {"status": payload.decision, "at": now, "note": payload.admin_note or ""}
+    await db.returns.update_one(
+        {"return_id": return_id},
+        {"$set": update, "$push": {"status_history": history}}
+    )
+    return await db.returns.find_one({"return_id": return_id}, {"_id": 0})
+
+
+@api_router.get("/admin/returns")
+async def admin_list_returns(request: Request, status: str = ""):
+    await require_admin(request)
+    flt = {}
+    if status:
+        flt["status"] = status
+    items = await db.returns.find(flt, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return items
 
 
 # ============= Service Packs (Bundles) =============
@@ -1793,7 +2042,9 @@ async def startup():
     # Idempotent seed: only insert SKUs not already in DB
     existing_skus = set()
     async for d in db.products.find({}, {"_id": 0, "sku": 1}):
-        existing_skus.add(d["sku"])
+        sku = d.get("sku")
+        if sku:
+            existing_skus.add(sku)
 
     inserted = 0
     for p in SEED_PRODUCTS + SEED_KITS:
