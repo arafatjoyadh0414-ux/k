@@ -1596,6 +1596,14 @@ async def create_return(payload: ReturnCreate, request: Request):
 
     # Validate items vs order; cap qty by order qty
     order_lookup = {it["product_id"]: it for it in order.get("items", [])}
+    order_subtotal = float(order.get("subtotal_bdt") or 0.0) or 1.0  # avoid div-by-zero
+    order_total = float(order.get("total_bdt") or 0.0)
+    # Effective discount factor: ratio of what customer actually paid (post discount, post fee)
+    # vs the gross subtotal. Applied per-line so refund matches what they paid.
+    effective_factor = (order_total / order_subtotal) if order_subtotal > 0 else 1.0
+    # Cap factor at 1.0 (don't refund more than gross when delivery fee inflates total)
+    if effective_factor > 1.0:
+        effective_factor = 1.0
     enriched = []
     refund_total = 0.0
     for ri in payload.items:
@@ -1606,7 +1614,8 @@ async def create_return(payload: ReturnCreate, request: Request):
         order_item = order_lookup[ri.product_id]
         if ri.quantity > order_item.get("quantity", 0):
             raise HTTPException(400, f"Quantity exceeds ordered for {order_item.get('name')}")
-        line_refund = order_item.get("price_bdt", 0.0) * ri.quantity
+        gross_line = order_item.get("price_bdt", 0.0) * ri.quantity
+        line_refund = round(gross_line * effective_factor, 2)
         refund_total += line_refund
         enriched.append({
             "product_id": ri.product_id,
@@ -1615,7 +1624,7 @@ async def create_return(payload: ReturnCreate, request: Request):
             "image_url": order_item.get("image_url", ""),
             "quantity": ri.quantity,
             "price_bdt": order_item.get("price_bdt", 0.0),
-            "line_refund_bdt": round(line_refund, 2),
+            "line_refund_bdt": line_refund,
             "reason": ri.reason or payload.reason or "",
         })
 

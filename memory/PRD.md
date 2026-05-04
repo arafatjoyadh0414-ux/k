@@ -107,32 +107,49 @@
 
 **Testing**: 18/18 Phase 4 backend pytest cases pass + e2e frontend flows validated. Action items addressed: Optional[float] fee semantics, negative-fee 400, 404 on unknown delivery_person_id, defensive option text.
 
+## Phase 6 — Invoice PDF + Returns + i18n + Email Scaffolding (2026-05-04)
+**Backend additions**
+- `GET /api/orders/{order_id}/invoice.pdf` — JOY-letterhead PDF via reportlab (bill-to/ship-to/payment, items table, discounts/delivery breakdown, signature block)
+- Returns/RMA endpoints: `POST /api/returns`, `GET /api/returns`, `GET /api/returns/{id}`, `GET /api/admin/returns`, `PATCH /api/admin/returns/{id}` — 7-day window from delivered, item validation, status flow (requested→approved/rejected→completed). On approval: `product.stock += qty` and `workshop.credit_used -= refund_total_bdt` if `credit-back` on credit order. Refund amount **prorated** by `total_bdt/subtotal_bdt` so volume-discounted orders refund what was actually paid.
+- `notifications.py` — Resend email + SMS scaffolding gated behind `RESEND_API_KEY`/`SMS_PROVIDER` env vars. Triggers KYC-approval/rejection, order-placed, order-status-change, delivery-assigned. No-ops gracefully (single log line) when keys missing — never blocks API.
+- New env vars: `RESEND_API_KEY`, `RESEND_FROM`, `APP_PUBLIC_URL`, `SMS_PROVIDER`
+
+**Frontend additions**
+- `LanguageContext` (en/bn dictionaries) + topbar **Bangla / English toggle** (data-testid=lang-toggle), persisted to localStorage. Currently translates sidebar nav + key labels — incrementally expandable.
+- Workshop `/returns` list page; admin `/admin/returns` page with status filters, expandable rows, refund-method picker, approve/reject/complete actions
+- `OrderDetail` (workshop) — replaced "Print" with **"Invoice PDF"** download button + **"Request Return"** button when `status=delivered` and within 7 days. Modal with per-item qty + reason + overall reason.
+- `AdminOrderDetail` — adds Invoice PDF download
+- New nav: workshop sidebar gets "Returns"; admin sidebar gets "Returns"
+
+**Testing**: 29/29 Phase 5 backend pytest cases pass + full e2e frontend flows validated. Notification skip-logging confirmed. Refund proration applied (post-testing fix).
+
 ## Backlog (Prioritized)
 **P0**
-- Online payment gateway (bKash / SSLCommerz / Stripe) for online prepay option
-- Transactional email/SMS notifications (KYC approved, order status changes)
+- Real Resend API key + go-live for email notifications
+- Online payment gateway (bKash / SSLCommerz live keys)
 
 **P1**
-- "Make My Car" AI wizard (skipped this iteration per user direction)
-- Chatbot assistant (skipped this iteration per user direction)
+- Expand i18n dictionary to Orders/Cart/Returns/PartRequest pages + toast strings
 - Bulk-order CSV upload for workshops
-- Search log tracking ("zero-result" insights)
-- Bangla language toggle (UI strings)
-- Product variants (e.g., size, fitment) and images gallery
+- Live SMS dispatch (Twilio or bulksmsbd)
+- "Make My Car" AI wizard + Chatbot
+- Search log tracking (zero-result insights)
 - Bulk CSV product import for admin
 - Workshop branch / multi-user team accounts
-- Returns / RMA workflow
-- Invoice PDF generation per order
+- Driver mobile view (`/my-deliveries` filtered by phone)
 
 **P2**
-- Loyalty / volume-discount tiers
+- **Refactor `server.py` (~2120 lines) into `/app/backend/routes/*.py` modules** (high priority — flagged 2 iterations in a row)
+- Decimal/paisa-int money refactor
 - Push notifications via web push
 - Mobile app (React Native)
-- Analytics dashboards (revenue trends, top SKUs, ageing receivables)
+- Analytics dashboards (revenue trends, ageing receivables)
 - Wishlist / saved-quotes
-- **Refactor `server.py` (~1850 lines) into `/app/backend/routes/*.py` modules**
-- Decimal/paisa-int money refactor
+- Atomic return-approval (findOneAndUpdate to prevent race-condition restock)
+- Persist `delivered_at` timestamp on orders (don't fall back to created_at for return window)
+- Tighten admin-returns guard: block re-decide on already-approved returns (currently allowed for the approved→completed transition)
 - Batch resolve for /service-packs bundle children ($lookup) to remove N+1
+- Update Phase 3 tests to expect tier-discounted subtotals (5 stale tests)
 
 ## Tech Decisions
 - Emergent Google Auth (no app passwords) → simpler, secure
