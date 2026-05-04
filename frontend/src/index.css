@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Hide Emergent platform-injected "Made with Emergent" badge */
+#emergent-badge,
+[id^="emergent-badge"],
+[class*="emergent-badge"],
+[class*="made-with-emergent"],
+a[href*="emergent.sh"],
+a[href*="emergent.dev"],
+a[href*="app.emergent.sh"],
+iframe[src*="emergent"][src*="badge"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
 @media print {
     aside, header, button[data-testid="logout-button"], .print\:hidden {
         display: none !important;
