@@ -1347,6 +1347,166 @@ async def stripe_webhook(request: Request):
     return {"ok": True}
 
 
+# ============= Delivery Persons =============
+class DeliveryPerson(BaseModel):
+    name: str
+    phone: str
+    nid_no: str = ""
+    vehicle_type: str = ""  # bike | van | pickup | truck
+    vehicle_no: str = ""
+    coverage_areas: List[str] = []
+    status: str = "active"  # active | inactive
+    notes: str = ""
+
+
+@api_router.get("/admin/delivery-persons")
+async def admin_list_delivery_persons(request: Request, status: str = ""):
+    await require_admin(request)
+    flt = {}
+    if status:
+        flt["status"] = status
+    items = await db.delivery_persons.find(flt, {"_id": 0}).sort("created_at", -1).to_list(500)
+    # attach in-flight count
+    for d in items:
+        d["active_assignments"] = await db.orders.count_documents({
+            "delivery_person_id": d["delivery_person_id"],
+            "status": {"$in": ["packed", "shipped"]}
+        })
+    return items
+
+
+@api_router.post("/admin/delivery-persons")
+async def admin_create_delivery_person(payload: DeliveryPerson, request: Request):
+    await require_admin(request)
+    if not payload.name.strip() or not payload.phone.strip():
+        raise HTTPException(400, "Name and phone required")
+    did = f"dp_{uuid.uuid4().hex[:10]}"
+    doc = {**payload.model_dump(), "delivery_person_id": did,
+           "created_at": datetime.now(timezone.utc).isoformat()}
+    await db.delivery_persons.insert_one(dict(doc))
+    doc.pop("_id", None)
+    return doc
+
+
+@api_router.put("/admin/delivery-persons/{delivery_person_id}")
+async def admin_update_delivery_person(delivery_person_id: str, payload: DeliveryPerson, request: Request):
+    await require_admin(request)
+    await db.delivery_persons.update_one(
+        {"delivery_person_id": delivery_person_id},
+        {"$set": payload.model_dump()}
+    )
+    return await db.delivery_persons.find_one({"delivery_person_id": delivery_person_id}, {"_id": 0})
+
+
+@api_router.delete("/admin/delivery-persons/{delivery_person_id}")
+async def admin_delete_delivery_person(delivery_person_id: str, request: Request):
+    await require_admin(request)
+    inflight = await db.orders.count_documents({
+        "delivery_person_id": delivery_person_id,
+        "status": {"$in": ["packed", "shipped"]}
+    })
+    if inflight:
+        raise HTTPException(400, f"Cannot delete: {inflight} active assignment(s)")
+    await db.delivery_persons.delete_one({"delivery_person_id": delivery_person_id})
+    return {"ok": True}
+
+
+# ============= Order: Assign Delivery & Fee =============
+class DeliveryAssignment(BaseModel):
+    delivery_person_id: str = ""
+    delivery_fee_bdt: float = 0.0
+    expected_delivery_date: str = ""
+    note: str = ""
+
+
+@api_router.patch("/admin/orders/{order_id}/delivery")
+async def admin_assign_delivery(order_id: str, payload: DeliveryAssignment, request: Request):
+    await require_admin(request)
+    order = await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(404, "Order not found")
+    update = {}
+    history_note = ""
+    if payload.delivery_person_id:
+        dp = await db.delivery_persons.find_one(
+            {"delivery_person_id": payload.delivery_person_id}, {"_id": 0}
+        )
+        if not dp:
+            raise HTTPException(400, "Invalid delivery person")
+        update["delivery_person_id"] = dp["delivery_person_id"]
+        update["delivery_person_name"] = dp["name"]
+        update["delivery_person_phone"] = dp["phone"]
+        update["delivery_vehicle_no"] = dp.get("vehicle_no", "")
+        history_note = f"Delivery assigned to {dp['name']} ({dp['phone']})"
+    if payload.delivery_fee_bdt is not None and payload.delivery_fee_bdt >= 0:
+        # Adjust order total: remove previous fee, add new fee
+        prev_fee = order.get("delivery_fee_bdt", 0.0)
+        delta = payload.delivery_fee_bdt - prev_fee
+        update["delivery_fee_bdt"] = payload.delivery_fee_bdt
+        new_total = round(order.get("total_bdt", 0.0) + delta, 2)
+        update["total_bdt"] = new_total
+        update["profit_bdt"] = round(new_total - order.get("cost_total_bdt", 0.0), 2)
+        # Adjust credit usage if credit-paid + still unpaid
+        if order.get("payment_method") == "credit" and order.get("payment_status") != "paid" and abs(delta) > 0.001:
+            await db.workshops.update_one(
+                {"workshop_id": order["workshop_id"]},
+                {"$inc": {"credit_used": delta}}
+            )
+    if payload.expected_delivery_date:
+        update["expected_delivery_date"] = payload.expected_delivery_date
+
+    ops = {}
+    if update:
+        ops["$set"] = update
+    if history_note or payload.note:
+        ops["$push"] = {"status_history": {
+            "status": order.get("status", "placed"),
+            "at": datetime.now(timezone.utc).isoformat(),
+            "note": payload.note or history_note,
+        }}
+    if ops:
+        await db.orders.update_one({"order_id": order_id}, ops)
+    return await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+
+
+# ============= Service Packs (Bundles) =============
+@api_router.get("/service-packs")
+async def list_service_packs(request: Request):
+    """Return all bundle products (service packs) with tier pricing."""
+    items = await db.products.find(
+        {"is_bundle": True}, {"_id": 0}
+    ).sort("price_bdt", 1).to_list(100)
+    user = await get_current_user(request)
+    tier = "retail"
+    if user and user.get("role") == "workshop":
+        ws = await db.workshops.find_one({"user_id": user["user_id"]}, {"_id": 0})
+        if ws:
+            tier = ws.get("pricing_tier", "silver")
+    for p in items:
+        p["retail_price_bdt"] = p["price_bdt"]
+        p["your_price_bdt"] = tier_price(p["price_bdt"], tier)
+        p["your_tier"] = tier
+        p.pop("cost_price_bdt", None)
+        # Resolve bundle items (read-only, names + skus)
+        resolved = []
+        for bi in p.get("bundle_items", []):
+            child = await db.products.find_one(
+                {"product_id": bi["product_id"]}, {"_id": 0}
+            )
+            if child:
+                resolved.append({
+                    "product_id": bi["product_id"],
+                    "quantity": bi.get("quantity", 1),
+                    "name": child["name"],
+                    "sku": child["sku"],
+                    "image_url": child.get("image_url", ""),
+                })
+        p["bundle_items_resolved"] = resolved
+    return items
+
+
+
+
 # ============= Seed =============
 SEED_PRODUCTS = [
     {"name": "Brake Disc Rotor (Front)", "sku": "JA-BRK-001", "category": "Brake", "brand": "JoyOEM",
@@ -1523,6 +1683,96 @@ SEED_KITS = [
 ]
 
 
+# ===== Service Packs (bundles built from existing SKUs) =====
+SEED_SERVICE_PACKS = [
+    {
+        "name": "JOY Basic Service Pack",
+        "sku": "JA-PACK-BASIC",
+        "category": "Service Packs",
+        "brand": "Joy Automart",
+        "description": "Routine maintenance bundle: oil change + filters + spark plugs. Perfect for 5,000–10,000 km service.",
+        "image_url": "https://images.unsplash.com/photo-1486006920555-c77dcf18193c?w=600",
+        "price_bdt": 4250,
+        "moq": 1,
+        "stock": 999,
+        "is_bundle": True,
+        "bundle_skus": [
+            ("JA-FLD-001", 1),  # Engine oil 4L
+            ("JA-ENG-001", 1),  # Oil filter
+            ("JA-ENG-003", 1),  # Air filter
+            ("JA-ENG-002", 4),  # Spark plug x4
+        ],
+    },
+    {
+        "name": "JOY Premium Service Pack",
+        "sku": "JA-PACK-PREMIUM",
+        "category": "Service Packs",
+        "brand": "Joy Automart",
+        "description": "Major service: oil + all filters + plugs + brake pads + fluids top-up. Recommended at 30,000 km.",
+        "image_url": "https://images.unsplash.com/photo-1530027621759-29e6f5d28848?w=600",
+        "price_bdt": 9800,
+        "moq": 1,
+        "stock": 999,
+        "is_bundle": True,
+        "bundle_skus": [
+            ("JA-FLD-001", 2),
+            ("JA-ENG-001", 1),
+            ("JA-ENG-003", 1),
+            ("JA-ENG-002", 4),
+            ("JA-BRK-002", 1),  # Brake pad set
+        ],
+    },
+    {
+        "name": "JOY Brake Refresh Pack",
+        "sku": "JA-PACK-BRAKE",
+        "category": "Service Packs",
+        "brand": "Joy Automart",
+        "description": "Front-axle brake refresh: rotor pair + ceramic pads. Quiet, fade-resistant.",
+        "image_url": "https://images.unsplash.com/photo-1760317890314-e964ffd7e6a6",
+        "price_bdt": 11500,
+        "moq": 1,
+        "stock": 999,
+        "is_bundle": True,
+        "bundle_skus": [
+            ("JA-BRK-001", 2),  # Disc rotor x2
+            ("JA-BRK-002", 1),  # Pad set
+        ],
+    },
+    {
+        "name": "JOY Suspension Tune-Up Pack",
+        "sku": "JA-PACK-SUSP",
+        "category": "Service Packs",
+        "brand": "Joy Automart",
+        "description": "Rear shocks pair + front wheel bearings — restore that showroom ride feel.",
+        "image_url": "https://images.unsplash.com/photo-1769218401073-71a5b1020c9b",
+        "price_bdt": 14500,
+        "moq": 1,
+        "stock": 999,
+        "is_bundle": True,
+        "bundle_skus": [
+            ("JA-SUS-001", 2),
+            ("JA-SUS-002", 2),
+        ],
+    },
+    {
+        "name": "JOY Lighting Upgrade Pack",
+        "sku": "JA-PACK-LIGHT",
+        "category": "Service Packs",
+        "brand": "Joy Automart",
+        "description": "Convert your headlights to LED + premium H4 spares for quick swaps. Brighter & whiter.",
+        "image_url": "https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?w=600",
+        "price_bdt": 6500,
+        "moq": 1,
+        "stock": 999,
+        "is_bundle": True,
+        "bundle_skus": [
+            ("JA-LGT-001", 1),
+            ("JA-ELC-001", 2),
+        ],
+    },
+]
+
+
 @app.on_event("startup")
 async def startup():
     try:
@@ -1553,6 +1803,26 @@ async def startup():
         inserted += 1
     if inserted:
         logger.info(f"Seeded {inserted} new products/kits")
+
+    # Seed service packs (resolve bundle_skus -> bundle_items[product_id])
+    for pack in SEED_SERVICE_PACKS:
+        if pack["sku"] in existing_skus:
+            continue
+        bundle_items = []
+        for sku, qty in pack["bundle_skus"]:
+            child = await db.products.find_one({"sku": sku}, {"_id": 0, "product_id": 1})
+            if child:
+                bundle_items.append({"product_id": child["product_id"], "quantity": qty})
+        if not bundle_items:
+            logger.warning(f"Skipping service pack {pack['sku']}: no children resolved")
+            continue
+        pdoc = {k: v for k, v in pack.items() if k != "bundle_skus"}
+        pdoc["bundle_items"] = bundle_items
+        pdoc["product_id"] = f"prd_{uuid.uuid4().hex[:10]}"
+        pdoc["created_at"] = datetime.now(timezone.utc).isoformat()
+        await db.products.insert_one(pdoc)
+        existing_skus.add(pack["sku"])
+        logger.info(f"Seeded service pack: {pack['sku']}")
 
     # Auto-flag Cyber Beast as featured if no featured kit exists
     has_featured = await db.products.count_documents({"is_kit": True, "is_featured": True})

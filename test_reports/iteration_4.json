@@ -1,0 +1,51 @@
+{
+  "summary": "Phase 4 testing (Service Packs + Delivery Persons + Order delivery assignment) complete. Backend: 18/18 new Phase 4 pytest cases pass (100%). Frontend: All requested data-testid elements render correctly, full happy-path e2e validated end-to-end. Tested: (1) GET /api/service-packs returns all 5 seeded packs (BASIC/PREMIUM/BRAKE/SUSP/LIGHT) with retail_price_bdt, your_price_bdt, your_tier, and bundle_items_resolved (each child has name+sku+quantity). Anonymous => retail tier (your_price_bdt == retail_price_bdt). Workshop without explicit tier => silver (5% off). Workshop with pricing_tier='gold' => your_price_bdt == retail*0.90 and your_tier='gold'. (2) Delivery persons CRUD: POST creates rider; rejects empty/whitespace name/phone with 400; GET returns list with active_assignments per rider counted from orders in {packed,shipped}; PUT updates fields; DELETE returns 200 if no active assignments and 400 if any rider has packed/shipped orders (verified by inserting an order in 'packed', confirming 400, moving to 'delivered', then 200). All endpoints correctly enforce admin auth (workshop=>403, anon=>401). (3) PATCH /api/admin/orders/{id}/delivery: assigning a rider copies name/phone/vehicle_no onto order, sets expected_delivery_date, appends a status_history entry. Setting delivery_fee_bdt updates total_bdt by delta, recomputes profit_bdt, and adjusts workshop.credit_used by the same delta when payment_method='credit' AND payment_status!='paid'. Verified deltas across 3 sequential fee changes (300 -> 500 -> 100): credit_used and total_bdt both move by +300, +200, -400 respectively. Confirmed credit_used is NOT touched for COD/non-credit orders. (4) Frontend: Workshop sidebar shows 'Service Packs' (data-testid=nav-service-packs); /service-packs renders [data-testid=packs-grid] with 5 [data-testid=pack-card-JA-PACK-*] cards and [data-testid=add-pack-*] buttons. Clicking Add Pack triggers a sonner toast 'JOY Basic Service Pack added to cart'. Admin sidebar shows 'Delivery Team' (data-testid=nav-admin-delivery); /admin/delivery-persons CRUD works through UI: 'Add Delivery Person' (data-testid=new-delivery-person-button) opens form (data-testid=delivery-person-form), Save (data-testid=save-delivery-person-button) creates a card. AdminOrderDetail shows [data-testid=delivery-card] with select/fee/date/save controls; saving assigns rider, increases admin-order-total from \u09f3 5,000 to \u09f3 5,250 (fee=250) and shows assigned rider info in card header. Workshop OrderDetail (/orders/:id) renders [data-testid=workshop-delivery-card] with rider name + phone + expected date.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "PUT /api/admin/delivery-persons/{id}", "issue": "No 404 when delivery_person_id is unknown — update_one silently does nothing and find_one returns null. Frontend will see null body. Should return 404."},
+      {"endpoint": "DELETE /api/admin/delivery-persons/{id}", "issue": "No 404 when delivery_person_id is unknown — delete_one returns 200 with {ok:true} even if nothing was deleted."},
+      {"endpoint": "PATCH /api/admin/orders/{id}/delivery", "issue": "Pydantic field delivery_fee_bdt defaults to 0.0 (not Optional[float]=None), so a request that only sends {delivery_person_id: X} is treated as fee=0.0 and will REMOVE any previously-set fee (re-applying delta = -prev_fee). To keep the fee unchanged on rider-only updates, use Optional[float]=None so the 'fee provided' branch is only entered when the client explicitly sends a fee."},
+      {"endpoint": "PATCH /api/admin/orders/{id}/delivery", "issue": "Negative delivery_fee_bdt is silently ignored (the `>= 0` guard skips the branch) instead of returning 400. Should validate and reject."},
+      {"endpoint": "GET /api/service-packs", "issue": "bundle_items_resolved is rebuilt on every request via N+1 product lookups (one find_one per child SKU). For 5 packs * ~4 children that's ~20 round-trips per call. Consider $lookup or a single batched find."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "AdminOrderDetail delivery select", "issues": ["React hydration warning in console: 'In HTML, <span> cannot be a child of <option>' — there's a span (probably an icon/dot) inside the native <option> in the assign-delivery-person-select. Native <option> only accepts text. Move the span outside or render label-only text inside <option>."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_phase4.py",
+    "/app/test_reports/pytest/phase4_results.xml",
+    "/app/test_reports/pytest/all_results.xml"
+  ],
+  "action_items": [
+    "Fix react hydration warning on assign-delivery-person-select: do not render <span> children inside <option> in AdminOrderDetail.jsx.",
+    "Make DeliveryAssignment.delivery_fee_bdt Optional[float]=None (not 0.0 default) so rider-only saves don't accidentally zero out an existing fee.",
+    "Reject negative delivery_fee_bdt with 400 instead of silently ignoring it.",
+    "Return 404 (not 200) for PUT/DELETE /api/admin/delivery-persons/{unknown_id}.",
+    "Optional perf: batch resolve bundle_items in /api/service-packs (single $in lookup instead of N+1 find_ones).",
+    "Heads-up (not in this iteration's scope but caught during regression): test_phase3 tier-pricing tests now fail because /api/orders applies tier_price() per line item (silver=5% off baked into subtotal) before the volume discount. If this is intentional, update phase3 tests to expect tier-discounted subtotals; if not, revert tier_price application in create_order. 5 phase3 tests fail this way: test_create_cod_order_success, test_order_status_progression, test_order_applies_discount_and_credit_used_post_discount, test_order_below_threshold_no_discount, test_credit_check_uses_post_discount."
+  ],
+  "critical_code_review_comments": [
+    "server.py is now 1859 lines — well over the 700-line guideline. Strongly recommend splitting (auth, products, orders, admin, delivery, packs, inquiries).",
+    "DeliveryAssignment model uses fee default 0.0 instead of Optional[float]=None, so a partial PATCH (rider only) is indistinguishable from 'fee=0' and unintentionally adjusts total/credit. Use None as the sentinel.",
+    "Admin delete_delivery_person returns ok:true even when no document was deleted — should 404 to surface real errors to the UI.",
+    "Float arithmetic for money still in use (delivery_fee_bdt, credit_used $inc). At scale this drifts; recommend Decimal or paisa-as-int.",
+    "The N+1 in /api/service-packs (one find_one per bundle child) will scale poorly as packs grow. Use $lookup or aggregate({$in: child_ids}) once.",
+    "AdminOrderDetail renders <span> inside native <option> — invalid HTML and triggers React hydration warning."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_phase4.py"
+  ],
+  "success_rate": {"backend": "100% (18/18 phase4)", "frontend": "100% (all data-testid + 4 e2e flows pass)"},
+  "test_credentials": "Reused admin_session/workshop_session fixtures from conftest.py. Also seeded persistent FE-test users for browser tests: admin (session_token=fe-tok-admin, email=fe-admin@joyautomart.com) and workshop (session_token=fe-tok-ws, user_id=fe-ws-1, kyc=approved, pricing_tier=gold, credit_limit=100000).",
+  "seed_data_creation": "Per-test ephemeral docs cleaned in fixture teardown: TEST_FeeRider/TEST_RiderActive/TEST_Rider_Karim delivery persons; TEST_ORD_* orders. FE seed users (fe-admin-1, fe-ws-1) are upserted (idempotent) and intentionally left in DB for future FE re-runs. Final cleanup removed all TEST- prefixed orders and TEST_ delivery persons after frontend run.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Run Phase 4 alone: `pytest backend/tests/test_phase4.py -v`. Full backend suite has 5 pre-existing Phase 3 failures unrelated to Phase 4 (tier_price now applied in /api/orders subtotal — see action_items). FE seeded users: admin token=fe-tok-admin, workshop token=fe-tok-ws (set as cookie 'session_token'). Workshop fe-ws-1 has pricing_tier='gold' so service-packs page shows 10% discount UI. The hydration warning '<span> cannot be a child of <option>' on /admin/orders/<id> needs the AdminOrderDetail select option markup to drop the <span> child.",
+  "rca of the issue": "All Phase 4 functionality green. The single observed defect is a partial-PATCH ambiguity: when admin assigns a rider without re-entering the fee, the server treats the missing fee as 0.0 (Pydantic default) and reverses any previously-set fee. Root cause: DeliveryAssignment.delivery_fee_bdt declared as `float = 0.0` rather than `Optional[float] = None`. Mitigation: change the field type and the `if payload.delivery_fee_bdt is not None and payload.delivery_fee_bdt >= 0` guard already in place will then correctly skip updates. The current frontend always sends fee with the form, so the UI flow worked, but a future API client that sends rider-only would hit this."
+}

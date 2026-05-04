@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import Layout from "../components/Layout";
 import api, { fmtBDT, statusColor } from "../lib/api";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Truck, User as UserIcon } from "lucide-react";
 import { toast } from "sonner";
 
 const FLOW = ["placed", "confirmed", "packed", "shipped", "delivered"];
@@ -11,12 +11,33 @@ const AdminOrderDetail = () => {
   const { id } = useParams();
   const [order, setOrder] = useState(null);
   const [note, setNote] = useState("");
+  const [riders, setRiders] = useState([]);
+  const [deliveryForm, setDeliveryForm] = useState({
+    delivery_person_id: "",
+    delivery_fee_bdt: "",
+    expected_delivery_date: "",
+    note: "",
+  });
 
   const load = async () => {
     const { data } = await api.get(`/orders/${id}`);
     setOrder(data);
+    setDeliveryForm({
+      delivery_person_id: data.delivery_person_id || "",
+      delivery_fee_bdt: data.delivery_fee_bdt != null ? String(data.delivery_fee_bdt) : "",
+      expected_delivery_date: data.expected_delivery_date || "",
+      note: "",
+    });
   };
   useEffect(() => { load(); }, [id]);
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await api.get("/admin/delivery-persons", { params: { status: "active" } });
+        setRiders(data || []);
+      } catch (_) { /* ignore */ }
+    })();
+  }, []);
 
   const updateStatus = async (status) => {
     try {
@@ -33,6 +54,20 @@ const AdminOrderDetail = () => {
       await load();
       toast.success("Marked paid");
     } catch (e) { toast.error("Failed"); }
+  };
+
+  const saveDelivery = async () => {
+    try {
+      const payload = {
+        delivery_person_id: deliveryForm.delivery_person_id || "",
+        delivery_fee_bdt: deliveryForm.delivery_fee_bdt === "" ? 0 : parseFloat(deliveryForm.delivery_fee_bdt),
+        expected_delivery_date: deliveryForm.expected_delivery_date || "",
+        note: deliveryForm.note || "",
+      };
+      await api.patch(`/admin/orders/${id}/delivery`, payload);
+      await load();
+      toast.success("Delivery details saved");
+    } catch (e) { toast.error(e.response?.data?.detail || "Failed"); }
   };
 
   if (!order) return <Layout><div className="overline">Loading…</div></Layout>;
@@ -78,8 +113,13 @@ const AdminOrderDetail = () => {
             ))}
             <div className="p-4 flex justify-between border-t-2 border-slate-300">
               <div className="font-semibold">Total</div>
-              <div className="font-display text-xl">{fmtBDT(order.total_bdt)}</div>
+              <div className="font-display text-xl" data-testid="admin-order-total">{fmtBDT(order.total_bdt)}</div>
             </div>
+            {order.delivery_fee_bdt > 0 && (
+              <div className="px-4 pb-3 -mt-2 text-xs text-slate-500 text-right">
+                (incl. delivery fee {fmtBDT(order.delivery_fee_bdt)})
+              </div>
+            )}
           </div>
 
           <div className="space-y-5">
@@ -87,6 +127,82 @@ const AdminOrderDetail = () => {
               <div className="overline mb-2">Shipping</div>
               <div className="text-sm whitespace-pre-line">{order.shipping_address}</div>
               {order.notes && <><div className="overline mt-3 mb-1">Notes</div><div className="text-sm text-slate-600">{order.notes}</div></>}
+            </div>
+
+            <div className="industrial-card p-5" data-testid="delivery-card">
+              <div className="overline mb-3 flex items-center gap-2"><Truck className="w-4 h-4" /> Delivery</div>
+
+              {order.delivery_person_name && (
+                <div className="mb-3 p-3 bg-slate-50 border border-slate-200 rounded-sm text-sm">
+                  <div className="flex items-center gap-2 font-semibold">
+                    <UserIcon className="w-3.5 h-3.5" /> {order.delivery_person_name}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1">{order.delivery_person_phone}</div>
+                  {order.delivery_vehicle_no && (
+                    <div className="text-xs text-slate-500 font-mono">Vehicle: {order.delivery_vehicle_no}</div>
+                  )}
+                  {order.expected_delivery_date && (
+                    <div className="text-xs text-slate-500 mt-1">Expected: {order.expected_delivery_date}</div>
+                  )}
+                </div>
+              )}
+
+              {order.status !== "cancelled" && order.status !== "delivered" && (
+                <div className="space-y-2.5">
+                  <div>
+                    <label className="overline block mb-1">Assign Rider</label>
+                    <select
+                      data-testid="assign-delivery-person-select"
+                      value={deliveryForm.delivery_person_id}
+                      onChange={(e) => setDeliveryForm({ ...deliveryForm, delivery_person_id: e.target.value })}
+                      className="w-full border border-slate-200 px-2.5 py-2 text-sm rounded-sm bg-white"
+                    >
+                      <option value="">— Select —</option>
+                      {riders.map((r) => (
+                        <option key={r.delivery_person_id} value={r.delivery_person_id}>
+                          {r.name} · {r.vehicle_type}{r.vehicle_no ? ` (${r.vehicle_no})` : ""}
+                        </option>
+                      ))}
+                    </select>
+                    {riders.length === 0 && (
+                      <Link to="/admin/delivery-persons" className="text-[11px] text-[#E11D48] hover:underline mt-1 inline-block">
+                        + Add a delivery person first
+                      </Link>
+                    )}
+                  </div>
+                  <div>
+                    <label className="overline block mb-1">Delivery Fee (BDT)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      data-testid="delivery-fee-input"
+                      value={deliveryForm.delivery_fee_bdt}
+                      onChange={(e) => setDeliveryForm({ ...deliveryForm, delivery_fee_bdt: e.target.value })}
+                      placeholder="0"
+                      className="w-full border border-slate-200 px-2.5 py-2 text-sm rounded-sm"
+                    />
+                    <div className="text-[10px] text-slate-500 mt-1">Will be added to order total. Adjusts credit usage if unpaid credit order.</div>
+                  </div>
+                  <div>
+                    <label className="overline block mb-1">Expected Date</label>
+                    <input
+                      type="date"
+                      data-testid="expected-date-input"
+                      value={deliveryForm.expected_delivery_date}
+                      onChange={(e) => setDeliveryForm({ ...deliveryForm, expected_delivery_date: e.target.value })}
+                      className="w-full border border-slate-200 px-2.5 py-2 text-sm rounded-sm"
+                    />
+                  </div>
+                  <button
+                    onClick={saveDelivery}
+                    data-testid="save-delivery-button"
+                    className="w-full bg-slate-900 hover:bg-[#E11D48] text-white text-sm font-semibold py-2 rounded-sm transition-colors duration-200"
+                  >
+                    Save Delivery Details
+                  </button>
+                </div>
+              )}
             </div>
 
             {order.status !== "cancelled" && order.status !== "delivered" && (

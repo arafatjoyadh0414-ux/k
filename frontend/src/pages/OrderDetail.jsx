@@ -135,15 +135,36 @@ const OrderDetail = () => {
                 <>
                   <div className="text-sm text-slate-500 mt-2">Subtotal: {fmtBDT(order.subtotal_bdt)}</div>
                   <div className="text-sm text-emerald-700">{order.discount_label} ({(order.discount_pct * 100).toFixed(0)}%): -{fmtBDT(order.discount_amount_bdt)}</div>
+                  {order.delivery_fee_bdt > 0 && (
+                    <div className="text-sm text-slate-500">Delivery: +{fmtBDT(order.delivery_fee_bdt)}</div>
+                  )}
                   <div className="font-display text-3xl mt-2">{fmtBDT(order.total_bdt)}</div>
                 </>
               ) : (
-                <div className="font-display text-3xl mt-1">{fmtBDT(order.total_bdt)}</div>
+                <>
+                  {order.delivery_fee_bdt > 0 && (
+                    <div className="text-xs text-slate-500 mt-2">Includes delivery {fmtBDT(order.delivery_fee_bdt)}</div>
+                  )}
+                  <div className="font-display text-3xl mt-1">{fmtBDT(order.total_bdt)}</div>
+                </>
               )}
               {order.due_date && (
                 <div className="text-xs text-slate-500 mt-2">Due: {new Date(order.due_date).toLocaleDateString()}</div>
               )}
             </div>
+            {order.delivery_person_name && (
+              <div className="industrial-card p-5" data-testid="workshop-delivery-card">
+                <div className="overline mb-2">Out for Delivery</div>
+                <div className="text-sm font-semibold">{order.delivery_person_name}</div>
+                <div className="text-xs text-slate-500 mt-0.5">{order.delivery_person_phone}</div>
+                {order.delivery_vehicle_no && (
+                  <div className="text-xs text-slate-500 font-mono">Vehicle: {order.delivery_vehicle_no}</div>
+                )}
+                {order.expected_delivery_date && (
+                  <div className="text-xs text-slate-500 mt-1">Expected: {order.expected_delivery_date}</div>
+                )}
+              </div>
+            )}
             <div className="industrial-card p-5">
               <div className="overline mb-2">Ship to</div>
               <div className="text-sm whitespace-pre-line">{order.shipping_address}</div>

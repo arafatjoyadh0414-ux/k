@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import {
   LayoutDashboard, Package, ShoppingCart, ClipboardList, UserCircle2,
-  Shield, LogOut, Wrench, Sparkles, Inbox, FileQuestion, Truck, BarChart3
+  Shield, LogOut, Wrench, Sparkles, Inbox, FileQuestion, Truck, BarChart3, Boxes, Bike
 } from "lucide-react";
 
 const LOGO = "https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg";
@@ -49,6 +49,7 @@ const Layout = ({ children }) => {
             <>
               <NavItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" testid="nav-dashboard" />
               <NavItem to="/kits" icon={Sparkles} label="Signature Kits" testid="nav-kits" />
+              <NavItem to="/service-packs" icon={Boxes} label="Service Packs" testid="nav-service-packs" />
               <NavItem to="/products" icon={Package} label="Products" testid="nav-products" />
               <NavItem to="/part-requests" icon={FileQuestion} label="Request Any Part" testid="nav-part-requests" />
               <NavItem to="/cart" icon={ShoppingCart} label={`Cart${count ? ` (${count})` : ""}`} testid="nav-cart" />
@@ -65,6 +66,7 @@ const Layout = ({ children }) => {
               <NavItem to="/admin/inquiries" icon={Inbox} label="Inquiries" testid="nav-admin-inquiries" />
               <NavItem to="/admin/products" icon={Package} label="Products" testid="nav-admin-products" />
               <NavItem to="/admin/suppliers" icon={Truck} label="Suppliers" testid="nav-admin-suppliers" />
+              <NavItem to="/admin/delivery-persons" icon={Bike} label="Delivery Team" testid="nav-admin-delivery" />
               <NavItem to="/admin/reports" icon={BarChart3} label="Reports" testid="nav-admin-reports" />
             </>
           )}

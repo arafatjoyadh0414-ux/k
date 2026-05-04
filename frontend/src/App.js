@@ -15,6 +15,7 @@ import Orders from "@/pages/Orders";
 import OrderDetail from "@/pages/OrderDetail";
 import Profile from "@/pages/Profile";
 import Kits from "@/pages/Kits";
+import ServicePacks from "@/pages/ServicePacks";
 import Inquire from "@/pages/Inquire";
 import PartRequest from "@/pages/PartRequest";
 import ProductDetail from "@/pages/ProductDetail";
@@ -23,6 +24,7 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import AdminInquiries from "@/pages/AdminInquiries";
 import AdminPartRequests from "@/pages/AdminPartRequests";
 import AdminSuppliers from "@/pages/AdminSuppliers";
+import AdminDeliveryPersons from "@/pages/AdminDeliveryPersons";
 import AdminReports from "@/pages/AdminReports";
 import AdminWorkshops from "@/pages/AdminWorkshops";
 import AdminWorkshopDetail from "@/pages/AdminWorkshopDetail";
@@ -45,6 +47,7 @@ const AppRouter = () => {
 
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/kits" element={<ProtectedRoute><Kits /></ProtectedRoute>} />
+      <Route path="/service-packs" element={<ProtectedRoute><ServicePacks /></ProtectedRoute>} />
       <Route path="/products" element={<ProtectedRoute><Products /></ProtectedRoute>} />
       <Route path="/products/:id" element={<ProtectedRoute><ProductDetail /></ProtectedRoute>} />
       <Route path="/part-requests" element={<ProtectedRoute><PartRequest /></ProtectedRoute>} />
@@ -63,6 +66,7 @@ const AppRouter = () => {
       <Route path="/admin/inquiries" element={<ProtectedRoute adminOnly><AdminInquiries /></ProtectedRoute>} />
       <Route path="/admin/part-requests" element={<ProtectedRoute adminOnly><AdminPartRequests /></ProtectedRoute>} />
       <Route path="/admin/suppliers" element={<ProtectedRoute adminOnly><AdminSuppliers /></ProtectedRoute>} />
+      <Route path="/admin/delivery-persons" element={<ProtectedRoute adminOnly><AdminDeliveryPersons /></ProtectedRoute>} />
       <Route path="/admin/reports" element={<ProtectedRoute adminOnly><AdminReports /></ProtectedRoute>} />
     </Routes>
   );
