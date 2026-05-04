@@ -273,7 +273,11 @@ async def auth_session(request: Request, response: Response):
         httponly=True, secure=True, samesite="none",
         path="/", max_age=7 * 24 * 60 * 60
     )
-    return {"user": user_doc}
+    # Also return the token in response body so the frontend can use it as a Bearer
+    # fallback. This is essential when the API and frontend live on different domains
+    # (e.g. custom domain b2bjoymart.com → backend on emergent.host) where the cookie
+    # may not be persisted by the browser.
+    return {"user": user_doc, "session_token": session_token}
 
 
 @api_router.get("/auth/me")
@@ -435,9 +439,15 @@ async def get_product(product_id: str, request: Request):
         p.pop("cost_price_bdt", None)
     # Resolve bundle items
     if p.get("is_bundle") and p.get("bundle_items"):
+        ids = [bi["product_id"] for bi in p["bundle_items"]]
+        children = await db.products.find(
+            {"product_id": {"$in": ids}},
+            {"_id": 0, "product_id": 1, "name": 1, "sku": 1, "image_url": 1},
+        ).to_list(100)
+        cmap = {c["product_id"]: c for c in children}
         resolved = []
         for bi in p["bundle_items"]:
-            child = await db.products.find_one({"product_id": bi["product_id"]}, {"_id": 0})
+            child = cmap.get(bi["product_id"])
             if child:
                 resolved.append({**bi, "name": child["name"], "sku": child["sku"], "image_url": child.get("image_url", "")})
         p["bundle_items_resolved"] = resolved
@@ -1406,12 +1416,16 @@ async def admin_list_delivery_persons(request: Request, status: str = ""):
     if status:
         flt["status"] = status
     items = await db.delivery_persons.find(flt, {"_id": 0}).sort("created_at", -1).to_list(500)
-    # attach in-flight count
-    for d in items:
-        d["active_assignments"] = await db.orders.count_documents({
-            "delivery_person_id": d["delivery_person_id"],
-            "status": {"$in": ["packed", "shipped"]}
-        })
+    # Batch the in-flight order count (avoid N+1 per rider)
+    if items:
+        ids = [d["delivery_person_id"] for d in items]
+        agg = await db.orders.aggregate([
+            {"$match": {"delivery_person_id": {"$in": ids}, "status": {"$in": ["packed", "shipped"]}}},
+            {"$group": {"_id": "$delivery_person_id", "count": {"$sum": 1}}},
+        ]).to_list(500)
+        cmap = {x["_id"]: x["count"] for x in agg}
+        for d in items:
+            d["active_assignments"] = cmap.get(d["delivery_person_id"], 0)
     return items
 
 

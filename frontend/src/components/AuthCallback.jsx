@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../lib/api";
+import api, { setStoredToken } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 
 // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
@@ -24,6 +24,11 @@ const AuthCallback = () => {
     (async () => {
       try {
         const { data } = await api.post("/auth/session", { session_id });
+        // Persist token for Bearer-fallback (essential when on a custom domain
+        // where the cross-site cookie may not stick).
+        if (data.session_token) {
+          setStoredToken(data.session_token);
+        }
         setUser(data.user);
         // clear hash, redirect to dashboard or admin
         const dest = data.user.role === "admin" ? "/admin" : "/dashboard";

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import api from "../lib/api";
+import api, { setStoredToken } from "../lib/api";
 
 const AuthContext = createContext(null);
 
@@ -29,7 +29,8 @@ export const AuthProvider = ({ children }) => {
   }, [checkAuth]);
 
   const logout = async () => {
-    try { await api.post("/auth/logout"); } catch (e) {}
+    try { await api.post("/auth/logout"); } catch (e) { /* ignore */ }
+    setStoredToken("");
     setUser(null);
     window.location.href = "/";
   };

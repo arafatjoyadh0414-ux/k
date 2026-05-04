@@ -3,9 +3,37 @@ import axios from "axios";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
 
+const TOKEN_KEY = "ja_session_token";
+
+export const getStoredToken = () => {
+  try { return localStorage.getItem(TOKEN_KEY) || ""; } catch { return ""; }
+};
+
+export const setStoredToken = (token) => {
+  try {
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+    else localStorage.removeItem(TOKEN_KEY);
+  } catch (_) { /* ignore */ }
+};
+
 const api = axios.create({
   baseURL: API,
   withCredentials: true,
+});
+
+// Attach Bearer token from localStorage on every request as a fallback to the
+// session_token cookie. Required when frontend and backend live on different
+// domains (e.g. custom domain b2bjoymart.com) where the cross-site cookie may
+// not be persisted by the browser.
+api.interceptors.request.use((config) => {
+  const token = getStoredToken();
+  if (token) {
+    config.headers = config.headers || {};
+    if (!config.headers.Authorization) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+  return config;
 });
 
 export default api;
