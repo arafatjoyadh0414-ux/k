@@ -9,11 +9,20 @@ import { toast } from "sonner";
 const VIN_RE = /^[A-HJ-NPR-Z0-9]{17}$/;
 
 const VehicleCard = ({ v }) => (
-  <div className="industrial-card p-5 bg-slate-950 text-white" data-testid="vin-vehicle-card">
-    <div className="flex items-center gap-2 mb-3">
+  <div className="industrial-card p-5 bg-slate-950 text-white" data-testid="vin-vehicle-card" style={{ backgroundColor: "#020617" }}>
+    <div className="flex items-center gap-2 mb-3 flex-wrap">
       <Car className="w-4 h-4 text-[#E11D48]" />
       <div className="overline" style={{ color: "#cbd5e1" }}>Decoded vehicle</div>
-      {v.cached && <span className="ml-auto text-[10px] uppercase tracking-wider bg-white/10 px-2 py-0.5 rounded-sm">cached</span>}
+      {v.cached && <span className="text-[10px] uppercase tracking-wider bg-white/10 px-2 py-0.5 rounded-sm">cached</span>}
+      {Array.isArray(v.sources) && v.sources.map((s) => (
+        <span key={s} className={`text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-sm ${
+          s === "nhtsa" ? "bg-emerald-500/20 text-emerald-200 border border-emerald-500/30"
+          : s === "wmi"  ? "bg-blue-500/20 text-blue-200 border border-blue-500/30"
+          : s === "year_code" ? "bg-slate-500/20 text-slate-200 border border-slate-500/30"
+          : "bg-amber-500/20 text-amber-200 border border-amber-500/30"}`}>
+          {s === "nhtsa" ? "NHTSA" : s === "wmi" ? "WMI" : s === "year_code" ? "year-code" : "AI"}
+        </span>
+      ))}
     </div>
     <div className="font-display text-2xl leading-tight" data-testid="vin-vehicle-title">
       {v.year || "—"} {v.make || "Unknown make"} {v.model || ""}
@@ -21,16 +30,20 @@ const VehicleCard = ({ v }) => (
     {v.trim && <div className="text-sm text-slate-300 mt-0.5">{v.trim}</div>}
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4 text-xs">
       {v.body_class && <Field label="Body" value={v.body_class} />}
-      {v.engine_l && <Field label="Engine" value={`${parseFloat(v.engine_l).toFixed(1)}L`} />}
+      {v.engine_l && <Field label="Engine" value={`${parseFloat(v.engine_l).toFixed(1)}L${v.engine_cyl ? ` · ${v.engine_cyl} cyl` : ""}`} />}
       {v.fuel && <Field label="Fuel" value={v.fuel} />}
       {v.transmission && <Field label="Transmission" value={v.transmission} />}
       {v.drive_type && <Field label="Drive" value={v.drive_type} />}
-      {v.plant_country && <Field label="Built in" value={v.plant_country} />}
+      {(v.plant_country || v.wmi_country) && <Field label="Built in" value={v.plant_country || v.wmi_country} />}
+      {v.manufacturer && <Field label="Manufacturer" value={v.manufacturer} />}
     </div>
-    {v.error_code && v.error_code !== "0" && (
-      <div className="mt-3 flex items-start gap-2 bg-amber-500/10 border border-amber-500/30 rounded-sm p-2 text-[11px] text-amber-200">
+    {v.ai_inferred && (
+      <div className="mt-3 flex items-start gap-2 bg-amber-500/10 border border-amber-500/30 rounded-sm p-2 text-[11px] text-amber-200" data-testid="vin-ai-inferred-warning">
         <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-        <span>{v.error_text || "Partial decode — VIN check digit issue"}</span>
+        <span>
+          Some details (model/engine/body) were AI-inferred from the WMI prefix and year-code because the global
+          NHTSA database had partial data for this market. Confidence: <b>{v.ai_confidence || "medium"}</b>. Verify with the vehicle's documents before ordering.
+        </span>
       </div>
     )}
     <div className="text-[10px] text-slate-500 mt-3 font-mono">{v.vin}</div>
