@@ -236,3 +236,20 @@ Inspired by the strategic audit. Most audit items were already built (catalog, K
 - Single-collection per entity in MongoDB; UUID-based IDs; never expose `_id`
 - Credit usage incremented on order, released on cancel/payment
 - Soft-delete pattern for files; storage_key cached at startup
+
+## 2026-02-10 — Refactor: split `server.py` (P0 done)
+**Why:** server.py had grown to 2820 lines, causing search/replace operations to fail on duplicate strings and slowing down all future edits.
+
+**What moved:**
+- New `core.py` (166 lines): owns the FastAPI `app`, `api_router`, MongoDB `client`/`db`, env vars, logger, object-storage helpers (`init_storage`/`put_object`/`get_object`), pricing helpers (`tier_price`, `calc_discount`, `TIER_DISCOUNTS`, `DISCOUNT_TIERS`), `parse_iso`, and auth helpers (`get_current_user`/`require_user`/`require_admin`).
+- New `routes/insights.py` (329 lines): Joy Score + Auto-Tier-Upgrade engine + `/workshop/insights` + `/admin/tier-upgrades`. Exposes `evaluate_and_apply_auto_upgrade` for orders & KYC handlers.
+- New `routes/chat.py` (150 lines): `/chat/message` + `/chat/history` (Claude Sonnet 4.5).
+- `server.py` now imports shared deps from `core` and pulls in route modules so their decorators register on the shared `api_router`.
+
+**Outcome:**
+- server.py: 2820 → 2252 lines (-20%).
+- All 5 phase-7 tier-upgrade tests passing; 43/44 across phases 5-7 (1 unrelated SSR shell test fails locally).
+- Pattern established for future extractions (orders, returns, products, admin can follow the same template).
+
+## 2026-02-10 — CSS bug fix (Insights joy-score-card)
+- `industrial-card` utility was overriding `bg-slate-950` (white-on-white invisible text). Fixed via inline `style={{ backgroundColor: "#020617" }}` which beats class-level cascade.

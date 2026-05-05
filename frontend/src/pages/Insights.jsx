@@ -75,7 +75,7 @@ const Insights = () => {
 
         {/* Joy Score + summary metrics */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          <div className="lg:col-span-5 industrial-card p-6 bg-slate-950 text-white relative overflow-hidden" data-testid="joy-score-card">
+          <div className="lg:col-span-5 industrial-card p-6 text-white relative overflow-hidden" style={{ backgroundColor: "#020617" }} data-testid="joy-score-card">
             <div className="absolute -right-20 -top-20 w-64 h-64 bg-[#E11D48] opacity-10 rounded-full blur-3xl pointer-events-none" />
             <div className="relative flex items-start gap-5 z-10">
               <ScoreRing score={joy_score.score} grade={joy_score.grade} />
