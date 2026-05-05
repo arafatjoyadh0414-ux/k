@@ -248,7 +248,7 @@ const Drawer = ({ open, onClose }) => {
       role="dialog"
     >
       <div className="absolute inset-0 bg-slate-950/30 backdrop-blur-[2px]" onClick={onClose} />
-      <div className="absolute right-0 top-0 bottom-0 w-full sm:w-[440px] bg-white border-l border-slate-200 shadow-2xl flex flex-col">
+      <div className="absolute right-0 top-0 bottom-0 w-full sm:w-[480px] bg-white border-l border-slate-200 shadow-2xl flex flex-col">
         {/* Header */}
         <div className="px-5 py-4 border-b border-slate-200 bg-slate-950 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
