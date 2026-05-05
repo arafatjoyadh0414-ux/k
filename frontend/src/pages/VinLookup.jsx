@@ -89,6 +89,7 @@ const VinLookup = () => {
   const [loading, setLoading] = useState(false);
   const [savedVins, setSavedVins] = useState([]);
   const [includeAi, setIncludeAi] = useState(true);
+  const [photos, setPhotos] = useState([]);
   const { add } = useCart();
 
   const loadSaved = async () => {
@@ -109,12 +110,20 @@ const VinLookup = () => {
     }
     setLoading(true);
     setResult(null);
+    setPhotos([]);
     try {
       const { data } = await api.get("/vin/parts", {
         params: { vin, include_ai: includeAi },
       });
       setResult(data);
       setVinInput(vin);
+      // Fire-and-forget photo gallery — never blocks the main flow
+      const v = data?.vehicle || {};
+      if (v.make) {
+        api.get("/vin/photos", { params: { make: v.make, model: v.model || "", year: v.year || "" } })
+          .then(({ data: pd }) => setPhotos(pd?.photos || []))
+          .catch(() => {});
+      }
     } catch (e) {
       toast.error(e.response?.data?.detail || "Lookup failed");
     } finally {
@@ -238,6 +247,27 @@ const VinLookup = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <div className="lg:col-span-2">
                 <VehicleCard v={result.vehicle} />
+                {photos.length > 0 && (
+                  <div className="mt-3" data-testid="vin-photo-gallery">
+                    <div className="overline mb-2 flex items-center justify-between">
+                      <span>Reference photos · Wikipedia</span>
+                      <span className="text-[10px] normal-case text-slate-400">For visual reference only</span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {photos.map((p, i) => (
+                        <a key={i} href={p.page_url} target="_blank" rel="noopener noreferrer"
+                          data-testid={`vin-photo-${i}`}
+                          className="group block aspect-[4/3] overflow-hidden rounded-sm border border-slate-200 bg-slate-50 relative">
+                          <img src={p.url} alt={p.title} loading="lazy"
+                            className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-1.5 text-[10px] text-white truncate">
+                            {p.title}
+                          </div>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="industrial-card p-5">
                 <div className="overline">Action</div>

@@ -235,6 +235,98 @@ async def vin_decode(vin: str):
     return decoded
 
 
+# ============= Wikipedia photo gallery =============
+WIKI_SEARCH = "https://en.wikipedia.org/w/api.php"
+WIKI_HEADERS = {"User-Agent": "JoyAutomart/1.0 (b2b@joyautomart.com)"}
+
+
+def _wiki_request(params: dict) -> dict:
+    try:
+        r = requests.get(WIKI_SEARCH, params=params, headers=WIKI_HEADERS, timeout=8)
+        r.raise_for_status()
+        return r.json()
+    except Exception as e:
+        logger.warning(f"Wikipedia request failed: {e}")
+        return {}
+
+
+def _fetch_vehicle_photos(make: str, model: str, year: int | None, limit: int = 4) -> list:
+    """Search Wikipedia for vehicle photos. Returns list of {url, title, page_url}.
+    Strategy: search "make model" (more reliable than year-specific search since
+    Wikipedia pages cover model generations, not single years), then fetch
+    each page's lead thumbnail via pageimages API."""
+    q_terms = " ".join([t for t in [make, model] if t]).strip()
+    if not q_terms:
+        return []
+
+    # Step 1: search for relevant Wikipedia pages
+    search = _wiki_request({
+        "action": "query", "format": "json", "list": "search",
+        "srsearch": q_terms, "srlimit": limit + 2, "srnamespace": 0,
+    })
+    hits = (search.get("query") or {}).get("search") or []
+    titles = [h["title"] for h in hits[:limit + 2]]
+    if not titles:
+        return []
+
+    # Step 2: get pageimages for those titles in one batched call
+    img_data = _wiki_request({
+        "action": "query", "format": "json",
+        "titles": "|".join(titles),
+        "prop": "pageimages|info",
+        "pithumbsize": 600, "piprop": "thumbnail|original",
+        "inprop": "url",
+    })
+    pages = (img_data.get("query") or {}).get("pages") or {}
+
+    # Preserve search ranking
+    by_title = {p.get("title"): p for p in pages.values()}
+    out = []
+    for title in titles:
+        p = by_title.get(title)
+        if not p:
+            continue
+        thumb = (p.get("thumbnail") or {}).get("source")
+        if not thumb:
+            continue
+        out.append({
+            "url": thumb,
+            "title": title,
+            "page_url": p.get("fullurl") or f"https://en.wikipedia.org/wiki/{title.replace(' ', '_')}",
+        })
+        if len(out) >= limit:
+            break
+    return out
+
+
+@api_router.get("/vin/photos")
+async def vin_photos(make: str = "", model: str = "", year: int | None = None):
+    """Return Wikipedia photo gallery for a vehicle. Cached for 30 days
+    keyed by {make}|{model} since photos change rarely."""
+    make = (make or "").strip()
+    model = (model or "").strip()
+    if not make:
+        return {"photos": []}
+    cache_key = f"{make.lower()}|{model.lower()}"
+    cached = await db.vehicle_photos_cache.find_one({"key": cache_key}, {"_id": 0})
+    if cached:
+        try:
+            cached_at = datetime.fromisoformat(cached["cached_at"].replace("Z", "+00:00"))
+            if datetime.now(timezone.utc) - cached_at < timedelta(days=CACHE_TTL_DAYS):
+                return {"photos": cached.get("photos", []), "cached": True}
+        except Exception:
+            pass
+
+    photos = _fetch_vehicle_photos(make, model, year)
+    await db.vehicle_photos_cache.update_one(
+        {"key": cache_key},
+        {"$set": {"key": cache_key, "photos": photos,
+                  "cached_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True,
+    )
+    return {"photos": photos, "cached": False}
+
+
 def _matches_fit(fit: dict, make: str, model: str, year):
     if not isinstance(fit, dict):
         return False
