@@ -1973,6 +1973,43 @@ SEED_KITS = [
         ],
         "gallery": [KIT_OVERVIEW_IMG, KIT_STEALTH_IMG, KIT_SHADOW_IMG],
     },
+    {
+        "name": "JOY Beast Wide Body Kit (BYD Sealion 6)",
+        "sku": "JA-KIT-JOYBEAST",
+        "category": "Body Kits",
+        "brand": "Joy Performance",
+        "description": (
+            "Bigger. Meaner. Unstoppable. Transform your BYD Sealion 6 into a head-turning beast on every road. "
+            "OEM-precision widebody fitment with carbon-fiber-look glass, 21\" alloy wheels with premium tyres, "
+            "and a paint-ready surface. Full package fitted, including rims & tyres."
+        ),
+        "image_url": "https://customer-assets.emergentagent.com/job_workshop-dashboard-1/artifacts/643f6kpt_file_0000000065c872078d88514e4cc0cb6c.png",
+        "price_bdt": 420000, "moq": 1, "stock": 15,
+        "is_kit": True, "kit_tier": "special",
+        "kit_features": [
+            "Aggressive Widebody Stance — Maximum Road Presence",
+            "Front Bumper + Front Lip Splitter",
+            "Side Skirts (Left & Right)",
+            "Widebody Fender Flares (full set)",
+            "Rear Diffuser + Rear Spoiler (Big Wing)",
+            "21\" Alloy Wheels with BYD Logo Center Cap",
+            "Premium Tyres Included",
+            "Carbon-Fiber-Look Glass — UV Protection, Heat Resistant",
+            "Carbon-Fiber Mirror Cover (ABS)",
+            "OEM-Level Precision Fitment for BYD Sealion 6",
+            "Paint-Ready Surface — Smooth Finish",
+            "Easy Installation (Screw & Clip Mounting)",
+            "Free Gift: Adhesive Promoter (stronger bond)",
+            "100% Fitment Guarantee · 48–72H Installation",
+        ],
+        "gallery": [
+            "https://customer-assets.emergentagent.com/job_workshop-dashboard-1/artifacts/643f6kpt_file_0000000065c872078d88514e4cc0cb6c.png",
+            "https://customer-assets.emergentagent.com/job_workshop-dashboard-1/artifacts/rldm8yat_file_00000000736c72068cf0c3a64a5f3a22.png",
+            "https://customer-assets.emergentagent.com/job_workshop-dashboard-1/artifacts/4nw424xo_file_00000000df7471faacaa015e25ab7b23.png",
+            "https://customer-assets.emergentagent.com/job_workshop-dashboard-1/artifacts/xkiyc362_file_00000000c6d87207a953d9af1719d04a.png",
+        ],
+        "car_fits": ["BYD Sealion 6", "BYD"],
+    },
 ]
 
 
