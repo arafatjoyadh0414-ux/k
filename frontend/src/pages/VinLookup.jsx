@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Layout from "../components/Layout";
 import api, { fmtBDT } from "../lib/api";
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
-import { Search, Car, Sparkles, AlertCircle, Bookmark, Trash2, Plus, ExternalLink, Info } from "lucide-react";
+import { Search, Car, Sparkles, AlertCircle, Bookmark, Trash2, Plus, ExternalLink, Info, Camera } from "lucide-react";
 import { toast } from "sonner";
 
 const VIN_RE = /^[A-HJ-NPR-Z0-9]{17}$/;
@@ -56,6 +56,130 @@ const Field = ({ label, value }) => (
     <div className="text-sm font-mono text-white mt-0.5">{value}</div>
   </div>
 );
+
+const CustomerCarCapture = ({ vin }) => {
+  const [photos, setPhotos] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const [note, setNote] = useState("");
+  const [previewUrl, setPreviewUrl] = useState("");
+
+  const load = useCallback(async () => {
+    try {
+      const { data } = await api.get("/vin/customer-photos", { params: { vin } });
+      setPhotos(data || []);
+    } catch (_) { /* ignore — endpoint requires auth */ }
+  }, [vin]);
+  useEffect(() => { load(); }, [load]);
+
+  const onFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 3 * 1024 * 1024) {
+      toast.error("Photo too large. Compress to under 3 MB and try again.");
+      return;
+    }
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("vin", vin);
+      fd.append("note", note);
+      fd.append("photo", file);
+      await api.post("/vin/customer-photo", fd, { headers: { "Content-Type": "multipart/form-data" } });
+      toast.success("Customer car photo saved");
+      setNote("");
+      await load();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Upload failed");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const view = async (photoId) => {
+    try {
+      const { data } = await api.get(`/vin/customer-photos/${photoId}/data`);
+      setPreviewUrl(data.data_url);
+    } catch (_) {
+      toast.error("Could not load photo");
+    }
+  };
+
+  const remove = async (photoId) => {
+    if (!window.confirm("Delete this customer car photo?")) return;
+    try {
+      await api.delete(`/vin/customer-photos/${photoId}`);
+      await load();
+    } catch (_) { toast.error("Delete failed"); }
+  };
+
+  return (
+    <div className="mt-4 industrial-card p-4" data-testid="customer-car-capture">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="overline">Customer's car · proof of service</div>
+          <p className="text-xs text-slate-600 mt-1 max-w-md">
+            Snap the actual customer vehicle to attach to this VIN. Helps with disputes
+            and creates a service-history trail.
+          </p>
+        </div>
+      </div>
+      <div className="flex flex-col sm:flex-row gap-2 mt-3">
+        <input
+          data-testid="customer-photo-note"
+          type="text"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="Optional note (license plate, mileage, body damage...)"
+          className="flex-1 border border-slate-200 px-3 py-2 text-sm rounded-sm focus:outline-none focus:ring-2 focus:ring-[#E11D48]"
+        />
+        <label className={`inline-flex items-center justify-center gap-1.5 cursor-pointer text-sm font-bold px-4 py-2 rounded-sm transition ${
+          uploading ? "bg-slate-300 text-slate-500" : "bg-[#E11D48] hover:bg-[#BE123C] text-white"
+        }`} data-testid="capture-customer-car-btn">
+          <Camera className="w-4 h-4" />
+          {uploading ? "Uploading…" : "Take photo"}
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            disabled={uploading}
+            onChange={onFile}
+            className="hidden"
+            data-testid="customer-photo-input"
+          />
+        </label>
+      </div>
+      {photos.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
+          {photos.map((p) => (
+            <div key={p.photo_id} className="relative group" data-testid={`customer-photo-${p.photo_id}`}>
+              <button onClick={() => view(p.photo_id)}
+                className="block aspect-[4/3] w-full bg-slate-100 border border-slate-200 rounded-sm overflow-hidden hover:border-[#E11D48] transition-colors text-left">
+                <div className="w-full h-full grid place-items-center text-slate-400">
+                  <Camera className="w-6 h-6" />
+                </div>
+              </button>
+              <div className="text-[10px] text-slate-500 mt-1 truncate">
+                {p.note || `${p.company_name} · ${(p.created_at || "").slice(0, 10)}`}
+              </div>
+              <button onClick={() => remove(p.photo_id)}
+                className="absolute top-1 right-1 p-1 bg-black/60 text-white rounded opacity-0 group-hover:opacity-100 transition"
+                data-testid={`delete-customer-photo-${p.photo_id}`}>
+                <Trash2 className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      {previewUrl && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setPreviewUrl("")} data-testid="customer-photo-preview">
+          <img src={previewUrl} alt="Customer car" className="max-h-full max-w-full rounded-sm" />
+          <button className="absolute top-4 right-4 bg-white text-slate-900 px-3 py-1 rounded-sm text-sm font-bold">Close</button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const SuggestionRow = ({ s, onRequest }) => (
   <div className="border border-slate-200 rounded-sm p-3" data-testid={`vin-suggestion-${(s.category || s.name || "").replace(/\s+/g, "-").toLowerCase()}`}>
@@ -247,16 +371,12 @@ const VinLookup = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <div className="lg:col-span-2">
                 <VehicleCard v={result.vehicle} />
-                {photos.length > 0 && (
+                {photos.length > 0 && photos[0].source === "google" ? (
                   <div className="mt-3" data-testid="vin-photo-gallery">
                     <div className="overline mb-2 flex items-center justify-between">
                       <span>Reference photo</span>
-                      <span className={`text-[10px] normal-case px-2 py-0.5 rounded-sm ${
-                        photos[0].source === "google"
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                          : "bg-amber-50 text-amber-700 border border-amber-200"
-                      }`}>
-                        {photos[0].source === "google" ? "Year-specific" : "Model generation · upgrade for exact-year match"}
+                      <span className="text-[10px] normal-case px-2 py-0.5 rounded-sm bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        ✓ Year-specific match
                       </span>
                     </div>
                     <a href={photos[0].page_url} target="_blank" rel="noopener noreferrer"
@@ -269,6 +389,24 @@ const VinLookup = () => {
                       </div>
                     </a>
                   </div>
+                ) : (
+                  <div className="mt-3" data-testid="vin-photo-placeholder">
+                    <div className="overline mb-2">Reference photo</div>
+                    <div className="border border-dashed border-slate-300 rounded-sm p-5 bg-slate-50 text-center">
+                      <div className="text-sm text-slate-700 font-display">
+                        Year-specific photos disabled
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+                        Showing wrong-year photos creates more confusion than no photo.
+                        Add free Google Custom Search keys to your <code className="bg-slate-200 px-1 rounded text-[10px]">backend/.env</code>
+                        to unlock exact <b>{result?.vehicle?.year}</b> {result?.vehicle?.make} photos for every VIN.
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {/* Customer's car proof-of-service capture */}
+                {result?.vehicle?.vin && (
+                  <CustomerCarCapture vin={result.vehicle.vin} />
                 )}
               </div>
               <div className="industrial-card p-5">

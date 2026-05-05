@@ -224,6 +224,19 @@ def render_invoice_pdf(order: dict, workshop: dict | None = None) -> bytes:
     story.append(Spacer(1, 4 * mm))
     story.append(Paragraph(footer_text, small))
 
+    # Brand stamp — workshops show this PDF to fleet customers / vehicle owners.
+    story.append(Spacer(1, 6 * mm))
+    brand = ParagraphStyle(
+        "Brand", parent=small, alignment=TA_CENTER,
+        textColor=JOY_GREY, fontSize=8, leading=11,
+    )
+    story.append(Paragraph(
+        "<b><font color='#E11D48'>JOY Automart</font></b> · "
+        "Bangladesh's B2B parts portal for auto repair workshops "
+        "&nbsp;·&nbsp; <font color='#0f172a'>www.joyautomart.com</font>",
+        brand,
+    ))
+
     doc.build(story)
     return buf.getvalue()
 
