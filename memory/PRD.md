@@ -136,10 +136,28 @@
 
 **Status: COMMERCIAL READY** — pending only customer-supplied Resend/bKash/SSLCommerz keys for live notifications and online payments.
 
+## Phase 8 — In-portal AI Assistant (2026-05-04)
+**Backend additions**
+- `POST /api/chat/message` and `GET /api/chat/history` — multi-turn assistant powered by Claude Sonnet 4.5 (`claude-sonnet-4-5-20250929`) via Emergent LLM key
+- `ai_assistant.py` — system-prompt-based structured JSON output (`{reply, actions[]}`); auto-detects English / Bangla; injects workshop's tier prices, KYC, credit, and recent orders into the system prompt
+- Action types: `show_product`, `show_kit`, `show_order`, `navigate`, `place_order` (gated behind KYC=approved + workshop role server-side)
+- `chat_messages` collection with indexes on `session_id+created_at` and `user_id+created_at`
+- Full history persisted; new sessions auto-create and the `session_id` is returned for follow-up turns
+- Verified: tier discount honoured (gold 10% off), Bangla replies emit when user writes Bangla, multi-turn context preserved across 4+ turns, place_order needs explicit confirmation
+
+**Frontend additions**
+- `ChatWidget.jsx` — floating bottom-right bubble + slide-in drawer (auth-gated)
+- Renders product cards with **[Add to cart]** button, order pills with deep links, navigate CTAs, and a confirm-order panel that calls `POST /api/orders` directly
+- Greeting + 3 suggested-prompt chips (English or Bangla based on `LanguageContext`)
+- Typing dots, multi-line composer, history restored on drawer reopen via `localStorage`-stored `session_id`
+
+**Status**: live in preview. Pending: redeploy to push to production at `b2bjoymart.com`.
+
 ## Backlog (Prioritized)
 **P0 — needs customer keys**
 - `RESEND_API_KEY` for live email notifications (scaffolding done)
 - bKash / SSLCommerz merchant keys for online payment go-live
+- Google Cloud OAuth Client ID + Secret for custom JOY-branded login (replaces Emergent OAuth screen)
 
 **P1**
 - Expand i18n dictionary to Orders/Cart/Returns/PartRequest pages + toast strings

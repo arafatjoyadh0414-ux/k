@@ -20,6 +20,7 @@ from invoice_pdf import render_invoice_pdf
 from notifications import (
     notify_kyc_decision, notify_order_placed, notify_order_status, notify_delivery_assigned,
 )
+from ai_assistant import chat_once
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -1800,6 +1801,107 @@ async def list_service_packs(request: Request):
 
 
 
+# ============= AI Assistant =============
+class ChatRequest(BaseModel):
+    session_id: str = ""
+    message: str
+
+
+@api_router.post("/chat/message")
+async def chat_message(payload: ChatRequest, request: Request):
+    user = await require_user(request)
+    if not payload.message or not payload.message.strip():
+        raise HTTPException(400, "Message required")
+    session_id = (payload.session_id or "").strip() or f"chat_{uuid.uuid4().hex[:12]}"
+
+    # Resolve workshop + tier (admin gets read-only assistant view)
+    workshop = await db.workshops.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    tier = (workshop or {}).get("pricing_tier", "retail")
+
+    # Apply tier pricing on a slim catalog snapshot
+    products = await db.products.find(
+        {},
+        {"_id": 0, "product_id": 1, "sku": 1, "name": 1, "category": 1,
+         "price_bdt": 1, "stock": 1, "is_kit": 1, "is_bundle": 1}
+    ).to_list(150)
+    for p in products:
+        p["your_price_bdt"] = tier_price(p["price_bdt"], tier)
+
+    # Recent orders for this user (admins see latest globally)
+    if user.get("role") == "admin":
+        orders = await db.orders.find({}, {"_id": 0}).sort("created_at", -1).to_list(6)
+    else:
+        orders = await db.orders.find(
+            {"user_id": user["user_id"]}, {"_id": 0}
+        ).sort("created_at", -1).to_list(6)
+
+    # Load conversation history
+    history = await db.chat_messages.find(
+        {"session_id": session_id, "user_id": user["user_id"]},
+        {"_id": 0}
+    ).sort("created_at", 1).to_list(100)
+
+    # Persist user message
+    now = datetime.now(timezone.utc).isoformat()
+    await db.chat_messages.insert_one(dict({
+        "message_id": f"msg_{uuid.uuid4().hex[:12]}",
+        "session_id": session_id,
+        "user_id": user["user_id"],
+        "role": "user",
+        "content": payload.message,
+        "created_at": now,
+    }))
+
+    # Call Claude
+    parsed = await chat_once(
+        session_id=session_id,
+        user_text=payload.message,
+        workshop=workshop,
+        tier=tier,
+        products=products,
+        orders=orders,
+        history=history,
+    )
+
+    # Validate place_order action against credit & KYC
+    safe_actions = []
+    for a in parsed.get("actions", []) or []:
+        if not isinstance(a, dict) or "type" not in a:
+            continue
+        if a["type"] == "place_order":
+            if not workshop or workshop.get("kyc_status") != "approved":
+                continue  # silently drop — show as text only
+        safe_actions.append(a)
+    parsed["actions"] = safe_actions
+
+    # Persist assistant reply (store full JSON for audit)
+    await db.chat_messages.insert_one(dict({
+        "message_id": f"msg_{uuid.uuid4().hex[:12]}",
+        "session_id": session_id,
+        "user_id": user["user_id"],
+        "role": "assistant",
+        "content": json.dumps({"reply": parsed.get("reply", ""), "actions": safe_actions}),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }))
+
+    return {
+        "session_id": session_id,
+        "reply": parsed.get("reply", ""),
+        "actions": safe_actions,
+    }
+
+
+@api_router.get("/chat/history")
+async def chat_history(request: Request, session_id: str):
+    user = await require_user(request)
+    msgs = await db.chat_messages.find(
+        {"session_id": session_id, "user_id": user["user_id"]}, {"_id": 0}
+    ).sort("created_at", 1).to_list(200)
+    return msgs
+
+
+
+
 # ============= Seed =============
 SEED_PRODUCTS = [
     {"name": "Brake Disc Rotor (Front)", "sku": "JA-BRK-001", "category": "Brake", "brand": "JoyOEM",
@@ -2133,6 +2235,9 @@ async def startup():
         await db.returns.create_index("return_id", unique=True)
         await db.returns.create_index([("user_id", 1), ("created_at", -1)])
         await db.returns.create_index([("status", 1), ("created_at", -1)])
+        await db.chat_messages.create_index("message_id", unique=True)
+        await db.chat_messages.create_index([("session_id", 1), ("created_at", 1)])
+        await db.chat_messages.create_index([("user_id", 1), ("created_at", -1)])
         logger.info("Indexes ensured")
     except Exception as e:
         logger.warning(f"Index creation warning: {e}")

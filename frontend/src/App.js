@@ -7,6 +7,7 @@ import { CartProvider } from "@/context/CartContext";
 import { LanguageProvider } from "@/context/LanguageContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AuthCallback from "@/components/AuthCallback";
+import ChatWidget from "@/components/ChatWidget";
 
 import Landing from "@/pages/Landing";
 import Dashboard from "@/pages/Dashboard";
@@ -90,6 +91,7 @@ function App() {
           <LanguageProvider>
             <CartProvider>
               <AppRouter />
+              <ChatWidget />
               <Toaster richColors position="top-right" />
             </CartProvider>
           </LanguageProvider>
