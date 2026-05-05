@@ -5,7 +5,7 @@ import { useCart } from "../context/CartContext";
 import { useLang } from "../context/LanguageContext";
 import {
   LayoutDashboard, Package, ShoppingCart, ClipboardList, UserCircle2,
-  Shield, LogOut, Wrench, Sparkles, Inbox, FileQuestion, Truck, BarChart3, Boxes, Bike, RotateCcw, Globe
+  Shield, LogOut, Wrench, Sparkles, Inbox, FileQuestion, Truck, BarChart3, Boxes, Bike, RotateCcw, Globe, Zap, TrendingUp
 } from "lucide-react";
 
 const LOGO = "https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg";
@@ -50,6 +50,8 @@ const Layout = ({ children }) => {
           {!isAdmin && (
             <>
               <NavItem to="/dashboard" icon={LayoutDashboard} label={t("nav.dashboard")} testid="nav-dashboard" />
+              <NavItem to="/insights" icon={TrendingUp} label="Insights" testid="nav-insights" />
+              <NavItem to="/quick-tools" icon={Zap} label="Quick Tools" testid="nav-quick-tools" />
               <NavItem to="/kits" icon={Sparkles} label={t("nav.kits")} testid="nav-kits" />
               <NavItem to="/service-packs" icon={Boxes} label={t("nav.service_packs")} testid="nav-service-packs" />
               <NavItem to="/products" icon={Package} label={t("nav.products")} testid="nav-products" />

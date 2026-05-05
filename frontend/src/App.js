@@ -23,6 +23,9 @@ import PartRequest from "@/pages/PartRequest";
 import Returns from "@/pages/Returns";
 import ProductDetail from "@/pages/ProductDetail";
 import PaymentReturn from "@/pages/PaymentReturn";
+import PublicCatalog from "@/pages/PublicCatalog";
+import Insights from "@/pages/Insights";
+import QuickTools from "@/pages/QuickTools";
 import { Terms, Privacy, NotFound } from "@/pages/Legal";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminInquiries from "@/pages/AdminInquiries";
@@ -49,6 +52,7 @@ const AppRouter = () => {
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/inquire" element={<Inquire />} />
       <Route path="/inquire/:sku" element={<Inquire />} />
+      <Route path="/catalog" element={<PublicCatalog />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/privacy" element={<Privacy />} />
 
@@ -62,6 +66,8 @@ const AppRouter = () => {
       <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
       <Route path="/orders/:id" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
       <Route path="/returns" element={<ProtectedRoute><Returns /></ProtectedRoute>} />
+      <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
+      <Route path="/quick-tools" element={<ProtectedRoute><QuickTools /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="/payment/return" element={<ProtectedRoute><PaymentReturn /></ProtectedRoute>} />
 

@@ -1802,6 +1802,291 @@ async def list_service_packs(request: Request):
 
 
 # ============= AI Assistant =============
+
+
+# ============= Public Catalog (SEO, no auth) =============
+@api_router.get("/public/catalog")
+async def public_catalog(category: str = "", q: str = ""):
+    """Anonymous catalog snapshot — used for the public /catalog page (SEO).
+    Returns retail prices only, no tier discount."""
+    flt = {}
+    if category:
+        flt["category"] = category
+    if q:
+        rx = {"$regex": q, "$options": "i"}
+        flt["$or"] = [{"name": rx}, {"sku": rx}, {"brand": rx}]
+    items = await db.products.find(
+        flt,
+        {"_id": 0, "product_id": 1, "sku": 1, "name": 1, "category": 1, "brand": 1,
+         "image_url": 1, "price_bdt": 1, "stock": 1, "is_kit": 1, "is_bundle": 1, "car_fits": 1,
+         "description": 1},
+    ).sort("category", 1).to_list(500)
+    return items
+
+
+@api_router.get("/public/categories")
+async def public_categories():
+    cats = await db.products.distinct("category")
+    return [c for c in cats if c]
+
+
+# ============= Saved Bundles (workshop's own service kits) =============
+class SavedBundleItem(BaseModel):
+    product_id: str
+    quantity: int
+
+
+class SavedBundlePayload(BaseModel):
+    name: str
+    items: List[SavedBundleItem]
+
+
+@api_router.post("/workshop/bundles")
+async def create_saved_bundle(payload: SavedBundlePayload, request: Request):
+    user = await require_user(request)
+    ws = await db.workshops.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not ws:
+        raise HTTPException(403, "Workshop only")
+    if not payload.name.strip():
+        raise HTTPException(400, "Name required")
+    if not payload.items:
+        raise HTTPException(400, "At least one item required")
+    bid = f"bnd_{uuid.uuid4().hex[:10]}"
+    doc = {
+        "saved_bundle_id": bid,
+        "user_id": user["user_id"],
+        "workshop_id": ws["workshop_id"],
+        "name": payload.name.strip(),
+        "items": [it.model_dump() for it in payload.items],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.saved_bundles.insert_one(dict(doc))
+    return {**doc}
+
+
+@api_router.get("/workshop/bundles")
+async def list_saved_bundles(request: Request):
+    user = await require_user(request)
+    bundles = await db.saved_bundles.find(
+        {"user_id": user["user_id"]}, {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    if not bundles:
+        return []
+    # Resolve product details
+    all_ids = list({it["product_id"] for b in bundles for it in b.get("items", [])})
+    products = await db.products.find(
+        {"product_id": {"$in": all_ids}},
+        {"_id": 0, "product_id": 1, "sku": 1, "name": 1, "image_url": 1, "price_bdt": 1, "moq": 1},
+    ).to_list(500)
+    pmap = {p["product_id"]: p for p in products}
+    tier = (await db.workshops.find_one({"user_id": user["user_id"]}, {"_id": 0}) or {}).get("pricing_tier", "silver")
+    for b in bundles:
+        resolved = []
+        total = 0.0
+        for it in b.get("items", []):
+            p = pmap.get(it["product_id"])
+            if not p:
+                continue
+            yp = tier_price(p["price_bdt"], tier)
+            line = yp * it["quantity"]
+            total += line
+            resolved.append({
+                **it,
+                "name": p["name"], "sku": p["sku"], "image_url": p.get("image_url", ""),
+                "your_price_bdt": yp, "line_total": line,
+            })
+        b["items_resolved"] = resolved
+        b["total_bdt"] = round(total, 2)
+    return bundles
+
+
+@api_router.delete("/workshop/bundles/{bundle_id}")
+async def delete_saved_bundle(bundle_id: str, request: Request):
+    user = await require_user(request)
+    res = await db.saved_bundles.delete_one(
+        {"saved_bundle_id": bundle_id, "user_id": user["user_id"]}
+    )
+    if res.deleted_count == 0:
+        raise HTTPException(404, "Not found")
+    return {"ok": True}
+
+
+# ============= Workshop Insights & Joy Score =============
+def _compute_joy_score(metrics: dict) -> dict:
+    """Proprietary credit-rating based on order count, frequency, on-time payments,
+    KYC, and credit utilization. Returns 0-100 score + grade + drivers."""
+    orders = metrics.get("orders_total", 0)
+    spend = metrics.get("spend_bdt_total", 0)
+    on_time = metrics.get("on_time_payment_rate", 1.0)  # 0..1
+    kyc_ok = 1 if metrics.get("kyc_status") == "approved" else 0
+    util = metrics.get("credit_utilization", 0)  # 0..1
+    months = metrics.get("active_months", 1)
+
+    # Components (each 0-100)
+    volume = min(100, orders * 4)               # 25 orders → 100
+    spend_score = min(100, spend / 5000)        # 500k BDT → 100
+    payment = on_time * 100
+    longevity = min(100, months * 8)            # 12+ months → 100
+    discipline = max(0, 100 - util * 100)       # high util → low score
+    base_kyc = kyc_ok * 100
+
+    score = round(
+        0.20 * volume
+        + 0.20 * spend_score
+        + 0.25 * payment
+        + 0.10 * longevity
+        + 0.15 * discipline
+        + 0.10 * base_kyc
+    )
+    if score >= 85:
+        grade = "Anchor"
+    elif score >= 70:
+        grade = "Elite"
+    elif score >= 50:
+        grade = "Partner"
+    else:
+        grade = "Starter"
+    return {"score": score, "grade": grade, "components": {
+        "volume": round(volume), "spend": round(spend_score),
+        "payment_punctuality": round(payment), "longevity": round(longevity),
+        "credit_discipline": round(discipline), "kyc": base_kyc,
+    }}
+
+
+@api_router.get("/workshop/insights")
+async def workshop_insights(request: Request):
+    user = await require_user(request)
+    ws = await db.workshops.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not ws:
+        raise HTTPException(403, "Workshop only")
+
+    orders = await db.orders.find({"user_id": user["user_id"]}, {"_id": 0}).to_list(1000)
+
+    # Aggregate
+    total_spend = sum(o.get("total_bdt", 0) for o in orders)
+    total_orders = len(orders)
+    discount_saved = sum(o.get("discount_amount_bdt", 0) for o in orders)
+    last_order_date = orders[0]["created_at"] if orders else None
+
+    # Top SKUs
+    sku_count = {}
+    sku_label = {}
+    for o in orders:
+        for it in o.get("items", []):
+            k = it.get("sku", "unknown")
+            sku_count[k] = sku_count.get(k, 0) + it.get("quantity", 0)
+            sku_label[k] = it.get("name", k)
+    top_skus = sorted(sku_count.items(), key=lambda x: -x[1])[:6]
+
+    # Monthly spend (last 6 months)
+    monthly = {}
+    for o in orders:
+        d = (o.get("created_at") or "")[:7]
+        if d:
+            monthly[d] = monthly.get(d, 0) + o.get("total_bdt", 0)
+    monthly_list = sorted(
+        [{"month": m, "spend": round(s)} for m, s in monthly.items()],
+        key=lambda x: x["month"]
+    )[-6:]
+
+    # Reorder cadence per SKU (predictive nudge)
+    sku_dates = {}
+    for o in sorted(orders, key=lambda x: x.get("created_at", "")):
+        for it in o.get("items", []):
+            sku = it.get("sku")
+            if sku:
+                sku_dates.setdefault(sku, []).append(o["created_at"])
+    nudges = []
+    now = datetime.now(timezone.utc)
+    for sku, dates in sku_dates.items():
+        if len(dates) < 2:
+            continue
+        # Average gap between orders
+        deltas = []
+        for i in range(1, len(dates)):
+            try:
+                a = datetime.fromisoformat(dates[i].replace("Z", "+00:00"))
+                b = datetime.fromisoformat(dates[i-1].replace("Z", "+00:00"))
+                deltas.append((a - b).days)
+            except Exception:
+                pass
+        if not deltas:
+            continue
+        avg_gap = sum(deltas) / len(deltas)
+        try:
+            last = datetime.fromisoformat(dates[-1].replace("Z", "+00:00"))
+            since_last = (now - last).days
+        except Exception:
+            continue
+        if avg_gap > 0 and since_last >= avg_gap * 0.85:
+            nudges.append({
+                "sku": sku,
+                "name": sku_label.get(sku, sku),
+                "avg_days": round(avg_gap),
+                "days_since_last": since_last,
+                "due_factor": round(since_last / avg_gap, 2),
+            })
+    nudges.sort(key=lambda x: -x["due_factor"])
+
+    # Joy Score inputs
+    credit_util = 0.0
+    if ws.get("credit_limit"):
+        credit_util = (ws.get("credit_used", 0) or 0) / ws["credit_limit"]
+    # On-time payment proxy: % of credit orders that are paid OR not yet due
+    credit_orders = [o for o in orders if o.get("payment_method") == "credit"]
+    on_time = 1.0
+    if credit_orders:
+        late = 0
+        for o in credit_orders:
+            try:
+                due = o.get("due_date")
+                if due and o.get("payment_status") != "paid":
+                    due_dt = datetime.fromisoformat(due.replace("Z", "+00:00"))
+                    if datetime.now(timezone.utc) > due_dt:
+                        late += 1
+            except Exception:
+                pass
+        on_time = max(0.0, 1.0 - late / len(credit_orders))
+
+    # Active months
+    if orders:
+        try:
+            first = datetime.fromisoformat(orders[-1]["created_at"].replace("Z", "+00:00"))
+            months = max(1, int((now - first).days / 30))
+        except Exception:
+            months = 1
+    else:
+        months = 0
+
+    joy = _compute_joy_score({
+        "orders_total": total_orders,
+        "spend_bdt_total": total_spend,
+        "on_time_payment_rate": on_time,
+        "kyc_status": ws.get("kyc_status", ""),
+        "credit_utilization": credit_util,
+        "active_months": months,
+    })
+
+    return {
+        "summary": {
+            "total_orders": total_orders,
+            "total_spend_bdt": round(total_spend),
+            "discount_saved_bdt": round(discount_saved),
+            "last_order_at": last_order_date,
+            "active_months": months,
+            "tier": ws.get("pricing_tier", "silver"),
+            "credit_limit": ws.get("credit_limit", 0),
+            "credit_used": ws.get("credit_used", 0),
+            "credit_utilization_pct": round(credit_util * 100),
+        },
+        "monthly_spend": monthly_list,
+        "top_skus": [{"sku": k, "name": sku_label.get(k, k), "qty": v} for k, v in top_skus],
+        "reorder_nudges": nudges[:6],
+        "joy_score": joy,
+    }
+
+
+# ============= AI Assistant =============
 class ChatRequest(BaseModel):
     session_id: str = ""
     message: str
@@ -1835,6 +2120,46 @@ async def chat_message(payload: ChatRequest, request: Request):
             {"user_id": user["user_id"]}, {"_id": 0}
         ).sort("created_at", -1).to_list(6)
 
+    # Predictive nudges (reorder cadence) — feed to chatbot for proactive suggestions
+    reorder_nudges = []
+    if user.get("role") != "admin":
+        all_orders = await db.orders.find(
+            {"user_id": user["user_id"]}, {"_id": 0, "items": 1, "created_at": 1}
+        ).sort("created_at", 1).to_list(500)
+        sku_dates = {}
+        sku_label = {}
+        for o in all_orders:
+            for it in o.get("items", []):
+                sku = it.get("sku")
+                if sku:
+                    sku_dates.setdefault(sku, []).append(o["created_at"])
+                    sku_label[sku] = it.get("name", sku)
+        now = datetime.now(timezone.utc)
+        for sku, dates in sku_dates.items():
+            if len(dates) < 2:
+                continue
+            try:
+                deltas = [
+                    (datetime.fromisoformat(dates[i].replace("Z", "+00:00"))
+                     - datetime.fromisoformat(dates[i-1].replace("Z", "+00:00"))).days
+                    for i in range(1, len(dates))
+                ]
+                if not deltas:
+                    continue
+                avg = sum(deltas) / len(deltas)
+                last = datetime.fromisoformat(dates[-1].replace("Z", "+00:00"))
+                since = (now - last).days
+                if avg > 0 and since >= avg * 0.85:
+                    reorder_nudges.append({
+                        "sku": sku,
+                        "name": sku_label.get(sku, sku),
+                        "avg_days": round(avg),
+                        "days_since_last": since,
+                    })
+            except Exception:
+                pass
+        reorder_nudges = sorted(reorder_nudges, key=lambda x: -x["days_since_last"])[:3]
+
     # Load conversation history
     history = await db.chat_messages.find(
         {"session_id": session_id, "user_id": user["user_id"]},
@@ -1861,6 +2186,7 @@ async def chat_message(payload: ChatRequest, request: Request):
         products=products,
         orders=orders,
         history=history,
+        reorder_nudges=reorder_nudges,
     )
 
     # Validate place_order action against credit & KYC

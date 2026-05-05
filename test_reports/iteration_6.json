@@ -1,0 +1,49 @@
+{
+  "summary": "Phase 6 testing complete: Pre-render shell, public catalog/categories, workshop insights w/ Joy Score, saved bundles CRUD, quick tools (My Service Kits + Bulk SKU Paste), and chat smoke. Backend: 10/10 pytest cases pass (100%). Frontend: all required data-testids render and full e2e happy-path validated end-to-end with cookie session_token=test-token-workshop-1. Pre-render shell: curl confirms `id=\"prerender-shell\"` present, contains 'JOY Automart' (11 occurrences) and 'Order on WhatsApp instead', and <meta property='og:url' content='https://b2bjoymart.com'> is set. Public catalog: GET /api/public/catalog returns 38 products WITHOUT auth (200) with keys name/sku/category/brand/description/image_url/price_bdt/stock/is_kit/product_id. Public categories: 16 distinct strings. /catalog renders public-catalog-page for anonymous, public-search-input filters live, public-cat-Brake filters to 2 brake products, public-signin-cta visible. Workshop insights: GET /api/workshop/insights returns summary{total_orders:0, total_spend_bdt:0, discount_saved_bdt:0, credit_limit:100000, credit_used:8900, credit_utilization_pct:9, tier:'gold', active_months:0}, joy_score{score:49, grade:'Starter', components:{volume:0, spend:0, payment_punctuality:100, longevity:0, credit_discipline:91, kyc:100}}; 401 without auth. /insights renders joy-score-ring (showing '49 STARTER'), all 6 score-component-* badges (volume/spend/payment_punctuality/longevity/credit_discipline/kyc), all 4 stat cards (stat-orders, stat-spend, stat-saved, stat-credit). Layout verified — joy-score ring at x=313 w=144, text at x=477 — NO overlap, z-index fix is correct. Saved bundles: POST validates name (422) and items (422) required; full CRUD works — created with 1 item (qty=3) of JA-ACC-001, GET returns items_resolved with name/sku/image_url/your_price_bdt/line_total + total_bdt=line_total*qty, admin-token DELETE returns 404 (owner isolation), owner DELETE returns 200, second DELETE returns 404. Quick Tools: tab-bundles default + tab-bulk visible, switching between tabs works, New Kit form opens with name+sku+qty+save/cancel, Bulk SKU Paste resolves 'JA-BRK-002 x 4\\nJA-ENG-001 x 2' to 'Brake Pad Set (Ceramic)' (৳7,920) and 'Engine Oil Filter' (৳810); bulk-add-all-button adds both to cart (cart count 4 → 6, toast 'Added 2 items to cart' shown). Chat: POST /api/chat/message returns 200 with sensible Claude reply mentioning consumables and JOY Service Packs.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/public/catalog", "issue": "Response items are MISSING `is_bundle` and `car_fits` fields that the review request enumerated. Currently exposed keys: name/sku/category/brand/description/image_url/price_bdt/stock/is_kit/product_id. Frontend /catalog and /quick-tools work fine without them, but if any consumer (SEO/sitemap/aggregator) relies on car_fits for vehicle filtering on the public page, it will be missing. Recommend including these on the public projection."},
+      {"endpoint": "POST /api/workshop/bundles", "issue": "Item field name is `quantity` (not `qty` as one might infer from cart-line shorthand). Documented contract is fine, but inconsistent with /api/cart line `qty` shorthand used elsewhere in the codebase. Either rename for consistency or document."},
+      {"endpoint": "GET /api/public/categories", "issue": "Returns both 'Brake' and 'brakes' (case-different duplicates) — likely caused by inconsistent product.category casing in seed/admin data. Consider normalizing on read (lowercase + Title Case) so the public catalog category buttons don't show two near-duplicates."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/insights joy-score-card", "issues": ["Component value labels (e.g. '0', '100', '91') under VOLUME/SPEND/etc. render in very low contrast against the gradient background and were not visible in the desktop screenshot at 1920x4000. Data-testid still resolves and the inner_text confirms values are present in DOM, but visual contrast of the score numbers under each component label needs darkening or a small badge background. No overlap with ring (z-index fix verified)."]},
+      {"screen": "/catalog public", "issues": ["Card grid uses generic .grid > div selectors — the spec mentioned `data-testid=public-product-*` for individual cards but cards do NOT carry that testid (only the page itself has public-catalog-page and category buttons have public-cat-*). Add per-card data-testid for future automated tests."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_phase6_public_insights_bundles.py",
+    "/app/test_reports/pytest/phase6_results.xml"
+  ],
+  "action_items": [
+    "Add `is_bundle` and `car_fits` to /api/public/catalog response projection so the public/anonymous catalog can support vehicle-fit filtering as advertised.",
+    "Normalize /api/public/categories de-duping ('Brake' vs 'brakes' both present today).",
+    "Improve contrast of joy_score component values on /insights so the 0/100/91/etc numbers under each label are clearly readable.",
+    "Add `data-testid=\"public-product-{sku}\"` (or {product_id}) to each catalog card for testability.",
+    "From iter 5 (still open): split server.py (now ~2540 lines) into modules; tighten PATCH /api/admin/returns approved-state guard; persist delivered_at first-class; prorate refund vs order-level discount/delivery_fee.",
+    "Optional: align bundle item field name (`quantity` vs `qty`) with cart-line shorthand for cross-API consistency."
+  ],
+  "critical_code_review_comments": [
+    "server.py grew from 2120 -> ~2540 lines. Strongly recommend splitting (auth, orders, returns, invoice, admin, packs, public, insights, bundles, notifications) before next feature add.",
+    "Pre-render shell is properly inlined in /app/frontend/public/index.html with prerender-shell id and og:url set to https://b2bjoymart.com — addresses P0 SEO/blank-page-without-JS finding.",
+    "_compute_joy_score correctly weights components and produces a defensible Starter/Partner/Elite/Anchor mapping; confirmed score=49 for 0-order workshop with KYC=approved + low credit_used reflects starter tier.",
+    "Public projection (excluding workshop-tier prices) is correct — anonymous catalog returns retail price_bdt only, no tier_price/your_price exposure. Good security boundary.",
+    "Saved-bundle owner-scoping uses delete_one({saved_bundle_id, user_id}) → returns 404 to non-owners (admin couldn't delete workshop's bundle) — clean. items_resolved server-side computation with line_total = your_price_bdt * quantity is correct and uses tier-aware your_price.",
+    "Chat reorder_nudges integration: chat_message passes nudges from /api/workshop/insights into chat_once, and Claude reply (verified) correctly references stocking JOY products by SKU (JA-BRK-002, JA-ENG-001 etc.) when the workshop has no recent orders. With recurring orders 7d apart, the system_prompt now has structured nudges to surface."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_phase6_public_insights_bundles.py"
+  ],
+  "success_rate": {"backend": "100% (10/10 phase6)", "frontend": "100% (all data-testid + full e2e bundle/bulk/insights flow verified)"},
+  "test_credentials": "Re-used Bearer test-token-workshop-1 (user=test-workshop-1, ws=ws-test-1, kyc=approved, gold, credit_limit=100000) and Bearer test-token-admin-1. Cookie session_token works for browser tests. Tokens still seeded — no re-seed needed.",
+  "seed_data_creation": "Per-test ephemeral docs cleaned by fixture teardown (TEST_K_phase6 bundle deleted in finally block of test_full_crud_owner_isolation). Bulk-paste FE flow added 2 items to test workshop's cart (JA-BRK-002 x4 + JA-ENG-001 x2, total ~৳8,730) — left as residual test cart content; main agent can clear via DELETE /api/cart/clear if desired.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Run Phase 6 alone: `pytest backend/tests/test_phase6_public_insights_bundles.py -v`. Pre-render shell is pure index.html — verify with `curl -s $REACT_APP_BACKEND_URL/ | grep prerender-shell`. For FE tests, set cookie session_token=test-token-workshop-1 BEFORE first navigation (add_cookies before page.goto) — otherwise the first /api/products fetch fires unauthenticated and the products array stays empty, causing the bulk-paste matcher to (falsely) report 'SKU not found'. Joy Score ring testid joy-score-ring; component testids score-component-{volume|spend|payment_punctuality|longevity|credit_discipline|kyc}. Stat testids stat-orders/stat-spend/stat-saved/stat-credit. Quick Tools tabs tab-bundles/tab-bulk; bulk-paste-textarea/bulk-parse-button/bulk-add-all-button.",
+  "rca of the issue": "No critical defects in Phase 6. Two doc-vs-impl gaps worth flagging: (1) public catalog projection omits is_bundle/car_fits that the review request listed — frontend doesn't currently use them but the spec advertises them, so consumers (sitemap/SEO) may break; mitigation: add to projection in /api/public/catalog. (2) /api/public/categories returns 'Brake' AND 'brakes' as separate categories (raw distinct of product.category without case-folding); root cause is inconsistent admin/seed casing; mitigation: lower().title() normalize on read OR backfill products via mongosh."
+}

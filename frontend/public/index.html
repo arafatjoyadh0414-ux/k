@@ -35,7 +35,110 @@
         <script>window.addEventListener("error",function(e){if(e.error instanceof DOMException&&e.error.name==="DataCloneError"&&e.message&&e.message.includes("PerformanceServerTiming")){e.stopImmediatePropagation();e.preventDefault()}},true);</script>
     </head>
     <body>
-        <noscript>You need to enable JavaScript to run this app.</noscript>
+        <!-- Pre-rendered marketing copy so the page is never blank — visible until React hydrates,
+             or permanently if the visitor has JS disabled. This is the P0 SEO + slow-network fix. -->
+        <div id="prerender-shell" style="margin:0;padding:0;font-family:'IBM Plex Sans',Helvetica,Arial,sans-serif;color:#0f172a;line-height:1.55;background:#ffffff;">
+          <header style="border-bottom:1px solid #e2e8f0;background:#0f172a;color:#ffffff;">
+            <div style="max-width:1100px;margin:0 auto;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <img src="https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg" alt="JOY Automart" width="40" height="40" style="display:block;" />
+                <div>
+                  <div style="font-size:18px;font-weight:700;letter-spacing:-0.01em;">JOY Automart</div>
+                  <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#cbd5e1;">B2B Workshop Portal · Bangladesh</div>
+                </div>
+              </div>
+              <a href="/dashboard" style="background:#E11D48;color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;padding:10px 18px;border-radius:4px;">Sign in</a>
+            </div>
+          </header>
+
+          <main style="max-width:1100px;margin:0 auto;padding:48px 20px;">
+            <section style="margin-bottom:56px;">
+              <div style="font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#E11D48;">For repair workshops · Dhaka & nationwide</div>
+              <h1 style="font-family:'Cabinet Grotesk',Helvetica,Arial,sans-serif;font-size:44px;line-height:1.06;font-weight:800;margin:14px 0 18px 0;letter-spacing:-0.015em;">
+                Wholesale auto parts.<br/>Credit you can build on.<br/>
+                <span style="color:#E11D48;">Built for the bay floor.</span>
+              </h1>
+              <p style="font-size:17px;color:#475569;max-width:640px;margin:0 0 24px 0;">
+                JOY Automart's B2B portal gives Bangladesh's auto-repair workshops verified parts, transparent
+                tier pricing, 30-day credit, and an AI assistant that knows cars as well as your master mechanic.
+              </p>
+              <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                <a href="/dashboard" style="background:#0f172a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;padding:14px 22px;border-radius:4px;">Open the portal →</a>
+                <a href="/catalog" style="background:#ffffff;border:1px solid #cbd5e1;color:#0f172a;text-decoration:none;font-size:14px;font-weight:700;padding:14px 22px;border-radius:4px;">Browse catalog</a>
+                <a href="https://wa.me/8801886799533" style="background:#25D366;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;padding:14px 22px;border-radius:4px;">WhatsApp 01886-799533</a>
+              </div>
+            </section>
+
+            <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-bottom:56px;">
+              <div style="border:1px solid #e2e8f0;padding:20px;border-radius:4px;">
+                <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#64748b;font-weight:700;">31+ parts</div>
+                <div style="font-family:'Cabinet Grotesk',Helvetica,Arial,sans-serif;font-size:24px;font-weight:700;margin-top:6px;">Verified catalog</div>
+                <div style="font-size:13px;color:#475569;margin-top:6px;">Brakes, suspension, engine, fluids, lighting, electrical, drivetrain — all in stock.</div>
+              </div>
+              <div style="border:1px solid #e2e8f0;padding:20px;border-radius:4px;">
+                <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#64748b;font-weight:700;">6 signature kits</div>
+                <div style="font-family:'Cabinet Grotesk',Helvetica,Arial,sans-serif;font-size:24px;font-weight:700;margin-top:6px;">Body kits, fitted</div>
+                <div style="font-size:13px;color:#475569;margin-top:6px;">From Shadow GT entry to Cyber Beast flagship + JOY Beast Wide Body for BYD Sealion 6.</div>
+              </div>
+              <div style="border:1px solid #e2e8f0;padding:20px;border-radius:4px;">
+                <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#64748b;font-weight:700;">Tier pricing</div>
+                <div style="font-family:'Cabinet Grotesk',Helvetica,Arial,sans-serif;font-size:24px;font-weight:700;margin-top:6px;">Silver · Gold · Platinum</div>
+                <div style="font-size:13px;color:#475569;margin-top:6px;">Up to 12% off retail, applied automatically. Volume discounts stack on top.</div>
+              </div>
+              <div style="border:1px solid #e2e8f0;padding:20px;border-radius:4px;">
+                <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#64748b;font-weight:700;">30-day credit</div>
+                <div style="font-family:'Cabinet Grotesk',Helvetica,Arial,sans-serif;font-size:24px;font-weight:700;margin-top:6px;">Credit-backed orders</div>
+                <div style="font-size:13px;color:#475569;margin-top:6px;">Approved workshops get a credit limit. Order today, settle in 30. Track usage in the dashboard.</div>
+              </div>
+            </section>
+
+            <section style="margin-bottom:56px;">
+              <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#64748b;font-weight:700;">How it works</div>
+              <h2 style="font-family:'Cabinet Grotesk',Helvetica,Arial,sans-serif;font-size:32px;font-weight:700;margin:8px 0 24px 0;letter-spacing:-0.01em;">From signup to delivery in 4 steps</h2>
+              <ol style="counter-reset:step;list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;">
+                <li style="border-left:3px solid #E11D48;padding:6px 18px;"><div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#E11D48;font-weight:700;">01</div><div style="font-weight:700;font-size:15px;margin-top:4px;">Sign up free</div><div style="font-size:13px;color:#475569;margin-top:4px;">Google sign-in, then upload your trade license for KYC.</div></li>
+                <li style="border-left:3px solid #E11D48;padding:6px 18px;"><div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#E11D48;font-weight:700;">02</div><div style="font-weight:700;font-size:15px;margin-top:4px;">Get approved</div><div style="font-size:13px;color:#475569;margin-top:4px;">We verify your shop and assign a tier + credit limit (typically same day).</div></li>
+                <li style="border-left:3px solid #E11D48;padding:6px 18px;"><div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#E11D48;font-weight:700;">03</div><div style="font-weight:700;font-size:15px;margin-top:4px;">Order anytime</div><div style="font-size:13px;color:#475569;margin-top:4px;">Browse catalog, paste SKUs, or chat with the AI to build orders fast.</div></li>
+                <li style="border-left:3px solid #E11D48;padding:6px 18px;"><div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#E11D48;font-weight:700;">04</div><div style="font-weight:700;font-size:15px;margin-top:4px;">Track + settle</div><div style="font-size:13px;color:#475569;margin-top:4px;">Live tracking, PDF invoice, and 7-day return window. Pay COD, online, or on credit.</div></li>
+              </ol>
+            </section>
+
+            <section style="background:#f8fafc;border:1px solid #e2e8f0;padding:28px;border-radius:6px;margin-bottom:48px;">
+              <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#64748b;font-weight:700;">Don't have JavaScript or a slow connection?</div>
+              <h3 style="font-family:'Cabinet Grotesk',Helvetica,Arial,sans-serif;font-size:22px;font-weight:700;margin:8px 0 8px 0;">Order on WhatsApp instead.</h3>
+              <p style="font-size:14px;color:#475569;margin:0 0 16px 0;max-width:640px;">Send your part number and quantity to <strong>01886-799533</strong>. Our team confirms stock + price within minutes.</p>
+              <a href="https://wa.me/8801886799533" style="background:#25D366;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;padding:12px 22px;border-radius:4px;display:inline-block;">Open WhatsApp →</a>
+            </section>
+          </main>
+
+          <footer style="border-top:1px solid #e2e8f0;background:#f8fafc;">
+            <div style="max-width:1100px;margin:0 auto;padding:24px 20px;font-size:12px;color:#64748b;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+              <div>© 2026 JOY Automart · Dhaka, Bangladesh · <a href="mailto:sales@joyautomart.com" style="color:#475569;text-decoration:none;">sales@joyautomart.com</a></div>
+              <div><a href="/terms" style="color:#475569;text-decoration:none;">Terms</a> · <a href="/privacy" style="color:#475569;text-decoration:none;">Privacy</a> · <a href="https://www.joyautomart.com" style="color:#475569;text-decoration:none;">Retail website</a></div>
+            </div>
+          </footer>
+        </div>
+        <noscript>
+          <style>#root{display:none}</style>
+        </noscript>
         <div id="root"></div>
+        <script>
+          // Hide the pre-render shell once React has mounted real content.
+          (function(){
+            var tries=0;
+            function check(){
+              var root=document.getElementById('root');
+              var shell=document.getElementById('prerender-shell');
+              if(root && root.children && root.children.length>0){
+                if(shell) shell.style.display='none';
+                return;
+              }
+              if(tries++ < 60){ setTimeout(check, 200); }
+            }
+            if(document.readyState==='loading'){
+              document.addEventListener('DOMContentLoaded', check);
+            } else { check(); }
+          })();
+        </script>
     </body>
 </html>

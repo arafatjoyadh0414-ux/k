@@ -147,6 +147,7 @@ def build_system_prompt(
     tier: str,
     products: list[dict],
     orders: list[dict],
+    reorder_nudges: list[dict] | None = None,
 ) -> str:
     ws = workshop or {}
     catalog_lines = []
@@ -170,6 +171,18 @@ def build_system_prompt(
     else:
         orders_text = "(no recent orders)"
 
+    nudges_text = ""
+    if reorder_nudges:
+        lines = [
+            f"- {n['sku']} ({n['name']}): typically every {n['avg_days']}d, last was {n['days_since_last']}d ago — DUE"
+            for n in reorder_nudges[:3]
+        ]
+        nudges_text = (
+            "\n\nPROACTIVE REORDER OPPORTUNITIES (mention naturally if relevant; "
+            "DO NOT spam — only bring it up if user opens the chat with a greeting "
+            "or asks 'what's new' / 'anything I should reorder'):\n" + "\n".join(lines)
+        )
+
     return SYSTEM_TEMPLATE.format(
         workshop_name=ws.get("company_name") or "Workshop",
         tier=(tier or "retail").upper(),
@@ -180,7 +193,7 @@ def build_system_prompt(
         contact_phone=ws.get("contact_phone", "—") or "—",
         catalog=catalog,
         orders=orders_text,
-    )
+    ) + nudges_text
 
 
 def _strip_code_fence(s: str) -> str:
@@ -237,6 +250,7 @@ async def chat_once(
     products: list[dict],
     orders: list[dict],
     history: list[dict],
+    reorder_nudges: list[dict] | None = None,
 ) -> dict[str, Any]:
     """One-shot chat: builds system prompt + history, calls Claude, returns parsed dict."""
     key = _get_key()
@@ -246,7 +260,7 @@ async def chat_once(
             "actions": [],
         }
 
-    system = build_system_prompt(workshop, tier, products, orders)
+    system = build_system_prompt(workshop, tier, products, orders, reorder_nudges or [])
     transcript = _format_history(history)
 
     # Compose the message: include prior conversation, then the new user turn.
