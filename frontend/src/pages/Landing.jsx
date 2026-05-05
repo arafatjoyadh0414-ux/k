@@ -1,7 +1,7 @@
 import React from "react";
 import { useAuth } from "../context/AuthContext";
 import { Navigate, Link } from "react-router-dom";
-import { ArrowRight, ShieldCheck, Wallet, Truck, PackageSearch } from "lucide-react";
+import { ArrowRight, ShieldCheck, Wallet, Truck, PackageSearch, Bot, BarChart3, Boxes, Zap } from "lucide-react";
 
 const LOGO = "https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg";
 const HERO = "https://images.pexels.com/photos/8986132/pexels-photo-8986132.jpeg";
@@ -64,20 +64,24 @@ const Landing = () => {
                 <svg className="w-5 h-5" viewBox="0 0 48 48"><path fill="#fff" d="M24 9.5c3.4 0 6.4 1.2 8.8 3.4l6.6-6.6C35.4 2.6 30 .5 24 .5 14.7.5 6.7 5.8 2.9 13.6l7.7 6c1.8-5.5 6.9-9.6 13.4-9.6z"/><path fill="#fff" opacity=".8" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.4 5.5-5 7.2l7.7 6c4.5-4.2 7.1-10.4 7.1-17.7z"/><path fill="#fff" opacity=".6" d="M10.6 28.4c-.5-1.4-.8-2.9-.8-4.4s.3-3 .8-4.4l-7.7-6C1.3 17 0 20.4 0 24s1.3 7 2.9 10.4l7.7-6z"/><path fill="#fff" opacity=".9" d="M24 47.5c6 0 11.4-2 15.4-5.4l-7.7-6c-2.1 1.4-4.8 2.3-7.7 2.3-6.5 0-11.6-4.1-13.4-9.6l-7.7 6C6.7 42.2 14.7 47.5 24 47.5z"/></svg>
                 Continue with Google
               </button>
-              <a href="/inquire" data-testid="hero-inquire-link"
+              <a href="/catalog" data-testid="hero-catalog-link"
                  className="inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-slate-900 text-slate-900 px-6 py-3 rounded-sm font-semibold transition-colors duration-200">
-                Schedule a Kit Install
+                Browse catalog
               </a>
-              <a href="https://www.joyautomart.com" target="_blank" rel="noreferrer"
-                className="text-sm font-semibold text-slate-700 hover:text-[#E11D48] underline-offset-4 hover:underline">
-                Visit retail site →
+              <a href="https://wa.me/8801886799533" data-testid="hero-whatsapp-link"
+                 className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1ca352] text-white px-5 py-3 rounded-sm font-semibold transition-colors duration-200">
+                WhatsApp 01886-799533
+              </a>
+              <a href="/inquire" data-testid="hero-inquire-link"
+                 className="text-sm font-semibold text-slate-700 hover:text-[#E11D48] underline-offset-4 hover:underline">
+                Schedule a Kit Install →
               </a>
             </div>
 
             <div className="mt-10 grid grid-cols-3 gap-6 max-w-lg">
               <div>
-                <div className="font-display text-3xl">12+</div>
-                <div className="overline mt-1">Categories</div>
+                <div className="font-display text-3xl">38+</div>
+                <div className="overline mt-1">Parts & Kits</div>
               </div>
               <div>
                 <div className="font-display text-3xl">৳ 5L</div>
@@ -113,17 +117,22 @@ const Landing = () => {
 
       {/* Features */}
       <section className="max-w-7xl mx-auto px-6 py-16">
-        <div className="overline mb-2">What you get</div>
-        <h2 className="font-display text-3xl lg:text-4xl tracking-tight max-w-2xl">
-          A workshop's command center for parts.
+        <div className="overline mb-2">Built for the bay floor</div>
+        <h2 className="font-display text-3xl lg:text-4xl tracking-tight max-w-3xl">
+          A workshop's command center for parts.<br />
+          <span className="text-[#E11D48]">Now with AI.</span>
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
           {[
             { Icon: ShieldCheck, t: "KYC Verified Trade", d: "Submit your trade license once. Get verified, unlock credit, and order with confidence." },
-            { Icon: Wallet, t: "Credit on Tap", d: "Admin-set credit limits per workshop. 30-day terms. Outstanding balance on your dashboard." },
-            { Icon: PackageSearch, t: "Genuine Parts", d: "Brake, engine, suspension, electrical, fluids—curated catalog with B2B pricing and MOQs." },
-            { Icon: Truck, t: "Trackable Delivery", d: "From Placed to Delivered—live status, dispatch updates, and order history forever." },
+            { Icon: Wallet, t: "Credit on Tap", d: "Admin-set credit limits per workshop. 30-day terms. Outstanding balance always visible." },
+            { Icon: PackageSearch, t: "Genuine Parts", d: "Brake, engine, suspension, electrical, fluids — curated catalog with B2B tier pricing." },
+            { Icon: Truck, t: "Trackable Delivery", d: "From Placed to Delivered — live status, dispatch updates, and delivery person assigned per order." },
+            { Icon: Bot, t: "JOY AI Assistant", d: "Ask anything about cars or our catalog — diagnostics, fitment, oil specs, even build a full order in chat." },
+            { Icon: BarChart3, t: "Joy Score & Insights", d: "Bangladesh's first workshop credit rating. Monthly spend, top parts, predictive reorder nudges — all on /insights." },
+            { Icon: Boxes, t: "Service Packs", d: "Pre-curated bundles — JOY Basic Service, Premium Service, Brake Refresh, Suspension Tune-Up. One click, full job." },
+            { Icon: Zap, t: "Quick Tools", d: "Save your own service kits. Paste a bulk SKU list and add 15 items to cart in one shot." },
           ].map(({ Icon, t, d }) => (
             <div key={t} className="industrial-card p-5">
               <div className="w-10 h-10 grid place-items-center bg-slate-900 text-white mb-4 rounded-sm">
