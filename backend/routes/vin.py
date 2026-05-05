@@ -216,6 +216,29 @@ async def vin_decode(vin: str):
     if not _vin_valid(vin):
         raise HTTPException(400, "Invalid VIN. Must be 17 chars, A-Z (no I/O/Q) and digits.")
 
+    # Workshop-verified correction takes priority over everything (NHTSA, WMI, AI)
+    correction = await db.vin_corrections.find_one({"vin": vin}, {"_id": 0})
+    if correction:
+        # Decode the underlying authoritative data first so we keep all fields,
+        # then overlay the corrected fields on top.
+        cached = await db.vin_cache.find_one({"vin": vin}, {"_id": 0}) or {}
+        if not cached:
+            cached = await _decode_full(vin)
+            await db.vin_cache.update_one({"vin": vin}, {"$set": cached}, upsert=True)
+        merged = dict(cached)
+        for k in ("make", "model", "year", "body_class", "engine_l", "fuel",
+                  "transmission", "drive_type", "trim"):
+            v = correction.get(k)
+            if v not in (None, "", 0):
+                merged[k] = v
+        merged["verified_by_workshop"] = True
+        merged["verified_by_company"] = correction.get("company_name", "")
+        merged["verified_at"] = correction.get("created_at", "")
+        merged["sources"] = ["workshop_verified"]
+        merged["ai_inferred"] = False
+        merged["cached"] = True
+        return merged
+
     # Cache hit?
     cached = await db.vin_cache.find_one({"vin": vin}, {"_id": 0})
     if cached:
@@ -233,6 +256,55 @@ async def vin_decode(vin: str):
     )
     decoded["cached"] = False
     return decoded
+
+
+# ============= Workshop VIN correction =============
+class VinCorrectionPayload(BaseModel):
+    vin: str
+    make: str = ""
+    model: str = ""
+    year: int | None = None
+    body_class: str = ""
+    engine_l: str = ""
+    fuel: str = ""
+    transmission: str = ""
+    drive_type: str = ""
+    trim: str = ""
+
+
+@api_router.post("/vin/correct")
+async def correct_vin(payload: VinCorrectionPayload, request: Request):
+    """Workshop submits the correct decode for a VIN. Becomes the
+    authoritative answer for every subsequent lookup network-wide."""
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(401, "Login required to correct VIN data")
+    vin = _normalize_vin(payload.vin)
+    if not _vin_valid(vin):
+        raise HTTPException(400, "Invalid VIN.")
+
+    ws = await db.workshops.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    company_name = (ws or {}).get("company_name", user.get("name", ""))
+
+    doc = {
+        "vin": vin,
+        "user_id": user["user_id"],
+        "company_name": company_name,
+        "make": payload.make.strip() or None,
+        "model": payload.model.strip() or None,
+        "year": payload.year,
+        "body_class": payload.body_class.strip() or None,
+        "engine_l": payload.engine_l.strip() or None,
+        "fuel": payload.fuel.strip() or None,
+        "transmission": payload.transmission.strip() or None,
+        "drive_type": payload.drive_type.strip() or None,
+        "trim": payload.trim.strip() or None,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    # Strip nulls
+    doc = {k: v for k, v in doc.items() if v is not None}
+    await db.vin_corrections.update_one({"vin": vin}, {"$set": doc}, upsert=True)
+    return {"ok": True, "vin": vin, "verified_by": company_name}
 
 
 # ============= Vehicle photo (Google CSE → Wikipedia fallback) =============

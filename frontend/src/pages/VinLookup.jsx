@@ -46,6 +46,12 @@ const VehicleCard = ({ v }) => (
         </span>
       </div>
     )}
+    {v.verified_by_company && (
+      <div className="mt-3 flex items-start gap-2 bg-emerald-500/10 border border-emerald-500/30 rounded-sm p-2 text-[11px] text-emerald-200">
+        <span>✓</span>
+        <span>Verified by <b>{v.verified_by_company}</b> · workshop-corrected data overrides automated decode for this VIN.</span>
+      </div>
+    )}
     <div className="text-[10px] text-slate-500 mt-3 font-mono">{v.vin}</div>
   </div>
 );
@@ -207,6 +213,79 @@ const SuggestionRow = ({ s, onRequest }) => (
   </div>
 );
 
+const CorrectVinModal = ({ vehicle, onClose, onSaved }) => {
+  const [form, setForm] = useState({
+    make: vehicle.make || "",
+    model: vehicle.model || "",
+    year: vehicle.year || "",
+    body_class: vehicle.body_class || "",
+    engine_l: vehicle.engine_l || "",
+    fuel: vehicle.fuel || "",
+    transmission: vehicle.transmission || "",
+    drive_type: vehicle.drive_type || "",
+    trim: vehicle.trim || "",
+  });
+  const [saving, setSaving] = useState(false);
+
+  const submit = async () => {
+    setSaving(true);
+    try {
+      await api.post("/vin/correct", {
+        vin: vehicle.vin,
+        ...form,
+        year: form.year ? parseInt(form.year) : null,
+      });
+      toast.success("Thanks — your correction is now the source of truth for this VIN");
+      onSaved();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Save failed");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const F = ({ k, label, type = "text" }) => (
+    <label className="block">
+      <div className="overline mb-1">{label}</div>
+      <input type={type} value={form[k]} onChange={(e) => setForm((s) => ({ ...s, [k]: e.target.value }))}
+        data-testid={`correct-${k}`}
+        className="w-full border border-slate-200 px-3 py-2 text-sm rounded-sm focus:outline-none focus:ring-2 focus:ring-[#E11D48]" />
+    </label>
+  );
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-start sm:items-center justify-center p-4 overflow-y-auto" onClick={onClose} data-testid="correct-vin-modal">
+      <div onClick={(e) => e.stopPropagation()} className="bg-white max-w-2xl w-full rounded-sm shadow-xl my-8">
+        <div className="border-b border-slate-200 p-4 sticky top-0 bg-white">
+          <div className="font-display text-lg">Correct this VIN</div>
+          <p className="text-xs text-slate-600 mt-1">
+            Your correction becomes the authoritative answer for <span className="font-mono">{vehicle.vin}</span>
+            {" "}— every workshop on JOY Automart benefits from your verified data.
+          </p>
+        </div>
+        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <F k="make" label="Make (e.g. Mercedes-Benz)" />
+          <F k="model" label="Model (e.g. S 500 Hybrid)" />
+          <F k="year" label="Year" type="number" />
+          <F k="body_class" label="Body (Sedan / SUV / …)" />
+          <F k="engine_l" label="Engine (L)" />
+          <F k="fuel" label="Fuel (Hybrid / Gasoline / Diesel)" />
+          <F k="transmission" label="Transmission" />
+          <F k="drive_type" label="Drive (RWD / 4WD / AWD)" />
+          <div className="sm:col-span-2"><F k="trim" label="Trim / variant (optional)" /></div>
+        </div>
+        <div className="border-t border-slate-200 p-4 flex gap-2 justify-end sticky bottom-0 bg-white">
+          <button onClick={onClose} className="text-sm text-slate-600 hover:text-slate-900 px-3 py-2">Cancel</button>
+          <button onClick={submit} disabled={saving} data-testid="submit-correction"
+            className="bg-[#E11D48] hover:bg-[#BE123C] disabled:bg-slate-200 text-white text-sm font-bold px-5 py-2 rounded-sm">
+            {saving ? "Saving…" : "Save correction"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const VinLookup = () => {
   const [vinInput, setVinInput] = useState("");
   const [result, setResult] = useState(null);
@@ -214,6 +293,7 @@ const VinLookup = () => {
   const [savedVins, setSavedVins] = useState([]);
   const [includeAi, setIncludeAi] = useState(true);
   const [photos, setPhotos] = useState([]);
+  const [showCorrect, setShowCorrect] = useState(false);
   const { add } = useCart();
 
   const loadSaved = async () => {
@@ -418,6 +498,14 @@ const VinLookup = () => {
                   className="mt-3 inline-flex items-center gap-1.5 bg-slate-900 hover:bg-[#E11D48] text-white text-xs font-semibold px-4 py-2 rounded-sm transition">
                   <Bookmark className="w-3.5 h-3.5" /> Save VIN
                 </button>
+                <button onClick={() => setShowCorrect(true)} data-testid="correct-vin-btn"
+                  className="mt-2 ml-2 inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-4 py-2 rounded-sm transition">
+                  Not right? Correct it →
+                </button>
+                <p className="text-[10px] text-slate-500 mt-3 leading-relaxed">
+                  Your correction overrides the automated decode for this VIN — every workshop on
+                  the network sees your verified data on subsequent lookups.
+                </p>
               </div>
             </div>
 
@@ -485,6 +573,9 @@ const VinLookup = () => {
               </section>
             )}
           </>
+        )}
+        {showCorrect && result?.vehicle && (
+          <CorrectVinModal vehicle={result.vehicle} onClose={() => setShowCorrect(false)} onSaved={() => { setShowCorrect(false); lookup(result.vehicle.vin); }} />
         )}
       </div>
     </Layout>
