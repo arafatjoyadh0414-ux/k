@@ -29,7 +29,7 @@ const AdminTierUpgrades = () => {
       <div className="space-y-6" data-testid="admin-tier-upgrades-page">
         <div>
           <div className="overline">Joy Score</div>
-          <h1 className="font-display text-3xl lg:text-4xl mt-1 flex items-center gap-3">
+          <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl leading-tight mt-1 flex items-center gap-3">
             <Award className="w-7 h-7 text-[#E11D48]" /> Auto Tier Upgrades
           </h1>
           <p className="text-sm text-slate-500 mt-1">

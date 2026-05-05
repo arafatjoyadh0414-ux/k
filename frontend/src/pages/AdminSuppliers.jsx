@@ -58,7 +58,7 @@ const AdminSuppliers = () => {
         <div className="flex items-end justify-between flex-wrap gap-3">
           <div>
             <div className="overline">Network</div>
-            <h1 className="font-display text-3xl lg:text-4xl mt-1">Suppliers</h1>
+            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl leading-tight mt-1">Suppliers</h1>
           </div>
           <button onClick={startNew} data-testid="new-supplier-button"
             className="inline-flex items-center gap-2 bg-[#E11D48] hover:bg-[#BE123C] text-white text-sm font-semibold px-4 py-2 rounded-sm">

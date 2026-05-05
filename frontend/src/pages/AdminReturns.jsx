@@ -46,7 +46,7 @@ const AdminReturns = () => {
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <div className="overline">RMA</div>
-            <h1 className="font-display text-3xl lg:text-4xl mt-1 flex items-center gap-3">
+            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl leading-tight mt-1 flex items-center gap-3">
               <RotateCcw className="w-7 h-7 text-[#E11D48]" /> Returns
             </h1>
           </div>

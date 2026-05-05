@@ -60,7 +60,7 @@ const AdminProducts = () => {
         <div className="flex items-end justify-between flex-wrap gap-3">
           <div>
             <div className="overline">Catalog</div>
-            <h1 className="font-display text-3xl lg:text-4xl mt-1">Products</h1>
+            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl leading-tight mt-1">Products</h1>
           </div>
           <div className="flex items-center gap-2">
             <label className="cursor-pointer inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-slate-900 text-sm font-semibold px-4 py-2 rounded-sm transition-colors duration-200" data-testid="upload-csv-label">

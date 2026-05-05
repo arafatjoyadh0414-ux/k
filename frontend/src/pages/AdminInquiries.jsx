@@ -32,7 +32,7 @@ const AdminInquiries = () => {
       <div className="space-y-6">
         <div>
           <div className="overline">Sales Pipeline</div>
-          <h1 className="font-display text-3xl lg:text-4xl mt-1">Kit Inquiries</h1>
+          <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl leading-tight mt-1">Kit Inquiries</h1>
         </div>
 
         <div className="flex flex-wrap gap-2">

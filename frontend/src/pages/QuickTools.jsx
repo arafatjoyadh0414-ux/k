@@ -13,7 +13,7 @@ const QuickTools = () => {
       <div className="space-y-6" data-testid="quick-tools-page">
         <div>
           <div className="overline">Power tools</div>
-          <h1 className="font-display text-3xl lg:text-4xl mt-1 flex items-center gap-3">
+          <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl leading-tight mt-1 flex items-center gap-3">
             <Zap className="w-7 h-7 text-[#E11D48]" /> Order faster
           </h1>
           <p className="text-sm text-slate-500 mt-1">

@@ -79,7 +79,7 @@ const Profile = () => {
         <div className="flex items-end justify-between flex-wrap gap-3">
           <div>
             <div className="overline">Workshop</div>
-            <h1 className="font-display text-3xl lg:text-4xl mt-1">Profile & KYC</h1>
+            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl leading-tight mt-1">Profile & KYC</h1>
           </div>
           <span className={`text-xs px-3 py-1.5 border rounded-sm ${statusColor(ws?.kyc_status)}`} data-testid="kyc-status-badge">
             KYC: {ws?.kyc_status?.replace("_", " ")}

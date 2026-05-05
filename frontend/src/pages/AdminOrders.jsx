@@ -19,7 +19,7 @@ const AdminOrders = () => {
       <div className="space-y-6">
         <div>
           <div className="overline">Admin</div>
-          <h1 className="font-display text-3xl lg:text-4xl mt-1">All Orders</h1>
+          <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl leading-tight mt-1">All Orders</h1>
         </div>
 
         <div className="flex flex-wrap gap-2">

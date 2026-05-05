@@ -1,11 +1,11 @@
-import React from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { useLang } from "../context/LanguageContext";
 import {
   LayoutDashboard, Package, ShoppingCart, ClipboardList, UserCircle2,
-  Shield, LogOut, Wrench, Sparkles, Inbox, FileQuestion, Truck, BarChart3, Boxes, Bike, RotateCcw, Globe, Zap, TrendingUp, ScanSearch, Repeat
+  Shield, LogOut, Wrench, Sparkles, Inbox, FileQuestion, Truck, BarChart3, Boxes, Bike, RotateCcw, Globe, Zap, TrendingUp, ScanSearch, Repeat, Menu, X
 } from "lucide-react";
 
 const LOGO = "https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg";
@@ -33,20 +33,52 @@ const Layout = ({ children }) => {
   const { lang, t, toggle } = useLang();
   const navigate = useNavigate();
   const isAdmin = user?.role === "admin";
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const location = useLocation();
+
+  // Auto-close drawer on route change
+  React.useEffect(() => { setDrawerOpen(false); }, [location.pathname]);
 
   return (
     <div className="min-h-screen flex bg-white">
-      {/* Sidebar */}
-      <aside className="w-64 border-r border-slate-200 bg-white flex flex-col sticky top-0 h-screen">
+      {/* Mobile drawer backdrop */}
+      {drawerOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-30 bg-black/40"
+          onClick={() => setDrawerOpen(false)}
+          data-testid="sidebar-backdrop"
+        />
+      )}
+
+      {/* Sidebar — fixed drawer on <lg, sticky panel on ≥lg */}
+      <aside
+        data-testid="sidebar"
+        className={`
+          fixed lg:sticky lg:top-0 inset-y-0 left-0 z-40
+          w-[260px] max-w-[80vw]
+          border-r border-slate-200 bg-white flex flex-col h-screen
+          transition-transform duration-200 ease-out
+          ${drawerOpen ? "translate-x-0" : "-translate-x-full"}
+          lg:translate-x-0
+        `}
+      >
         <div className="p-5 border-b border-slate-200 flex items-center gap-3">
           <img src={LOGO} alt="Joy Automart" className="w-10 h-10 object-contain" data-testid="brand-logo" />
-          <div>
-            <div className="font-display text-lg leading-none">Joy Automart</div>
+          <div className="min-w-0">
+            <div className="font-display text-lg leading-none truncate">Joy Automart</div>
             <div className="overline mt-1">B2B Portal</div>
           </div>
+          <button
+            onClick={() => setDrawerOpen(false)}
+            className="lg:hidden ml-auto p-1.5 text-slate-500 hover:text-slate-900"
+            aria-label="Close menu"
+            data-testid="sidebar-close"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        <nav className="flex-1 py-4 space-y-0.5">
+        <nav className="flex-1 py-4 space-y-0.5 overflow-y-auto">
           {!isAdmin && (
             <>
               <NavItem to="/dashboard" icon={LayoutDashboard} label={t("nav.dashboard")} testid="nav-dashboard" />
@@ -107,9 +139,19 @@ const Layout = ({ children }) => {
 
       {/* Main */}
       <main className="flex-1 min-w-0">
-        <header className="h-14 border-b border-slate-200 px-6 flex items-center justify-between bg-white sticky top-0 z-10">
-          <div className="overline">{isAdmin ? t("header.admin") : t("header.workshop")}</div>
-          <div className="flex items-center gap-4">
+        <header className="h-14 border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between bg-white sticky top-0 z-20 gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              onClick={() => setDrawerOpen(true)}
+              className="lg:hidden p-1.5 -ml-1.5 text-slate-700 hover:text-[#E11D48]"
+              aria-label="Open menu"
+              data-testid="sidebar-open"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <div className="overline truncate">{isAdmin ? t("header.admin") : t("header.workshop")}</div>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
             <button
               onClick={toggle}
               data-testid="lang-toggle"
@@ -117,12 +159,13 @@ const Layout = ({ children }) => {
               title="Toggle language"
             >
               <Globe className="w-3.5 h-3.5" />
-              {lang === "en" ? t("lang.toggle_to_bn") : t("lang.toggle_to_en")}
+              <span className="hidden sm:inline">{lang === "en" ? t("lang.toggle_to_bn") : t("lang.toggle_to_en")}</span>
+              <span className="sm:hidden">{lang === "en" ? "বাং" : "EN"}</span>
             </button>
-            <div className="text-xs text-slate-500">www.joyautomart.com</div>
+            <div className="hidden md:block text-xs text-slate-500">www.joyautomart.com</div>
           </div>
         </header>
-        <div className="p-6 lg:p-8">{children}</div>
+        <div className="p-4 sm:p-6 lg:p-8">{children}</div>
       </main>
     </div>
   );

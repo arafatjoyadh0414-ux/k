@@ -29,9 +29,9 @@ const KycBanner = ({ status, onSubmit }) => {
 };
 
 const StatBlock = ({ label, value, sub }) => (
-  <div className="industrial-card p-5">
+  <div className="industrial-card p-4 sm:p-5">
     <div className="overline">{label}</div>
-    <div className="font-display text-3xl mt-2">{value}</div>
+    <div className="font-display text-2xl sm:text-3xl mt-2 break-words">{value}</div>
     {sub && <div className="text-xs text-slate-500 mt-1">{sub}</div>}
   </div>
 );
@@ -136,7 +136,7 @@ const Dashboard = () => {
         <div className="flex items-end justify-between flex-wrap gap-4">
           <div>
             <div className="overline">Welcome back</div>
-            <h1 className="font-display text-3xl lg:text-4xl mt-1">{user?.name?.split(" ")[0] || "Workshop"} — your bay floor</h1>
+            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl mt-1 leading-tight break-words">{user?.name?.split(" ")[0] || "Workshop"} — your bay floor</h1>
           </div>
           <div className="flex items-center gap-2">
             <Link to="/products" data-testid="dashboard-shop-button"
@@ -165,7 +165,7 @@ const Dashboard = () => {
                   <span className="inline-flex items-center gap-2 self-start text-[10px] font-semibold uppercase tracking-[0.2em] px-3 py-1.5 rounded-sm bg-[#E11D48] text-white w-fit">
                     <Sparkles className="w-3.5 h-3.5" /> {featured.featured_label || "Featured Kit"}
                   </span>
-                  <h3 className="font-display text-3xl lg:text-4xl mt-3 leading-none">{featured.name}</h3>
+                  <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl leading-tight mt-3 leading-none">{featured.name}</h3>
                   <p className="text-sm text-slate-300 mt-2 max-w-md">{featured.description}</p>
 
                   <div className="mt-5 flex items-end gap-6">
@@ -201,7 +201,7 @@ const Dashboard = () => {
             <div className="flex items-start justify-between">
               <div>
                 <div className="overline" style={{color: "#94a3b8"}}>Credit Status</div>
-                <div className="font-display text-4xl mt-2" data-testid="credit-available">{fmtBDT(available)}</div>
+                <div className="font-display text-2xl sm:text-3xl lg:text-4xl mt-2 break-words" data-testid="credit-available">{fmtBDT(available)}</div>
                 <div className="text-sm text-slate-300 mt-1">Available credit</div>
               </div>
               <Wallet className="w-8 h-8 text-[#E11D48]" />

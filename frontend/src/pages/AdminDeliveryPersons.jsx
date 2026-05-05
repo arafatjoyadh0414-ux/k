@@ -92,7 +92,7 @@ const AdminDeliveryPersons = () => {
         <div className="flex items-end justify-between flex-wrap gap-3">
           <div>
             <div className="overline">Logistics</div>
-            <h1 className="font-display text-3xl lg:text-4xl mt-1">Delivery Team</h1>
+            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl leading-tight mt-1">Delivery Team</h1>
             <p className="text-sm text-slate-500 mt-1">
               Riders and drivers you can assign to outgoing orders.
             </p>

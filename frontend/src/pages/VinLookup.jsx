@@ -57,9 +57,9 @@ const VehicleCard = ({ v }) => (
 );
 
 const Field = ({ label, value }) => (
-  <div className="bg-white/5 border border-white/10 rounded-sm px-2.5 py-2">
-    <div className="text-[9px] uppercase tracking-[0.1em] text-slate-300">{label}</div>
-    <div className="text-sm font-mono text-white mt-0.5">{value}</div>
+  <div className="bg-white/5 border border-white/10 rounded-sm px-2.5 py-2 min-w-0">
+    <div className="text-[9px] uppercase tracking-[0.1em] text-slate-300 truncate">{label}</div>
+    <div className="text-sm font-mono text-white mt-0.5 break-words leading-snug">{value}</div>
   </div>
 );
 
@@ -611,7 +611,7 @@ const VinLookup = () => {
       <div className="space-y-6">
         <div>
           <div className="overline">VIN Lookup · Find Parts</div>
-          <h1 className="font-display text-3xl lg:text-4xl mt-1" data-testid="vin-page-title">
+          <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl mt-1 leading-tight" data-testid="vin-page-title">
             Type a VIN. Get parts.
           </h1>
           <p className="text-sm text-slate-600 mt-2 max-w-2xl">

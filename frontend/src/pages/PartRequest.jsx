@@ -67,7 +67,7 @@ const PartRequest = () => {
         <div className="flex items-end justify-between flex-wrap gap-3">
           <div>
             <div className="overline">Sourcing</div>
-            <h1 className="font-display text-3xl lg:text-4xl mt-1">Request Any Part</h1>
+            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl leading-tight mt-1">Request Any Part</h1>
             <p className="text-sm text-slate-600 mt-2 max-w-2xl">
               Can't find a part? Tell us what you need — car, part, quantity, urgency — we'll source it from our suppliers and quote you within 48 hours.
             </p>

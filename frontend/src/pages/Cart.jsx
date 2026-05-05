@@ -94,7 +94,7 @@ const Cart = () => {
       <div className="space-y-6">
         <div>
           <div className="overline">Checkout</div>
-          <h1 className="font-display text-3xl lg:text-4xl mt-1">Review & Confirm</h1>
+          <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl leading-tight mt-1">Review & Confirm</h1>
         </div>
 
         {items.length === 0 ? (

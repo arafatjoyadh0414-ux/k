@@ -70,7 +70,7 @@ const Insights = () => {
       <div className="space-y-8" data-testid="insights-page">
         <div>
           <div className="overline">Workshop intelligence</div>
-          <h1 className="font-display text-3xl lg:text-4xl mt-1">Your business at a glance</h1>
+          <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl leading-tight mt-1">Your business at a glance</h1>
         </div>
 
         {/* Joy Score + summary metrics */}

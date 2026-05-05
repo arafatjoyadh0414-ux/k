@@ -41,7 +41,7 @@ const AdminReports = () => {
       <div className="space-y-6">
         <div>
           <div className="overline">Analytics</div>
-          <h1 className="font-display text-3xl lg:text-4xl mt-1">Reports</h1>
+          <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl leading-tight mt-1">Reports</h1>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

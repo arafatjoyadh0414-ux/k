@@ -32,7 +32,7 @@ const KitCard = ({ kit, onAdd, isAlt }) => {
         </div>
         <div className="absolute bottom-4 left-4 text-white">
           <div className="overline" style={{color: "#cbd5e1"}}>Joy Signature Series</div>
-          <div className="font-display text-3xl lg:text-4xl mt-1 leading-none">{kit.name.replace(" Body Kit", "")}</div>
+          <div className="font-display text-2xl sm:text-3xl lg:text-4xl leading-tight mt-1 leading-none">{kit.name.replace(" Body Kit", "")}</div>
         </div>
       </div>
 
@@ -165,7 +165,7 @@ const Kits = () => {
         <section id="kit-list" className="space-y-6">
           <div>
             <div className="overline">The Lineup</div>
-            <h2 className="font-display text-3xl lg:text-4xl mt-1">Five kits. One transformation.</h2>
+            <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl leading-tight mt-1">Five kits. One transformation.</h2>
           </div>
 
           {loading ? (

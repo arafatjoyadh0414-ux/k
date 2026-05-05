@@ -290,7 +290,7 @@ const Recurring = () => {
         <div className="flex items-end justify-between gap-4">
           <div>
             <div className="overline">Automation</div>
-            <h1 className="font-display text-3xl lg:text-4xl mt-1" data-testid="recurring-page-title">
+            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl mt-1 leading-tight" data-testid="recurring-page-title">
               Recurring orders
             </h1>
             <p className="text-sm text-slate-600 mt-2 max-w-2xl">
