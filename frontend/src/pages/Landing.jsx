@@ -2,9 +2,10 @@ import React from "react";
 import { useAuth } from "../context/AuthContext";
 import { Navigate, Link } from "react-router-dom";
 import { ArrowRight, ShieldCheck, Wallet, Truck, PackageSearch, Bot, BarChart3, Boxes, Zap } from "lucide-react";
+import HARRIER_HERO from "../assets/harrier-hero.jpg";
 
 const LOGO = "https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg";
-const HERO = "https://images.pexels.com/photos/8986132/pexels-photo-8986132.jpeg";
+const HERO = HARRIER_HERO;
 
 const Landing = () => {
   const { user, loading } = useAuth();
@@ -96,7 +97,7 @@ const Landing = () => {
 
           <div className="lg:col-span-5 relative">
             <div className="relative border border-slate-200 rounded-sm overflow-hidden">
-              <img src={HERO} alt="Mechanic at work" className="w-full h-[460px] object-cover" />
+              <img src={HERO} alt="Toyota Harrier 2020 cruising through Gulshan, Dhaka at golden hour" className="w-full h-[460px] object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent" />
               <div className="absolute bottom-4 left-4 right-4 bg-white border border-slate-200 p-4">
                 <div className="overline">Live order</div>

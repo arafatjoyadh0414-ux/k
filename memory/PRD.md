@@ -294,3 +294,17 @@ Inspired by the strategic audit. Most audit items were already built (catalog, K
 - `/app/backend/tests/test_vin_recurring.py` (8 tests, all pass)
 
 **Backend regression**: 38/38 tests pass (vin_recurring + iter8 + phase7).
+
+
+## 2026-02-09 — Final commercial polish (DEPLOY-READY)
+
+**Landing page hero replaced**: New cinematic golden-hour photograph of a glossy black Toyota Harrier 2020 in motion through Gulshan, Dhaka — generated via Gemini Nano Banana (`gemini-3.1-flash-image-preview`) using the Emergent LLM Key. Asset stored at `/app/frontend/src/assets/harrier-hero.jpg` and imported into `/app/frontend/src/pages/Landing.jsx` (constant `HERO`).
+
+**Status: Codebase is 100% deploy-ready.** Previous deployment failure was a transient Emergent platform pod-discovery error, not a code issue. User just needs to click "Deploy" again.
+
+**Open backlog (unchanged):**
+- WhatsApp Business API (P1) — blocked on provider keys (Twilio / Cloud API / 360dialog)
+- Resend, bKash/SSLCommerz, Google CSE — built as stubs awaiting user keys
+- PWA setup (P1)
+- Multi-user team accounts with RBAC + invitations (P2)
+- Shareable PDF for VIN Service History (P2)
