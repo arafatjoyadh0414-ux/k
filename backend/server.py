@@ -1818,16 +1818,28 @@ async def public_catalog(category: str = "", q: str = ""):
     items = await db.products.find(
         flt,
         {"_id": 0, "product_id": 1, "sku": 1, "name": 1, "category": 1, "brand": 1,
-         "image_url": 1, "price_bdt": 1, "stock": 1, "is_kit": 1, "is_bundle": 1, "car_fits": 1,
-         "description": 1},
+         "image_url": 1, "price_bdt": 1, "stock": 1, "is_kit": 1, "is_bundle": 1,
+         "car_fits": 1, "description": 1},
     ).sort("category", 1).to_list(500)
+    # Normalize category casing on read so 'Brake' vs 'brakes' don't collide downstream
+    for p in items:
+        if p.get("category"):
+            p["category"] = p["category"].strip().title()
     return items
 
 
 @api_router.get("/public/categories")
 async def public_categories():
     cats = await db.products.distinct("category")
-    return [c for c in cats if c]
+    # De-duplicate case-insensitively, return Title-Cased values
+    seen = {}
+    for c in cats:
+        if not c:
+            continue
+        key = c.strip().lower()
+        if key not in seen:
+            seen[key] = c.strip().title()
+    return sorted(seen.values())
 
 
 # ============= Saved Bundles (workshop's own service kits) =============

@@ -90,9 +90,9 @@ const Insights = () => {
             </div>
             <div className="relative grid grid-cols-3 gap-2 mt-6 z-10">
               {Object.entries(joy_score.components).map(([k, v]) => (
-                <div key={k} className="bg-white/5 px-3 py-2 rounded-sm" data-testid={`score-component-${k}`}>
-                  <div className="text-[10px] uppercase tracking-[0.12em] text-slate-300">{k.replace(/_/g, " ")}</div>
-                  <div className="text-sm font-semibold mt-0.5">{v}/100</div>
+                <div key={k} className="bg-white/10 backdrop-blur-sm border border-white/15 px-2.5 py-2 rounded-sm" data-testid={`score-component-${k}`}>
+                  <div className="text-[9px] uppercase tracking-[0.1em] text-slate-200 leading-tight">{k.replace(/_/g, " ")}</div>
+                  <div className="text-base font-display text-white mt-0.5">{v}<span className="text-[10px] text-slate-300 ml-0.5">/100</span></div>
                 </div>
               ))}
             </div>

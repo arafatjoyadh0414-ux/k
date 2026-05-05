@@ -153,11 +153,60 @@
 
 **Status**: live in preview. Pending: redeploy to push to production at `b2bjoymart.com`.
 
+## Phase 9 — "Deploy Everything" sprint (2026-05-04)
+Inspired by the strategic audit. Most audit items were already built (catalog, KYC, credit, dashboard, returns, invoice PDF, chatbot, tier pricing, delivery). This sprint added everything else achievable on the current React+FastAPI stack:
+
+**P0 fix (the audit's "single biggest problem"):**
+- **Pre-rendered HTML landing** in `index.html` (id=`prerender-shell`) — full marketing page renders before React hydrates. Site is no longer blank without JS / on slow 4G. Includes: hero, trust badges, 4-step "how it works", WhatsApp fallback CTA, footer with legal links. Hidden via JS once React mounts.
+- Fixed `og:url` → `https://b2bjoymart.com` (was joyautomart.com)
+
+**Public catalog at `/catalog` (SEO + anonymous browsing):**
+- `GET /api/public/catalog` (no auth) returns retail-priced 38-product catalog with full metadata (`is_bundle`, `car_fits`, etc.)
+- `GET /api/public/categories` returns deduplicated, normalized category list
+- Frontend page with category filter, search, per-card test IDs, sign-in CTA, WhatsApp CTA
+
+**Workshop Insights (`/insights`):**
+- `GET /api/workshop/insights` returns `summary`, `monthly_spend[]`, `top_skus[]`, `reorder_nudges[]` (predictive based on order cadence), `joy_score{score, grade, components}`
+- **Joy Score** — proprietary 0–100 credit rating (Starter / Partner / Elite / Anchor) computed from order volume, spend, payment punctuality, longevity, credit discipline, KYC. Bangladesh's first workshop credit-rating system.
+- Frontend: Joy Score gradient ring (animated), 6 component badges, monthly spend bar chart, top-SKUs grid, reorder nudge cards
+
+**Quick Tools (`/quick-tools`):**
+- **Saved Bundles** — workshop creates own service kits ("Toyota Axio 5K Service" = oil + filter + plugs). One-click "Add Kit to Cart". `POST/GET/DELETE /api/workshop/bundles` with owner-isolation (404 if not owner)
+- **Bulk SKU Paste** — paste comma/newline list with optional `x QTY`, parser shows found/missing rows + total, "Add all to cart" button. Suggests sourcing-request link for missing SKUs.
+
+**Chatbot context:**
+- Chat endpoint now passes predictive `reorder_nudges` to Claude system prompt — Claude proactively mentions due-for-reorder SKUs when contextually appropriate (no spam)
+
+**Backend cleanups (from testing-agent action items):**
+- Public catalog projection now includes `is_bundle` + `car_fits`
+- Categories de-duplicated case-insensitively + Title-Cased
+- Backfilled legacy `brakes` → `Brake`
+
+**Test results: 100% backend (10/10 phase6) + 100% frontend e2e**
+
+**Status**: live in preview. Pending redeploy to push to `b2bjoymart.com`.
+
 ## Backlog (Prioritized)
 **P0 — needs customer keys**
 - `RESEND_API_KEY` for live email notifications (scaffolding done)
 - bKash / SSLCommerz merchant keys for online payment go-live
-- Google Cloud OAuth Client ID + Secret for custom JOY-branded login (replaces Emergent OAuth screen)
+- WhatsApp Business API keys (Twilio / Cloud API) for WhatsApp ordering
+- Google Cloud OAuth Client ID + Secret for custom JOY-branded login
+
+**P1 — buildable now**
+- Recurring orders scheduler (cron + admin review queue)
+- Workshop branch / multi-user team accounts
+- Vehicle Make → Model → Year → Engine cascading filter (currently flat free-text)
+- Driver mobile view at `/my-deliveries`
+- "Make My Car" AI wizard
+- Search-log tracking (zero-result insights)
+- Bulk CSV product import for admin
+
+**P2 — refactoring**
+- **Refactor `server.py` (~2540 lines, flagged 3 iterations) into `/app/backend/routes/*.py`**
+- Decimal/paisa-int money refactor
+- iOS / Android (PWA / Capacitor / RN — your earlier question, still open)
+- Persist `delivered_at` on orders; tighten admin-returns guard; atomic restock
 
 **P1**
 - Expand i18n dictionary to Orders/Cart/Returns/PartRequest pages + toast strings
