@@ -3,7 +3,7 @@ import Layout from "../components/Layout";
 import api, { fmtBDT } from "../lib/api";
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
-import { Search, Car, Sparkles, AlertCircle, Bookmark, Trash2, Plus, ExternalLink, Info, Camera } from "lucide-react";
+import { Search, Car, Sparkles, AlertCircle, Bookmark, Trash2, Plus, ExternalLink, Info, Camera, History, Image as ImageIcon, FileText, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 const VIN_RE = /^[A-HJ-NPR-Z0-9]{17}$/;
@@ -213,6 +213,93 @@ const SuggestionRow = ({ s, onRequest }) => (
   </div>
 );
 
+const TIMELINE_META = {
+  photo: { icon: Camera, color: "bg-blue-500", label: "PHOTO" },
+  saved: { icon: Bookmark, color: "bg-slate-700", label: "SAVED" },
+  correction: { icon: CheckCircle2, color: "bg-emerald-600", label: "VERIFIED" },
+  part_request: { icon: FileText, color: "bg-amber-500", label: "PART REQUEST" },
+};
+
+const fmtDateTime = (iso) => {
+  if (!iso) return "—";
+  try {
+    return new Date(iso).toLocaleDateString("en-GB", {
+      day: "2-digit", month: "short", year: "numeric",
+    });
+  } catch (_) { return iso.slice(0, 10); }
+};
+
+const ServiceHistory = ({ history, vin }) => {
+  const [photoPreview, setPhotoPreview] = useState("");
+  const openPhoto = async (photoId) => {
+    try {
+      const { data } = await api.get(`/vin/customer-photos/${photoId}/data`);
+      setPhotoPreview(data.data_url);
+    } catch (_) { /* ignore */ }
+  };
+  const s = history.stats || {};
+  return (
+    <section data-testid="vin-service-history">
+      <div className="flex items-center gap-2 mb-3">
+        <History className="w-4 h-4 text-[#E11D48]" />
+        <div className="font-display text-lg">Service history for this VIN</div>
+        <span className="text-xs bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded-sm">
+          {s.event_count} event{s.event_count === 1 ? "" : "s"}
+        </span>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+        <Stat label="Total events" value={s.event_count || 0} />
+        <Stat label="Photos on file" value={s.photo_count || 0} />
+        <Stat label="Workshops" value={s.workshop_count || 0} />
+        <Stat label="First seen" value={s.first_seen ? fmtDateTime(s.first_seen) : "—"} small />
+      </div>
+
+      <div className="industrial-card p-0 overflow-hidden">
+        <ul className="divide-y divide-slate-100">
+          {history.timeline.map((t, i) => {
+            const meta = TIMELINE_META[t.type] || { icon: Info, color: "bg-slate-500", label: t.type };
+            const Icon = meta.icon;
+            return (
+              <li key={i} className="flex items-start gap-3 p-3 hover:bg-slate-50 transition-colors" data-testid={`timeline-event-${i}`}>
+                <div className={`w-8 h-8 rounded-full ${meta.color} text-white grid place-items-center flex-shrink-0`}>
+                  <Icon className="w-3.5 h-3.5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-slate-500">{meta.label}</span>
+                    <span className="text-[10px] text-slate-400">·</span>
+                    <span className="text-[10px] text-slate-500 font-mono">{fmtDateTime(t.date)}</span>
+                  </div>
+                  <div className="font-display text-sm mt-0.5">{t.title}</div>
+                  {t.note && <div className="text-xs text-slate-600 mt-0.5">{t.note}</div>}
+                  <div className="text-[11px] text-slate-500 mt-0.5">by <b>{t.company_name}</b></div>
+                </div>
+                {t.type === "photo" && t.photo_id && (
+                  <button onClick={() => openPhoto(t.photo_id)} data-testid={`view-photo-${i}`}
+                    className="text-[11px] text-[#E11D48] hover:underline self-center font-semibold">View →</button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+      {photoPreview && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setPhotoPreview("")}>
+          <img src={photoPreview} alt="" className="max-h-full max-w-full rounded-sm" />
+          <button className="absolute top-4 right-4 bg-white text-slate-900 px-3 py-1 rounded-sm text-sm font-bold">Close</button>
+        </div>
+      )}
+    </section>
+  );
+};
+
+const Stat = ({ label, value, small = false }) => (
+  <div className="industrial-card p-3">
+    <div className="overline">{label}</div>
+    <div className={`font-display ${small ? "text-sm" : "text-xl"} mt-1`}>{value}</div>
+  </div>
+);
+
 const CorrectVinModal = ({ vehicle, onClose, onSaved }) => {
   const [form, setForm] = useState({
     make: vehicle.make || "",
@@ -294,6 +381,7 @@ const VinLookup = () => {
   const [includeAi, setIncludeAi] = useState(true);
   const [photos, setPhotos] = useState([]);
   const [showCorrect, setShowCorrect] = useState(false);
+  const [history, setHistory] = useState(null);
   const { add } = useCart();
 
   const loadSaved = async () => {
@@ -315,6 +403,7 @@ const VinLookup = () => {
     setLoading(true);
     setResult(null);
     setPhotos([]);
+    setHistory(null);
     try {
       const { data } = await api.get("/vin/parts", {
         params: { vin, include_ai: includeAi },
@@ -327,6 +416,12 @@ const VinLookup = () => {
         api.get("/vin/photos", { params: { make: v.make, model: v.model || "", year: v.year || "" } })
           .then(({ data: pd }) => setPhotos(pd?.photos || []))
           .catch(() => {});
+      }
+      // Fire-and-forget service history
+      if (v.vin) {
+        api.get("/vin/history", { params: { vin: v.vin } })
+          .then(({ data: h }) => setHistory(h))
+          .catch(() => setHistory(null));
       }
     } catch (e) {
       toast.error(e.response?.data?.detail || "Lookup failed");
@@ -573,6 +668,9 @@ const VinLookup = () => {
               </section>
             )}
           </>
+        )}
+        {result && history && history.timeline?.length > 0 && (
+          <ServiceHistory history={history} vin={result.vehicle.vin} />
         )}
         {showCorrect && result?.vehicle && (
           <CorrectVinModal vehicle={result.vehicle} onClose={() => setShowCorrect(false)} onSaved={() => { setShowCorrect(false); lookup(result.vehicle.vin); }} />

@@ -628,3 +628,100 @@ async def delete_saved_vin(saved_id: str, request: Request):
     if res.deleted_count == 0:
         raise HTTPException(404, "Not found")
     return {"ok": True}
+
+
+# ============= Vehicle Service History =============
+@api_router.get("/vin/history")
+async def vin_history(vin: str, request: Request):
+    """Cross-workshop service history timeline for a VIN.
+    Combines: customer photos (network-wide), saved-VIN actions (this user),
+    workshop corrections, and part requests matching the decoded vehicle."""
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(401, "Login required")
+    vin_n = _normalize_vin(vin)
+    if not _vin_valid(vin_n):
+        raise HTTPException(400, "Invalid VIN.")
+
+    photos = await db.vin_customer_photos.find(
+        {"vin": vin_n}, {"_id": 0, "image_b64": 0},
+    ).sort("created_at", -1).to_list(100)
+
+    saved = await db.saved_vins.find(
+        {"vin": vin_n, "user_id": user["user_id"]}, {"_id": 0},
+    ).to_list(50)
+
+    correction = await db.vin_corrections.find_one({"vin": vin_n}, {"_id": 0})
+
+    decoded = await db.vin_cache.find_one({"vin": vin_n}, {"_id": 0}) or {}
+    if correction:
+        decoded = {**decoded, **{k: v for k, v in correction.items() if v}}
+    pr_filter = {}
+    if decoded.get("make"):
+        pr_filter["car_brand"] = {"$regex": f"^{re.escape(decoded['make'])}$", "$options": "i"}
+    if decoded.get("model"):
+        pr_filter["car_model"] = {"$regex": re.escape(decoded["model"]), "$options": "i"}
+    part_requests = []
+    if pr_filter:
+        pr_filter["user_id"] = user["user_id"]
+        part_requests = await db.part_requests.find(
+            pr_filter, {"_id": 0},
+        ).sort("created_at", -1).to_list(20)
+
+    timeline = []
+    for p in photos:
+        timeline.append({
+            "type": "photo",
+            "date": p.get("created_at"),
+            "company_name": p.get("company_name", "Unknown workshop"),
+            "title": "Customer car photo",
+            "note": p.get("note", ""),
+            "photo_id": p.get("photo_id"),
+        })
+    for s in saved:
+        timeline.append({
+            "type": "saved",
+            "date": s.get("created_at"),
+            "company_name": "You",
+            "title": f"Saved as: {s.get('label', '')}",
+            "note": "",
+        })
+    if correction and correction.get("created_at"):
+        c_summary = " ".join(str(x) for x in [
+            correction.get("year"), correction.get("make"), correction.get("model")
+        ] if x).strip()
+        timeline.append({
+            "type": "correction",
+            "date": correction.get("created_at"),
+            "company_name": correction.get("company_name", "Unknown workshop"),
+            "title": "VIN data verified",
+            "note": c_summary,
+        })
+    for pr in part_requests:
+        timeline.append({
+            "type": "part_request",
+            "date": pr.get("created_at"),
+            "company_name": "You",
+            "title": f"Requested: {pr.get('part_name', 'Part')}",
+            "note": pr.get("notes", "") or pr.get("status", ""),
+            "request_id": pr.get("request_id"),
+        })
+
+    timeline.sort(key=lambda x: x.get("date") or "", reverse=True)
+
+    workshop_count = len({
+        p.get("company_name") for p in photos if p.get("company_name")
+    })
+    dates = [t["date"] for t in timeline if t.get("date")]
+    return {
+        "vin": vin_n,
+        "stats": {
+            "event_count": len(timeline),
+            "photo_count": len(photos),
+            "workshop_count": workshop_count,
+            "part_request_count": len(part_requests),
+            "first_seen": min(dates) if dates else None,
+            "last_seen": max(dates) if dates else None,
+        },
+        "timeline": timeline,
+    }
