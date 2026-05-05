@@ -689,17 +689,22 @@ async def vin_history(vin: str, request: Request):
     decoded = await db.vin_cache.find_one({"vin": vin_n}, {"_id": 0}) or {}
     if correction:
         decoded = {**decoded, **{k: v for k, v in correction.items() if v}}
-    pr_filter = {}
-    if decoded.get("make"):
-        pr_filter["car_brand"] = {"$regex": f"^{re.escape(decoded['make'])}$", "$options": "i"}
-    if decoded.get("model"):
-        pr_filter["car_model"] = {"$regex": re.escape(decoded["model"]), "$options": "i"}
-    part_requests = []
-    if pr_filter:
-        pr_filter["user_id"] = user["user_id"]
-        part_requests = await db.part_requests.find(
-            pr_filter, {"_id": 0},
-        ).sort("created_at", -1).to_list(20)
+    # Part requests tagged directly with this VIN (most reliable) +
+    # fall back to a decoded make/model match for legacy requests.
+    part_requests = await db.part_requests.find(
+        {"user_id": user["user_id"], "vin_chassis": vin_n},
+        {"_id": 0},
+    ).sort("created_at", -1).to_list(50)
+    if not part_requests:
+        pr_filter = {"user_id": user["user_id"]}
+        if decoded.get("make"):
+            pr_filter["car_brand"] = {"$regex": f"^{re.escape(decoded['make'])}$", "$options": "i"}
+        if decoded.get("model"):
+            pr_filter["car_model"] = {"$regex": re.escape(decoded["model"]), "$options": "i"}
+        if "car_brand" in pr_filter:
+            part_requests = await db.part_requests.find(
+                pr_filter, {"_id": 0},
+            ).sort("created_at", -1).to_list(20)
 
     timeline = []
     for o in orders:

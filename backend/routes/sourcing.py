@@ -41,6 +41,16 @@ class PartRequestCreate(BaseModel):
     budget_bdt: float = 0.0
     notes: str = ""
     photo_urls: List[str] = []
+    # Structured VIN snapshot — populated by the VIN lookup page so sourcing
+    # team has full decoded vehicle context.
+    vin_decoded: dict = {}
+
+
+class VinPartsBatch(BaseModel):
+    vin: str
+    vehicle: dict
+    parts: List[dict]
+    urgency: str = "normal"
 
 
 @api_router.post("/part-requests")
@@ -61,6 +71,7 @@ async def create_part_request(payload: PartRequestCreate, request: Request):
         "part_name": payload.part_name.strip(), "part_number": payload.part_number.strip(),
         "quantity": payload.quantity, "urgency": payload.urgency, "budget_bdt": payload.budget_bdt,
         "notes": payload.notes.strip(), "photo_urls": payload.photo_urls,
+        "vin_decoded": payload.vin_decoded or {},
         "status": "new",
         "status_history": [{"status": "new", "at": now, "note": "Request submitted"}],
         "quote_bdt": 0.0, "quote_lead_time_days": 0,
@@ -69,6 +80,68 @@ async def create_part_request(payload: PartRequestCreate, request: Request):
     }
     await db.part_requests.insert_one(dict(doc))
     return {"request_id": req_id, "ok": True}
+
+
+@api_router.post("/part-requests/vin-batch")
+async def create_vin_part_requests(payload: VinPartsBatch, request: Request):
+    """Submit multiple part requests in one shot, all tagged with the same
+    VIN + decoded vehicle snapshot. Used by the VIN Lookup page when a
+    workshop wants quotes on several parts for one vehicle."""
+    user = await require_user(request)
+    ws = await db.workshops.find_one({"user_id": user["user_id"]}, {"_id": 0})
+    if not ws:
+        raise HTTPException(403, "Workshop only")
+
+    vin = (payload.vin or "").strip().upper()
+    if len(vin) != 17:
+        raise HTTPException(400, "Invalid VIN")
+    if not payload.parts:
+        raise HTTPException(400, "At least one part required")
+
+    veh = payload.vehicle or {}
+    car_brand = veh.get("make") or ""
+    car_model = veh.get("model") or ""
+    car_year = int(veh.get("year") or 0) or 0
+    if not car_brand:
+        raise HTTPException(400, "Decoded vehicle make missing")
+
+    now = datetime.now(timezone.utc).isoformat()
+    created = []
+    for p in payload.parts:
+        part_name = (p.get("part_name") or "").strip()
+        if not part_name:
+            continue
+        req_id = f"PRT-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+        doc = {
+            "request_id": req_id, "user_id": user["user_id"], "workshop_id": ws["workshop_id"],
+            "company_name": ws["company_name"],
+            "car_brand": car_brand, "car_model": car_model, "car_year": car_year,
+            "vin_chassis": vin,
+            "part_name": part_name,
+            "part_number": (p.get("part_number") or "").strip(),
+            "quantity": int(p.get("quantity") or 1),
+            "urgency": p.get("urgency") or payload.urgency or "normal",
+            "budget_bdt": float(p.get("budget_bdt") or 0),
+            "notes": (p.get("notes") or "").strip(),
+            "photo_urls": [],
+            "vin_decoded": {
+                "vin": vin,
+                "make": veh.get("make"), "model": veh.get("model"),
+                "year": veh.get("year"), "body_class": veh.get("body_class"),
+                "engine_l": veh.get("engine_l"), "fuel": veh.get("fuel"),
+                "transmission": veh.get("transmission"), "drive_type": veh.get("drive_type"),
+                "trim": veh.get("trim"), "plant_country": veh.get("plant_country"),
+            },
+            "source": "vin_lookup",
+            "status": "new",
+            "status_history": [{"status": "new", "at": now, "note": f"Submitted via VIN lookup ({vin})"}],
+            "quote_bdt": 0.0, "quote_lead_time_days": 0,
+            "supplier_note": "", "admin_note": "", "order_id": "",
+            "created_at": now,
+        }
+        await db.part_requests.insert_one(dict(doc))
+        created.append(req_id)
+    return {"ok": True, "vin": vin, "request_ids": created, "count": len(created)}
 
 
 @api_router.get("/part-requests")

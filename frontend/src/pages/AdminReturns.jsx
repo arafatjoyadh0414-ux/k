@@ -85,22 +85,43 @@ const AdminReturns = () => {
                 <div key={r.return_id} className="industrial-card" data-testid={`admin-return-${r.return_id}`}>
                   <button
                     onClick={() => setExpanded(open ? null : r.return_id)}
-                    className="w-full grid grid-cols-12 px-5 py-4 items-center text-left hover:bg-slate-50 transition-colors"
+                    className="w-full text-left hover:bg-slate-50 transition-colors"
                     data-testid={`admin-return-toggle-${r.return_id}`}
                   >
-                    <div className="col-span-3">
-                      <div className="font-mono text-sm">{r.return_id}</div>
-                      <div className="text-xs text-slate-500">{new Date(r.created_at).toLocaleDateString()}</div>
+                    {/* Desktop layout */}
+                    <div className="hidden md:grid grid-cols-12 px-5 py-4 items-center">
+                      <div className="col-span-3 min-w-0">
+                        <div className="font-mono text-sm truncate">{r.return_id}</div>
+                        <div className="text-xs text-slate-500">{new Date(r.created_at).toLocaleDateString()}</div>
+                      </div>
+                      <div className="col-span-3 min-w-0">
+                        <div className="text-sm font-semibold truncate">{r.company_name}</div>
+                        <Link to={`/admin/orders/${r.order_id}`} className="text-xs text-slate-500 font-mono hover:text-[#E11D48] truncate block" onClick={(e) => e.stopPropagation()}>{r.order_id}</Link>
+                      </div>
+                      <div className="col-span-2 text-center text-sm">{r.items?.length} items</div>
+                      <div className="col-span-2 text-right font-semibold">{fmtBDT(r.refund_total_bdt)}</div>
+                      <div className="col-span-2 text-right flex items-center justify-end gap-2">
+                        <span className={`text-xs px-2.5 py-1 border rounded-sm ${statusColor(r.status)}`}>{r.status}</span>
+                        {open ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                      </div>
                     </div>
-                    <div className="col-span-3">
-                      <div className="text-sm font-semibold">{r.company_name}</div>
-                      <Link to={`/admin/orders/${r.order_id}`} className="text-xs text-slate-500 font-mono hover:text-[#E11D48]" onClick={(e) => e.stopPropagation()}>{r.order_id}</Link>
-                    </div>
-                    <div className="col-span-2 text-center text-sm">{r.items?.length} items</div>
-                    <div className="col-span-2 text-right font-semibold">{fmtBDT(r.refund_total_bdt)}</div>
-                    <div className="col-span-2 text-right flex items-center justify-end gap-2">
-                      <span className={`text-xs px-2.5 py-1 border rounded-sm ${statusColor(r.status)}`}>{r.status}</span>
-                      {open ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                    {/* Mobile layout */}
+                    <div className="md:hidden p-4 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="font-mono text-xs text-slate-500">{r.return_id}</div>
+                          <div className="text-sm font-semibold truncate mt-0.5">{r.company_name}</div>
+                          <Link to={`/admin/orders/${r.order_id}`} className="text-[10px] text-slate-500 font-mono hover:text-[#E11D48]" onClick={(e) => e.stopPropagation()}>{r.order_id}</Link>
+                        </div>
+                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                          <span className={`text-[10px] uppercase tracking-wider px-2 py-1 border rounded-sm ${statusColor(r.status)}`}>{r.status}</span>
+                          {open ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between text-xs border-t border-slate-100 pt-2">
+                        <span className="text-slate-500">{r.items?.length} items · {new Date(r.created_at).toLocaleDateString()}</span>
+                        <span className="font-semibold">{fmtBDT(r.refund_total_bdt)}</span>
+                      </div>
                     </div>
                   </button>
 

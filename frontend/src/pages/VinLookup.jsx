@@ -373,6 +373,110 @@ const CorrectVinModal = ({ vehicle, onClose, onSaved }) => {
   );
 };
 
+const BatchPartRequest = ({ vehicle, parts, onUpdate, onRemove, onAdd, onSubmit, submitting }) => {
+  const v = vehicle || {};
+  return (
+    <section className="industrial-card p-5" data-testid="vin-batch-part-request">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div className="min-w-0 flex-1">
+          <div className="overline">Request parts for this VIN</div>
+          <div className="font-display text-lg mt-1 leading-tight">
+            Get supplier quotes — sourced + tagged with this car
+          </div>
+          <p className="text-xs text-slate-600 mt-1 max-w-2xl">
+            Add the parts you need. Our sourcing team gets the full vehicle context
+            (year/make/model/engine + VIN) so quotes come back accurate the first time.
+          </p>
+        </div>
+        <button
+          onClick={onAdd}
+          data-testid="batch-add-blank-part"
+          className="inline-flex items-center gap-1 bg-slate-900 hover:bg-[#E11D48] text-white text-xs font-bold px-3 py-2 rounded-sm transition flex-shrink-0"
+        >
+          <Plus className="w-3.5 h-3.5" /> Add part
+        </button>
+      </div>
+      {parts.length === 0 ? (
+        <div className="mt-4 text-center text-sm text-slate-500 border border-dashed border-slate-300 rounded-sm py-6 px-4" data-testid="batch-empty">
+          No parts added yet. Tap <span className="font-bold text-slate-700">Add part</span> above, or
+          tap <span className="font-bold text-slate-700">Request quote</span> on any AI suggestion to add it here.
+        </div>
+      ) : (
+        <div className="mt-4 space-y-3">
+          {parts.map((p, i) => (
+            <div key={i} className="border border-slate-200 rounded-sm p-3 bg-slate-50/50" data-testid={`batch-part-${i}`}>
+              <div className="flex items-center justify-between mb-2">
+                <div className="overline">Part {i + 1}</div>
+                <button onClick={() => onRemove(i)} data-testid={`batch-remove-${i}`}
+                  className="text-red-500 hover:text-red-700 p-1">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
+                <input
+                  data-testid={`batch-part-name-${i}`}
+                  className="md:col-span-5 border border-slate-200 px-3 py-2 text-sm rounded-sm focus:outline-none focus:ring-2 focus:ring-[#E11D48]"
+                  placeholder="Part name * (e.g. Front brake pads)"
+                  value={p.part_name}
+                  onChange={(e) => onUpdate(i, "part_name", e.target.value)}
+                />
+                <input
+                  data-testid={`batch-part-number-${i}`}
+                  className="md:col-span-3 border border-slate-200 px-3 py-2 text-sm rounded-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#E11D48]"
+                  placeholder="OEM/cross-ref #"
+                  value={p.part_number}
+                  onChange={(e) => onUpdate(i, "part_number", e.target.value)}
+                />
+                <input
+                  data-testid={`batch-part-qty-${i}`}
+                  type="number"
+                  min={1}
+                  className="md:col-span-2 border border-slate-200 px-3 py-2 text-sm rounded-sm focus:outline-none focus:ring-2 focus:ring-[#E11D48]"
+                  placeholder="Qty"
+                  value={p.quantity}
+                  onChange={(e) => onUpdate(i, "quantity", parseInt(e.target.value) || 1)}
+                />
+                <select
+                  data-testid={`batch-part-urgency-${i}`}
+                  value={p.urgency || "normal"}
+                  onChange={(e) => onUpdate(i, "urgency", e.target.value)}
+                  className="md:col-span-2 border border-slate-200 px-3 py-2 text-sm rounded-sm bg-white"
+                >
+                  <option value="low">Low priority</option>
+                  <option value="normal">Normal</option>
+                  <option value="high">Urgent</option>
+                </select>
+                <input
+                  data-testid={`batch-part-notes-${i}`}
+                  className="md:col-span-12 border border-slate-200 px-3 py-2 text-sm rounded-sm focus:outline-none focus:ring-2 focus:ring-[#E11D48]"
+                  placeholder="Notes (optional) — symptoms, brand preference, etc."
+                  value={p.notes}
+                  onChange={(e) => onUpdate(i, "notes", e.target.value)}
+                />
+              </div>
+            </div>
+          ))}
+          <div className="flex items-start justify-between gap-3 pt-2 flex-wrap">
+            <div className="text-[11px] text-slate-500 max-w-md">
+              Sourcing team will see: <b>{v.year} {v.make} {v.model}</b>
+              {v.engine_l ? ` · ${parseFloat(v.engine_l).toFixed(1)}L` : ""}
+              {v.fuel ? ` · ${v.fuel}` : ""} · VIN <span className="font-mono">{v.vin}</span>
+            </div>
+            <button
+              onClick={onSubmit}
+              disabled={submitting || parts.filter((p) => p.part_name?.trim()).length === 0}
+              data-testid="batch-submit"
+              className="bg-[#E11D48] hover:bg-[#BE123C] disabled:bg-slate-200 disabled:text-slate-500 text-white text-sm font-bold px-5 py-2.5 rounded-sm transition flex-shrink-0"
+            >
+              {submitting ? "Submitting…" : `Submit ${parts.filter((p) => p.part_name?.trim()).length} request${parts.filter((p) => p.part_name?.trim()).length === 1 ? "" : "s"} →`}
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+};
+
 const VinLookup = () => {
   const [vinInput, setVinInput] = useState("");
   const [result, setResult] = useState(null);
@@ -382,6 +486,8 @@ const VinLookup = () => {
   const [photos, setPhotos] = useState([]);
   const [showCorrect, setShowCorrect] = useState(false);
   const [history, setHistory] = useState(null);
+  const [batchParts, setBatchParts] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
   const { add } = useCart();
 
   const loadSaved = async () => {
@@ -404,6 +510,7 @@ const VinLookup = () => {
     setResult(null);
     setPhotos([]);
     setHistory(null);
+    setBatchParts([]);
     try {
       const { data } = await api.get("/vin/parts", {
         params: { vin, include_ai: includeAi },
@@ -449,23 +556,54 @@ const VinLookup = () => {
   };
 
   const requestQuote = (suggestion) => {
+    // Single suggestion → add to batch panel rather than navigating away
     const v = result?.vehicle || {};
-    const partName = suggestion.name || suggestion.category || "Part";
-    const note = `For ${v.year || ""} ${v.make || ""} ${v.model || ""} (VIN ${v.vin}). OEM hint: ${suggestion.oem_hint || "—"}`;
-    const params = new URLSearchParams({
-      car_brand: v.make || "",
-      car_model: v.model || "",
-      car_year: String(v.year || ""),
-      part_name: partName,
-      notes: note,
-    });
-    window.location.href = `/part-requests?${params.toString()}`;
+    const part = {
+      part_name: suggestion.name || suggestion.category || "Part",
+      part_number: suggestion.oem_hint || "",
+      quantity: 1,
+      notes: suggestion.common_brands ? `Cross-ref: ${Array.isArray(suggestion.common_brands) ? suggestion.common_brands.join(", ") : suggestion.common_brands}` : "",
+    };
+    setBatchParts((prev) => [...prev, part]);
+    toast.success(`Added "${part.part_name}" — scroll down to submit batch`);
+    void v; // suppress unused-warn
   };
 
   const addToCart = (p, qty = 1) => {
     const itemForCart = { ...p, price_bdt: p.your_price_bdt || p.price_bdt };
     add(itemForCart, Math.max(qty, p.moq || 1));
     toast.success(`Added ${p.name}`);
+  };
+
+  const submitBatchParts = async () => {
+    if (batchParts.length === 0 || !result?.vehicle?.vin) return;
+    setSubmitting(true);
+    try {
+      const { data } = await api.post("/part-requests/vin-batch", {
+        vin: result.vehicle.vin,
+        vehicle: result.vehicle,
+        parts: batchParts.filter((p) => (p.part_name || "").trim()),
+        urgency: "normal",
+      });
+      toast.success(`Submitted ${data.count} part request${data.count === 1 ? "" : "s"} for ${result.vehicle.vin}`);
+      setBatchParts([]);
+      api.get("/vin/history", { params: { vin: result.vehicle.vin } })
+        .then(({ data: h }) => setHistory(h)).catch(() => {});
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Submit failed");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const updateBatchPart = (i, key, val) => {
+    setBatchParts((prev) => prev.map((p, idx) => idx === i ? { ...p, [key]: val } : p));
+  };
+  const removeBatchPart = (i) => {
+    setBatchParts((prev) => prev.filter((_, idx) => idx !== i));
+  };
+  const addBlankPart = () => {
+    setBatchParts((prev) => [...prev, { part_name: "", part_number: "", quantity: 1, notes: "" }]);
   };
 
   return (
@@ -658,6 +796,17 @@ const VinLookup = () => {
               </section>
             )}
           </>
+        )}
+        {result && (
+          <BatchPartRequest
+            vehicle={result.vehicle}
+            parts={batchParts}
+            onUpdate={updateBatchPart}
+            onRemove={removeBatchPart}
+            onAdd={addBlankPart}
+            onSubmit={submitBatchParts}
+            submitting={submitting}
+          />
         )}
         {result && history && history.timeline?.length > 0 && (
           <ServiceHistory history={history} vin={result.vehicle.vin} />
