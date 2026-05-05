@@ -3,7 +3,7 @@ import Layout from "../components/Layout";
 import api, { fmtBDT } from "../lib/api";
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
-import { Search, Car, Sparkles, AlertCircle, Bookmark, Trash2, Plus, ExternalLink, Info, Camera, History, Image as ImageIcon, FileText, CheckCircle2 } from "lucide-react";
+import { Search, Car, Sparkles, AlertCircle, Bookmark, Trash2, Plus, ExternalLink, Info, Camera, History, Image as ImageIcon, FileText, CheckCircle2, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 
 const VIN_RE = /^[A-HJ-NPR-Z0-9]{17}$/;
@@ -378,7 +378,7 @@ const VinLookup = () => {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [savedVins, setSavedVins] = useState([]);
-  const [includeAi, setIncludeAi] = useState(true);
+  const [includeAi, setIncludeAi] = useState(false);
   const [photos, setPhotos] = useState([]);
   const [showCorrect, setShowCorrect] = useState(false);
   const [history, setHistory] = useState(null);
@@ -546,12 +546,16 @@ const VinLookup = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <div className="lg:col-span-2">
                 <VehicleCard v={result.vehicle} />
-                {photos.length > 0 && photos[0].source === "google" ? (
+                {photos.length > 0 ? (
                   <div className="mt-3" data-testid="vin-photo-gallery">
                     <div className="overline mb-2 flex items-center justify-between">
                       <span>Reference photo</span>
-                      <span className="text-[10px] normal-case px-2 py-0.5 rounded-sm bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        ✓ Year-specific match
+                      <span className={`text-[10px] normal-case px-2 py-0.5 rounded-sm ${
+                        photos[0].source === "google"
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                          : "bg-blue-50 text-blue-700 border border-blue-200"
+                      }`}>
+                        {photos[0].source === "google" ? "✓ Year-specific" : "Wikipedia · model generation"}
                       </span>
                     </div>
                     <a href={photos[0].page_url} target="_blank" rel="noopener noreferrer"
@@ -564,21 +568,7 @@ const VinLookup = () => {
                       </div>
                     </a>
                   </div>
-                ) : (
-                  <div className="mt-3" data-testid="vin-photo-placeholder">
-                    <div className="overline mb-2">Reference photo</div>
-                    <div className="border border-dashed border-slate-300 rounded-sm p-5 bg-slate-50 text-center">
-                      <div className="text-sm text-slate-700 font-display">
-                        Year-specific photos disabled
-                      </div>
-                      <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
-                        Showing wrong-year photos creates more confusion than no photo.
-                        Add free Google Custom Search keys to your <code className="bg-slate-200 px-1 rounded text-[10px]">backend/.env</code>
-                        to unlock exact <b>{result?.vehicle?.year}</b> {result?.vehicle?.make} photos for every VIN.
-                      </p>
-                    </div>
-                  </div>
-                )}
+                ) : null}
                 {/* Customer's car proof-of-service capture */}
                 {result?.vehicle?.vin && (
                   <CustomerCarCapture vin={result.vehicle.vin} />

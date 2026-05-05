@@ -152,19 +152,41 @@ async def _ai_augment_vehicle(decoded: dict) -> dict:
     return {}
 
 
-async def _decode_full(vin: str) -> dict:
+async def _decode_full(vin: str, fast: bool = False) -> dict:
     """Multi-source decode chain. Always returns a dict — never raises
-    on partial data. The dict is suitable to be cached + returned."""
+    on partial data. The dict is suitable to be cached + returned.
+    
+    fast=True skips the AI augmentation step (saves ~3-5s)."""
     nhtsa = await _decode_via_nhtsa(vin)
     wmi = lookup_wmi(vin)
     year_from_code = decode_year(vin)
 
-    # Build base from NHTSA + WMI fallback
+    # Year disambiguation. Many European/JDM manufacturers (Porsche, Mercedes,
+    # BMW, Toyota Japan) use Z-fillers and DON'T follow the ISO position-7
+    # numeric-vs-alpha rule. NHTSA naively applies the rule and returns 1988
+    # for what is actually a 2018 Porsche.
+    # Rule: only override NHTSA when (a) NHTSA's year is < 2000, AND (b) the
+    # WMI is a non-US prefix (W=Germany, S=UK, V=France/Spain, J=Japan, K=Korea,
+    # L=China, M=India/Thailand, T=Czech, X=Russia, Y=Sweden, Z=Italy).
+    # US-built VINs (1/4/5*, 2*=Canada, 3*=Mexico) follow ISO strictly — trust NHTSA.
+    nhtsa_year = int(nhtsa["year_str"]) if nhtsa["year_str"].isdigit() else None
+    chosen_year = nhtsa_year or year_from_code
+    year_disambiguated = False
+    NON_US_PREFIXES = ("W", "S", "V", "J", "K", "L", "M", "T", "X", "Y", "Z")
+    if (
+        nhtsa_year and year_from_code
+        and nhtsa_year < 2000
+        and year_from_code >= 2010
+        and (vin[:1] in NON_US_PREFIXES)
+    ):
+        chosen_year = year_from_code
+        year_disambiguated = True
+
     decoded = {
         "vin": vin,
         "make": nhtsa["make"] or wmi.get("make", "").split(" / ")[0].title(),
         "model": nhtsa["model"],
-        "year": int(nhtsa["year_str"]) if nhtsa["year_str"].isdigit() else year_from_code,
+        "year": chosen_year,
         "body_class": nhtsa["body_class"],
         "vehicle_type": nhtsa["vehicle_type"],
         "engine_cc": nhtsa["engine_cc"],
@@ -182,6 +204,8 @@ async def _decode_full(vin: str) -> dict:
         "wmi_make": wmi.get("make", ""),
         "wmi_country": wmi.get("country", ""),
         "year_from_code": year_from_code,
+        "nhtsa_year": nhtsa_year,
+        "year_disambiguated": year_disambiguated,
         "error_code": nhtsa["error_code"],
         "error_text": nhtsa["error_text"],
         "decoded_at": datetime.now(timezone.utc).isoformat(),
@@ -191,19 +215,19 @@ async def _decode_full(vin: str) -> dict:
     }
     decoded["sources"] = [s for s in decoded["sources"] if s]
 
-    # AI augmentation: only when we have make+year but missing model/engine/body
-    aug = await _ai_augment_vehicle(decoded)
-    if aug:
-        for k, v in aug.items():
-            if k in ("inferred", "inference_confidence"):
-                continue
-            if not decoded.get(k):
-                decoded[k] = v
-        decoded["sources"].append("ai")
-        decoded["ai_inferred"] = True
-        decoded["ai_confidence"] = aug.get("inference_confidence", "medium")
+    # AI augmentation: only when explicitly requested (slow path)
+    if not fast:
+        aug = await _ai_augment_vehicle(decoded)
+        if aug:
+            for k, v in aug.items():
+                if k in ("inferred", "inference_confidence"):
+                    continue
+                if not decoded.get(k):
+                    decoded[k] = v
+            decoded["sources"].append("ai")
+            decoded["ai_inferred"] = True
+            decoded["ai_confidence"] = aug.get("inference_confidence", "medium")
 
-    # Soften the error message when WMI gave us useful fallback data
     if decoded["error_code"] and decoded["make"]:
         decoded["error_text"] = f"NHTSA partial decode (used WMI fallback): {decoded['error_text']}"
 
@@ -211,7 +235,9 @@ async def _decode_full(vin: str) -> dict:
 
 
 @api_router.get("/vin/decode")
-async def vin_decode(vin: str):
+async def vin_decode(vin: str, fast: bool = True):
+    """fast=True (default) returns in ~1s using NHTSA + WMI + year-code only.
+    fast=False adds AI augmentation (3-5s extra)."""
     vin = _normalize_vin(vin)
     if not _vin_valid(vin):
         raise HTTPException(400, "Invalid VIN. Must be 17 chars, A-Z (no I/O/Q) and digits.")
@@ -647,6 +673,13 @@ async def vin_history(vin: str, request: Request):
         {"vin": vin_n}, {"_id": 0, "image_b64": 0},
     ).sort("created_at", -1).to_list(100)
 
+    # Orders tagged with this VIN — true repair history
+    orders = await db.orders.find(
+        {"vehicle_vin": vin_n, "user_id": user["user_id"]},
+        {"_id": 0, "order_id": 1, "items": 1, "total_bdt": 1, "status": 1,
+         "company_name": 1, "created_at": 1},
+    ).sort("created_at", -1).to_list(100)
+
     saved = await db.saved_vins.find(
         {"vin": vin_n, "user_id": user["user_id"]}, {"_id": 0},
     ).to_list(50)
@@ -669,6 +702,18 @@ async def vin_history(vin: str, request: Request):
         ).sort("created_at", -1).to_list(20)
 
     timeline = []
+    for o in orders:
+        item_summary = ", ".join(it.get("name", "") for it in (o.get("items") or [])[:3])
+        if len(o.get("items") or []) > 3:
+            item_summary += f" +{len(o['items']) - 3} more"
+        timeline.append({
+            "type": "order",
+            "date": o.get("created_at"),
+            "company_name": o.get("company_name", "You"),
+            "title": f"Ordered: {item_summary or 'Items'}",
+            "note": f"৳{int(o.get('total_bdt', 0)):,} · {o.get('status', '')}",
+            "order_id": o.get("order_id"),
+        })
     for p in photos:
         timeline.append({
             "type": "photo",
@@ -720,6 +765,8 @@ async def vin_history(vin: str, request: Request):
             "photo_count": len(photos),
             "workshop_count": workshop_count,
             "part_request_count": len(part_requests),
+            "order_count": len(orders),
+            "total_spend_bdt": round(sum(o.get("total_bdt", 0) for o in orders)),
             "first_seen": min(dates) if dates else None,
             "last_seen": max(dates) if dates else None,
         },

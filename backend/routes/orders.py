@@ -101,6 +101,7 @@ async def create_order(payload: OrderCreate, request: Request):
         "due_date": due_date,
         "shipping_address": payload.shipping_address,
         "notes": payload.notes,
+        "vehicle_vin": (payload.vehicle_vin or "").strip().upper(),
         "status": "placed",
         "status_history": [{"status": "placed", "at": now.isoformat(), "note": "Order placed"}],
         "created_at": now.isoformat()

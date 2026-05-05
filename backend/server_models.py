@@ -73,6 +73,7 @@ class OrderCreate(BaseModel):
     payment_method: str  # credit | cod
     shipping_address: str
     notes: str = ""
+    vehicle_vin: str = ""  # optional — links order to vehicle service history
 
 
 # Auth helpers (get_current_user, require_user, require_admin) live in core.py

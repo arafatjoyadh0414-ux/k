@@ -12,6 +12,7 @@ const Cart = () => {
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [shipping, setShipping] = useState("");
   const [notes, setNotes] = useState("");
+  const [vehicleVin, setVehicleVin] = useState("");
   const [placing, setPlacing] = useState(false);
   const [quote, setQuote] = useState(null);
   const navigate = useNavigate();
@@ -68,6 +69,7 @@ const Cart = () => {
         payment_method: paymentMethod,
         shipping_address: shipping,
         notes,
+        vehicle_vin: vehicleVin.trim().toUpperCase(),
       });
       clear();
       toast.success(`Order placed: ${data.order_id}`);
@@ -197,6 +199,18 @@ const Cart = () => {
                 <div className="overline mb-2">Notes (optional)</div>
                 <textarea data-testid="order-notes" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)}
                   className="w-full border border-slate-200 p-2 text-sm rounded-sm" placeholder="Delivery preferences, contact instructions…" />
+              </div>
+
+              <div>
+                <div className="overline mb-2">Customer's vehicle VIN (optional)</div>
+                <input data-testid="order-vehicle-vin" type="text" value={vehicleVin}
+                  onChange={(e) => setVehicleVin(e.target.value.toUpperCase())}
+                  maxLength={17}
+                  className="w-full border border-slate-200 px-2 py-2 text-sm rounded-sm font-mono uppercase tracking-wider"
+                  placeholder="17-char VIN — links order to vehicle service history" />
+                <p className="text-[10px] text-slate-500 mt-1">
+                  Tagging an order with a VIN makes it appear in that vehicle's repair timeline forever.
+                </p>
               </div>
 
               {!kycOk && (
