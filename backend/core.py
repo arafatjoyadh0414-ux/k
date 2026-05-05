@@ -39,6 +39,12 @@ ADMIN_EMAILS = [e.strip().lower() for e in os.environ.get("ADMIN_EMAILS", "").sp
 STRIPE_API_KEY = os.environ.get("STRIPE_API_KEY")
 USD_TO_BDT = float(os.environ.get("USD_TO_BDT", "120"))
 
+# Google Custom Search Engine for VIN vehicle photos (optional).
+# When both are set, vin/photos uses Google Images for an exact-match
+# year/make/model photo. When unset, we fall back to Wikipedia (1 photo).
+GOOGLE_CSE_API_KEY = os.environ.get("GOOGLE_CSE_API_KEY", "")
+GOOGLE_CSE_ID = os.environ.get("GOOGLE_CSE_ID", "")
+
 STORAGE_URL = "https://integrations.emergentagent.com/objstore/api/v1/storage"
 APP_NAME = "joyautomart"
 storage_key: Optional[str] = None

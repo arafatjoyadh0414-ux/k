@@ -250,22 +250,24 @@ const VinLookup = () => {
                 {photos.length > 0 && (
                   <div className="mt-3" data-testid="vin-photo-gallery">
                     <div className="overline mb-2 flex items-center justify-between">
-                      <span>Reference photos · Wikipedia</span>
-                      <span className="text-[10px] normal-case text-slate-400">For visual reference only</span>
+                      <span>Reference photo</span>
+                      <span className={`text-[10px] normal-case px-2 py-0.5 rounded-sm ${
+                        photos[0].source === "google"
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                          : "bg-amber-50 text-amber-700 border border-amber-200"
+                      }`}>
+                        {photos[0].source === "google" ? "Year-specific" : "Model generation · upgrade for exact-year match"}
+                      </span>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      {photos.map((p, i) => (
-                        <a key={i} href={p.page_url} target="_blank" rel="noopener noreferrer"
-                          data-testid={`vin-photo-${i}`}
-                          className="group block aspect-[4/3] overflow-hidden rounded-sm border border-slate-200 bg-slate-50 relative">
-                          <img src={p.url} alt={p.title} loading="lazy"
-                            className="w-full h-full object-cover transition-transform group-hover:scale-105" />
-                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-1.5 text-[10px] text-white truncate">
-                            {p.title}
-                          </div>
-                        </a>
-                      ))}
-                    </div>
+                    <a href={photos[0].page_url} target="_blank" rel="noopener noreferrer"
+                      data-testid="vin-photo-0"
+                      className="block aspect-[16/9] overflow-hidden rounded-sm border border-slate-200 bg-slate-50 relative group">
+                      <img src={photos[0].url} alt={photos[0].title} loading="lazy"
+                        className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 text-xs text-white">
+                        {photos[0].title}
+                      </div>
+                    </a>
                   </div>
                 )}
               </div>

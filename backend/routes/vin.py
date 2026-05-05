@@ -30,7 +30,7 @@ from datetime import datetime, timezone, timedelta
 from fastapi import HTTPException, Request
 from pydantic import BaseModel
 
-from core import api_router, db, logger, EMERGENT_LLM_KEY, get_current_user, tier_price
+from core import api_router, db, logger, EMERGENT_LLM_KEY, GOOGLE_CSE_API_KEY, GOOGLE_CSE_ID, get_current_user, tier_price
 from wmi_table import lookup_wmi, decode_year
 
 NHTSA_VALUES = "https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/{vin}?format=json"
@@ -235,9 +235,48 @@ async def vin_decode(vin: str):
     return decoded
 
 
-# ============= Wikipedia photo gallery =============
+# ============= Vehicle photo (Google CSE → Wikipedia fallback) =============
 WIKI_SEARCH = "https://en.wikipedia.org/w/api.php"
 WIKI_HEADERS = {"User-Agent": "JoyAutomart/1.0 (b2b@joyautomart.com)"}
+GOOGLE_CSE_URL = "https://www.googleapis.com/customsearch/v1"
+
+
+def _google_cse_top_image(query: str) -> dict | None:
+    """Hit Google Custom Search Image API. Returns the single best photo
+    or None on failure. Free tier: 100 queries/day."""
+    if not GOOGLE_CSE_API_KEY or not GOOGLE_CSE_ID:
+        return None
+    try:
+        r = requests.get(
+            GOOGLE_CSE_URL,
+            params={
+                "key": GOOGLE_CSE_API_KEY,
+                "cx": GOOGLE_CSE_ID,
+                "q": query,
+                "searchType": "image",
+                "imgType": "photo",
+                "imgSize": "large",
+                "safe": "active",
+                "num": 1,
+            },
+            timeout=8,
+        )
+        if r.status_code != 200:
+            logger.warning(f"Google CSE returned {r.status_code}: {r.text[:200]}")
+            return None
+        items = (r.json().get("items") or [])
+        if not items:
+            return None
+        it = items[0]
+        return {
+            "url": it.get("link"),
+            "title": it.get("title", "")[:140],
+            "page_url": (it.get("image") or {}).get("contextLink") or it.get("link"),
+            "source": "google",
+        }
+    except Exception as e:
+        logger.warning(f"Google CSE failed: {e}")
+        return None
 
 
 def _wiki_request(params: dict) -> dict:
@@ -250,81 +289,88 @@ def _wiki_request(params: dict) -> dict:
         return {}
 
 
-def _fetch_vehicle_photos(make: str, model: str, year: int | None, limit: int = 4) -> list:
-    """Search Wikipedia for vehicle photos. Returns list of {url, title, page_url}.
-    Strategy: search "make model" (more reliable than year-specific search since
-    Wikipedia pages cover model generations, not single years), then fetch
-    each page's lead thumbnail via pageimages API."""
+def _wiki_top_image(make: str, model: str) -> dict | None:
+    """Single best Wikipedia photo. Returns None on failure."""
     q_terms = " ".join([t for t in [make, model] if t]).strip()
     if not q_terms:
-        return []
-
-    # Step 1: search for relevant Wikipedia pages
+        return None
     search = _wiki_request({
         "action": "query", "format": "json", "list": "search",
-        "srsearch": q_terms, "srlimit": limit + 2, "srnamespace": 0,
+        "srsearch": q_terms, "srlimit": 3, "srnamespace": 0,
     })
     hits = (search.get("query") or {}).get("search") or []
-    titles = [h["title"] for h in hits[:limit + 2]]
-    if not titles:
-        return []
-
-    # Step 2: get pageimages for those titles in one batched call
+    if not hits:
+        return None
+    titles = [h["title"] for h in hits[:3]]
     img_data = _wiki_request({
         "action": "query", "format": "json",
         "titles": "|".join(titles),
         "prop": "pageimages|info",
-        "pithumbsize": 600, "piprop": "thumbnail|original",
+        "pithumbsize": 600, "piprop": "thumbnail",
         "inprop": "url",
     })
     pages = (img_data.get("query") or {}).get("pages") or {}
-
-    # Preserve search ranking
     by_title = {p.get("title"): p for p in pages.values()}
-    out = []
     for title in titles:
         p = by_title.get(title)
         if not p:
             continue
         thumb = (p.get("thumbnail") or {}).get("source")
-        if not thumb:
-            continue
-        out.append({
-            "url": thumb,
-            "title": title,
-            "page_url": p.get("fullurl") or f"https://en.wikipedia.org/wiki/{title.replace(' ', '_')}",
-        })
-        if len(out) >= limit:
-            break
-    return out
+        if thumb:
+            return {
+                "url": thumb,
+                "title": title,
+                "page_url": p.get("fullurl") or f"https://en.wikipedia.org/wiki/{title.replace(' ', '_')}",
+                "source": "wikipedia",
+            }
+    return None
 
 
 @api_router.get("/vin/photos")
 async def vin_photos(make: str = "", model: str = "", year: int | None = None):
-    """Return Wikipedia photo gallery for a vehicle. Cached for 30 days
-    keyed by {make}|{model} since photos change rarely."""
+    """Return ONE exact-match vehicle photo. Tries Google CSE first
+    (most accurate, year-specific) → falls back to Wikipedia (model
+    generation only). 30-day cache keyed by year+make+model."""
     make = (make or "").strip()
     model = (model or "").strip()
     if not make:
-        return {"photos": []}
-    cache_key = f"{make.lower()}|{model.lower()}"
+        return {"photos": [], "source": None}
+
+    cache_key = f"{year or ''}|{make.lower()}|{model.lower()}"
     cached = await db.vehicle_photos_cache.find_one({"key": cache_key}, {"_id": 0})
     if cached:
         try:
             cached_at = datetime.fromisoformat(cached["cached_at"].replace("Z", "+00:00"))
             if datetime.now(timezone.utc) - cached_at < timedelta(days=CACHE_TTL_DAYS):
-                return {"photos": cached.get("photos", []), "cached": True}
+                return {
+                    "photos": cached.get("photos", []),
+                    "source": cached.get("source"),
+                    "cached": True,
+                }
         except Exception:
             pass
 
-    photos = _fetch_vehicle_photos(make, model, year)
+    # 1. Try Google CSE for the exact year+make+model
+    photo = None
+    source = None
+    if GOOGLE_CSE_API_KEY and GOOGLE_CSE_ID:
+        q = " ".join(str(x) for x in [year, make, model] if x).strip()
+        photo = _google_cse_top_image(q)
+        source = "google" if photo else None
+
+    # 2. Fall back to Wikipedia (model-generation level)
+    if not photo:
+        photo = _wiki_top_image(make, model)
+        source = "wikipedia" if photo else None
+
+    photos = [photo] if photo else []
     await db.vehicle_photos_cache.update_one(
         {"key": cache_key},
-        {"$set": {"key": cache_key, "photos": photos,
+        {"$set": {"key": cache_key, "photos": photos, "source": source,
                   "cached_at": datetime.now(timezone.utc).isoformat()}},
         upsert=True,
     )
-    return {"photos": photos, "cached": False}
+    return {"photos": photos, "source": source, "cached": False}
 
 
 def _matches_fit(fit: dict, make: str, model: str, year):
