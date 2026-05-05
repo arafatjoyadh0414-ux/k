@@ -253,3 +253,22 @@ Inspired by the strategic audit. Most audit items were already built (catalog, K
 
 ## 2026-02-10 — CSS bug fix (Insights joy-score-card)
 - `industrial-card` utility was overriding `bg-slate-950` (white-on-white invisible text). Fixed via inline `style={{ backgroundColor: "#020617" }}` which beats class-level cascade.
+
+## 2026-02-10 — P0 follow-up: full route extraction + P2 features
+
+**Continued server.py refactor (P1 complete):**
+- server.py: 2820 → **469 lines** (-83%) total across both refactor passes.
+- 11 route modules under `/app/backend/routes/`: auth_workshop, products, orders, admin_misc, sourcing, payments, catalog, returns, insights, chat, driver.
+- New `server_models.py` for shared Pydantic models. `core.py` for app/db/router/helpers.
+- 30/30 backend regression tests pass (`test_iter8_regression.py` covers all 11 modules).
+
+**P2 features delivered:**
+- ✅ **Cascading vehicle filter (Make → Model → Year)**: New `/api/vehicles/options` returns brand→model→years tree from product car_fits. Products page now uses 3 cascading SELECT dropdowns; selecting brand enables model, selecting model enables year. Auto-clears downstream filters on parent change.
+- ✅ **Driver mobile view**: Token-authenticated `/driver/:driverId?token=X` mobile-first React page. Backend `/api/driver/{id}/profile|orders|orders/{order_id}/status` requires `?token=` query param matching the delivery person's `access_token`. Drivers see assigned packed/shipped orders with company name, address, clickable phone, item list, COD callouts, and one-tap "Picked up → Out for delivery" / "Mark delivered" actions. Strict transitions: packed→shipped→delivered. Admin Delivery Persons page surfaces a copyable driver link per rider.
+- ✅ **Bulk CSV product import (frontend)**: Already existed in AdminProducts.jsx — confirmed working.
+
+**Backlog still open:**
+- Recurring orders scheduler (P2, deferred — needs cron design)
+- Multi-user team accounts (P2, deferred — needs RBAC + invitations design)
+- WhatsApp Business API (P1, blocked on user provider choice + key)
+- PWA setup (P1)

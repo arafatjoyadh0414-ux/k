@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../components/Layout";
 import api from "../lib/api";
-import { Plus, Trash2, Edit, Bike, Truck, Package2, Phone } from "lucide-react";
+import { Plus, Trash2, Edit, Bike, Truck, Package2, Phone, Link as LinkIcon, Copy } from "lucide-react";
 import { toast } from "sonner";
 
 const empty = {
@@ -229,6 +229,30 @@ const AdminDeliveryPersons = () => {
                     Active orders:{" "}
                     <span className="font-semibold text-slate-800">{d.active_assignments || 0}</span>
                   </div>
+
+                  {d.access_token && (
+                    <div className="mt-3 bg-slate-50 border border-slate-200 rounded-sm p-2">
+                      <div className="flex items-center gap-1 text-[10px] uppercase tracking-wider text-slate-500 mb-1">
+                        <LinkIcon className="w-3 h-3" /> Driver mobile link
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <code className="text-[10px] font-mono text-slate-700 truncate flex-1" data-testid={`dp-link-${d.delivery_person_id}`}>
+                          {`${window.location.origin}/driver/${d.delivery_person_id}?token=${d.access_token}`}
+                        </code>
+                        <button
+                          onClick={() => {
+                            const url = `${window.location.origin}/driver/${d.delivery_person_id}?token=${d.access_token}`;
+                            navigator.clipboard.writeText(url);
+                            toast.success("Driver link copied");
+                          }}
+                          className="text-[10px] font-semibold text-slate-600 hover:text-[#E11D48] flex items-center gap-1"
+                          data-testid={`copy-dp-link-${d.delivery_person_id}`}
+                        >
+                          <Copy className="w-3 h-3" /> Copy
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="flex gap-3 mt-4 pt-3 border-t border-slate-100">
                     <button

@@ -54,8 +54,23 @@ const Products = () => {
   const [carBrand, setCarBrand] = useState("");
   const [carModel, setCarModel] = useState("");
   const [carYear, setCarYear] = useState("");
+  const [vehicleTree, setVehicleTree] = useState({ brands: [], by_brand: {} });
   const [loading, setLoading] = useState(true);
   const { add } = useCart();
+
+  // Load cascade tree once
+  useEffect(() => {
+    api.get("/vehicles/options").then(({ data }) => setVehicleTree(data || { brands: [], by_brand: {} })).catch(() => {});
+  }, []);
+
+  // Reset model/year when brand changes; reset year when model changes
+  useEffect(() => { setCarModel(""); setCarYear(""); }, [carBrand]);
+  useEffect(() => { setCarYear(""); }, [carModel]);
+
+  const availableModels = carBrand && vehicleTree.by_brand[carBrand]
+    ? vehicleTree.by_brand[carBrand].models : [];
+  const availableYears = carBrand && carModel && vehicleTree.by_brand[carBrand]?.by_model?.[carModel]
+    ? vehicleTree.by_brand[carBrand].by_model[carModel] : [];
 
   useEffect(() => {
     (async () => {
@@ -101,12 +116,21 @@ const Products = () => {
             )}
           </div>
           <div className="grid grid-cols-3 gap-3">
-            <input data-testid="car-brand-filter" type="text" value={carBrand} onChange={(e) => setCarBrand(e.target.value)} placeholder="Brand (Toyota / BYD…)"
-              className="border border-slate-200 px-3 py-2 text-sm rounded-sm focus:outline-none focus:ring-2 focus:ring-[#E11D48]" />
-            <input data-testid="car-model-filter" type="text" value={carModel} onChange={(e) => setCarModel(e.target.value)} placeholder="Model (Harrier / Sealion…)"
-              className="border border-slate-200 px-3 py-2 text-sm rounded-sm focus:outline-none focus:ring-2 focus:ring-[#E11D48]" />
-            <input data-testid="car-year-filter" type="number" value={carYear} onChange={(e) => setCarYear(e.target.value)} placeholder="Year (2020)"
-              className="border border-slate-200 px-3 py-2 text-sm rounded-sm focus:outline-none focus:ring-2 focus:ring-[#E11D48]" />
+            <select data-testid="car-brand-filter" value={carBrand} onChange={(e) => setCarBrand(e.target.value)}
+              className="border border-slate-200 px-3 py-2 text-sm rounded-sm focus:outline-none focus:ring-2 focus:ring-[#E11D48] bg-white">
+              <option value="">Brand · any</option>
+              {vehicleTree.brands.map((b) => <option key={b} value={b}>{b}</option>)}
+            </select>
+            <select data-testid="car-model-filter" value={carModel} onChange={(e) => setCarModel(e.target.value)} disabled={!carBrand}
+              className="border border-slate-200 px-3 py-2 text-sm rounded-sm focus:outline-none focus:ring-2 focus:ring-[#E11D48] bg-white disabled:bg-slate-50 disabled:text-slate-400">
+              <option value="">{carBrand ? "Model · any" : "Pick a brand first"}</option>
+              {availableModels.map((m) => <option key={m} value={m}>{m}</option>)}
+            </select>
+            <select data-testid="car-year-filter" value={carYear} onChange={(e) => setCarYear(e.target.value)} disabled={!carModel}
+              className="border border-slate-200 px-3 py-2 text-sm rounded-sm focus:outline-none focus:ring-2 focus:ring-[#E11D48] bg-white disabled:bg-slate-50 disabled:text-slate-400">
+              <option value="">{carModel ? "Year · any" : "Pick a model first"}</option>
+              {availableYears.map((y) => <option key={y} value={y}>{y}</option>)}
+            </select>
           </div>
         </div>
 

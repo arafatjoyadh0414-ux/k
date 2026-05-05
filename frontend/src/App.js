@@ -40,6 +40,7 @@ import AdminWorkshopDetail from "@/pages/AdminWorkshopDetail";
 import AdminOrders from "@/pages/AdminOrders";
 import AdminOrderDetail from "@/pages/AdminOrderDetail";
 import AdminProducts from "@/pages/AdminProducts";
+import Driver from "@/pages/Driver";
 
 const AppRouter = () => {
   const location = useLocation();
@@ -54,6 +55,7 @@ const AppRouter = () => {
       <Route path="/inquire" element={<Inquire />} />
       <Route path="/inquire/:sku" element={<Inquire />} />
       <Route path="/catalog" element={<PublicCatalog />} />
+      <Route path="/driver/:driverId" element={<Driver />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/privacy" element={<Privacy />} />
 
