@@ -1,0 +1,49 @@
+{
+  "summary": "Phase 7 testing: Joy-Score-driven auto tier upgrade (Silver/Gold/Platinum at score ≥50/70/85) + admin audit log + cart toast wiring. Backend: 5/5 pytest pass — GET /api/workshop/insights returns joy_score{score,grade,components{volume,spend,payment_punctuality,longevity,credit_discipline,kyc}} + next_threshold{score_needed,tier,credit_floor_bdt,label}; GET /api/admin/tier-upgrades is admin-only and returns []; POST /api/orders on a seeded silver workshop with 20 pre-existing orders returns `tier_upgraded` in the response (from_tier=silver → to_tier=gold, from_credit_bdt=100000 → to_credit_bdt=200000, score=76, grade=Elite) AND the tier_upgrade_log row is written (admin /admin/tier-upgrades row visible with all required fields: log_id, workshop_id, from/to tier, from/to credit_bdt, score, grade, created_at). Frontend Insights page renders data-testid='insights-page', joy-score-ring, joy-score-value='75', joy-score-grade='ELITE', all 6 score-component-* badges, all 4 stat cards, AND next-tier-panel with correct text 'Reach 85 Joy Score to unlock ANCHOR · Auto-upgrades to platinum tier + credit limit raised to ৳5,00,000', +10 to go badge, and gradient progress bar (75/85≈88%). Admin /admin/tier-upgrades page renders admin-tier-upgrades-page, tier-upgrades-list with 1 existing audit row showing 'Test WS · ws-test-1 · 73 ELITE · SILVER→GOLD · ৳1,00,000→৳2,00,000'. Cart.jsx place-order-button flow correctly reads response.tier_upgraded and shows sonner toast with 'Tier: X→Y' and 'Credit limit raised to ৳...' (verified by code review + backend returning the object). NOTE: Review request mentioned field 'next_tier' but the actual backend field is 'next_threshold' — frontend matches backend (both use next_threshold), so no breakage; just a docs-vs-impl naming mismatch in the review request itself.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/workshop/insights", "issue": "Field is named `next_threshold` (not `next_tier` as review request spec implies). Frontend is consistent, but any external consumer expecting `next_tier` will break. Consider aliasing or renaming."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Insights / joy-score-card",
+        "issue": "CRITICAL contrast bug: the card has classes `bg-slate-950 text-white` but the `industrial-card` utility class appears to override background to white (computed backgroundColor=rgb(255,255,255)). Result: joy-score-value '75' (text-white) renders white-on-white and is invisible; all 6 score-component values (0/100, 100/100, 91/100, etc.) also render invisibly. Only the grade 'ELITE' is visible because it uses bg-clip-text gradient. Primary feature of the page is effectively unreadable on desktop. Fix: either add `!important` to bg-slate-950 via bg-[#020617] arbitrary value, reorder class priority, or move dark background into industrial-card variant. Flagged in iter6 as well but still unfixed.",
+        "selector": "[data-testid='joy-score-card'] [data-testid='joy-score-value']",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/insights joy-score-card", "issues": ["Same dark-theme-override bug persists from iter6. The ring score number and the six component numbers under VOLUME/SPEND/PAYMENT_PUNCTUALITY/LONGEVITY/CREDIT_DISCIPLINE/KYC are all invisible (white-on-white). DOM is correct, CSS cascade is broken."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_phase7_tier_upgrade.py",
+    "/app/test_reports/pytest/phase7_results.xml"
+  ],
+  "action_items": [
+    "P0: Fix /insights joy-score-card background. `industrial-card` utility is overriding `bg-slate-950`. The score number and 6 component values are invisible (white-on-white) for every workshop. Suggested fix: in Insights.jsx line 78 replace className with an inline style={{backgroundColor:'#020617', color:'white'}} OR scope industrial-card to only apply bg when no bg-* override is present OR use `!bg-slate-950` with Tailwind's important modifier.",
+    "Consider renaming `next_threshold` → `next_tier` in /api/workshop/insights to match external spec, or expose both.",
+    "Still outstanding from iter5/6: split server.py (now 2821 lines) into modules (auth/orders/returns/invoice/admin/packs/public/insights/bundles/tier_upgrade/notifications)."
+  ],
+  "critical_code_review_comments": [
+    "server.py `evaluate_and_apply_auto_upgrade()` is well-designed: idempotent, never downgrades (uses TIER_ORDER index comparison), never blocks order (wrapped in try/except in POST /orders), writes audit log only when tier OR credit actually changed. Credit floor uses `>` check so already-higher custom credit is preserved. Good.",
+    "_compute_joy_score thresholds map cleanly to AUTO_UPGRADE_RULES (50/70/85 → silver/gold/platinum with floors 100k/200k/500k). However `_compute_joy_score` returns grade names 'Starter/Partner/Elite/Anchor' while TIER_ORDER uses 'silver/gold/platinum'. Mixing the two vocabularies in tier_upgrade_log rows (grade=Elite, to_tier=gold) is intentional but may confuse admins reading the audit log. Consider adding both.",
+    "KYC-approval hook also triggers evaluate_and_apply_auto_upgrade (line 742) — good, first-time KYC-approved workshops with past orders get retroactive upgrade.",
+    "Frontend Cart.jsx correctly consumes `data.tier_upgraded` (line 75) and surfaces a sonner toast with tier change and credit change. Toast deferred by 600ms so it doesn't collide with order-placed toast. Good UX.",
+    "CRITICAL CSS BUG: Insights.jsx joy-score-card `bg-slate-950 text-white` does not take effect — industrial-card (likely defined in App.css with background:#ffffff) has higher specificity. This is the same issue flagged in iter6 but still unresolved."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_phase7_tier_upgrade.py"
+  ],
+  "success_rate": {"backend": "100% (5/5 phase7)", "frontend": "80% — Insights, Admin, Cart pages all render with correct data-testids and data binding; tier_upgraded toast wiring verified by code review + backend contract; deducted for the CRITICAL joy-score card contrast bug making primary feature unreadable"},
+  "test_credentials": "Re-used Bearer test-token-workshop-1 (user=test-workshop-1, ws=ws-test-1, kyc=approved, now gold at joy_score=75) and Bearer test-token-admin-1. Cookie session_token on preview domain works. No re-seed needed.",
+  "seed_data_creation": "Temporary workshop TEST_tu_ws_<uuid> + 20 orders seeded during test_order_bumps_to_gold and cleaned up in finally block (users, workshops, user_sessions, orders, tier_upgrade_log all deleted). Zero residual test data after run. Existing tier_upgrade_log row for ws-test-1 (silver→gold, score=73) left in place for frontend admin page verification.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Run phase 7 alone: `REACT_APP_BACKEND_URL=<url> pytest backend/tests/test_phase7_tier_upgrade.py -v`. Frontend testids: joy-score-ring, joy-score-value, joy-score-grade, score-component-{volume|spend|payment_punctuality|longevity|credit_discipline|kyc}, next-tier-panel, anchor-tier-panel, stat-orders/spend/saved/credit, admin-tier-upgrades-page, tier-upgrades-list, tier-upgrade-{log_id}, tier-upgrades-empty. To retrigger an upgrade during UI testing: (a) reset ws-test-1 in mongo to pricing_tier='silver', credit_limit=100000, credit_used=0, joy_score=null, delete orders, delete tier_upgrade_log; (b) pre-seed ~20 paid orders; (c) login as workshop and place one more order → Cart toast should show 'Tier: SILVER → GOLD. Credit limit raised to ৳2,00,000.'",
+  "rca of the issue": "CRITICAL: /insights joy-score-card bg-slate-950 is overridden by `industrial-card` CSS utility (likely defined in /app/frontend/src/App.css or index.css with `background: #fff` at higher specificity). Root cause: Tailwind utility class `bg-slate-950` has specificity 0-1-0 while `.industrial-card { background: #fff }` has the same specificity but is parsed later in the CSS cascade, winning the tiebreak. Fix options: (1) add !important via `!bg-slate-950`, (2) replace `industrial-card` with another class that doesn't set background on this specific card, (3) inline style={{backgroundColor:'#020617'}}. The DOM/JS layer is correct (score=75, grade=ELITE, all 6 components populated); purely a CSS specificity bug. Impact: every workshop user sees an unreadable Joy Score card — the primary feature of the Insights page."
+}
