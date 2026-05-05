@@ -43,6 +43,9 @@ from routes import payments as _payments_routes  # noqa: F401
 from routes import catalog as _catalog_routes  # noqa: F401
 from routes import returns as _returns_routes  # noqa: F401
 from routes import driver as _driver_routes  # noqa: F401
+from routes import vin as _vin_routes  # noqa: F401
+from routes import recurring as _recurring_routes  # noqa: F401
+from routes.recurring import start_recurring_worker
 
 # Pydantic models (kept here for back-compat). Authoritative copies live in server_models.py.
 from server_models import User, Workshop, Product, CartItem, OrderCreate  # noqa: F401
@@ -386,9 +389,20 @@ async def startup():
         await db.chat_messages.create_index("message_id", unique=True)
         await db.chat_messages.create_index([("session_id", 1), ("created_at", 1)])
         await db.chat_messages.create_index([("user_id", 1), ("created_at", -1)])
+        await db.recurring_orders.create_index("recurring_id", unique=True)
+        await db.recurring_orders.create_index([("is_active", 1), ("next_run_at", 1)])
+        await db.recurring_orders.create_index([("user_id", 1), ("created_at", -1)])
+        await db.vin_cache.create_index("vin", unique=True)
+        await db.saved_vins.create_index([("user_id", 1), ("created_at", -1)])
         logger.info("Indexes ensured")
     except Exception as e:
         logger.warning(f"Index creation warning: {e}")
+
+    # Start the recurring-orders background worker
+    try:
+        start_recurring_worker()
+    except Exception as e:
+        logger.warning(f"Recurring worker start failed: {e}")
 
     # Idempotent seed: only insert SKUs not already in DB
     existing_skus = set()

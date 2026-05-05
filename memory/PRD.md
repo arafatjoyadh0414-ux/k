@@ -268,7 +268,29 @@ Inspired by the strategic audit. Most audit items were already built (catalog, K
 - ✅ **Bulk CSV product import (frontend)**: Already existed in AdminProducts.jsx — confirmed working.
 
 **Backlog still open:**
-- Recurring orders scheduler (P2, deferred — needs cron design)
 - Multi-user team accounts (P2, deferred — needs RBAC + invitations design)
 - WhatsApp Business API (P1, blocked on user provider choice + key)
 - PWA setup (P1)
+
+## 2026-02-10 — VIN lookup + Recurring orders (deployment-ready)
+
+**VIN Lookup → Find Parts** (`/vin-lookup`):
+- Backend `/api/vin/decode` calls free NHTSA vPIC API (covers any VIN globally, 1981+) and caches in `db.vin_cache` for 30 days.
+- Backend `/api/vin/parts` decodes VIN + matches against catalog `car_fits` + asks Claude for AI cross-reference suggestions (8 parts max, with OEM hints + aftermarket brand cross-refs and a strong "verify before ordering" disclaimer).
+- Saved VINs (`/api/vin/saved`) per workshop for one-tap reorder when the same vehicle returns.
+- AI suggestions surface a "Request quote" CTA that pre-fills the existing `/part-requests` sourcing form with the decoded vehicle context.
+- Honest scoping: no proprietary global parts DB integration (Tecdoc/Mitchell/ALLDATA cost thousands/month and require licensing); AI fills the gap with disclaimers.
+
+**Recurring orders scheduler** (`/recurring`):
+- Schedule weekly/biweekly/monthly/custom-cadence orders. Backend background worker scans `db.recurring_orders` every hour for `next_run_at <= now` and auto-places orders against current tier pricing + credit limit.
+- Pause/resume/run-now/edit/delete from UI. Skips runs cleanly when KYC isn't approved or credit insufficient (logged in `db.recurring_runs`).
+- Auto-placed orders carry `source: "recurring"` + `recurring_id` for traceability.
+- Joy Score auto-upgrade evaluation runs on every recurring order placement.
+
+**Files added:**
+- `/app/backend/routes/vin.py`, `/app/backend/routes/recurring.py`
+- `/app/frontend/src/pages/VinLookup.jsx`, `/app/frontend/src/pages/Recurring.jsx`
+- Nav links: `nav-vin-lookup`, `nav-recurring`
+- `/app/backend/tests/test_vin_recurring.py` (8 tests, all pass)
+
+**Backend regression**: 38/38 tests pass (vin_recurring + iter8 + phase7).

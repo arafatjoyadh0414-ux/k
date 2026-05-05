@@ -41,6 +41,8 @@ import AdminOrders from "@/pages/AdminOrders";
 import AdminOrderDetail from "@/pages/AdminOrderDetail";
 import AdminProducts from "@/pages/AdminProducts";
 import Driver from "@/pages/Driver";
+import VinLookup from "@/pages/VinLookup";
+import Recurring from "@/pages/Recurring";
 
 const AppRouter = () => {
   const location = useLocation();
@@ -71,6 +73,8 @@ const AppRouter = () => {
       <Route path="/returns" element={<ProtectedRoute><Returns /></ProtectedRoute>} />
       <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
       <Route path="/quick-tools" element={<ProtectedRoute><QuickTools /></ProtectedRoute>} />
+      <Route path="/vin-lookup" element={<ProtectedRoute><VinLookup /></ProtectedRoute>} />
+      <Route path="/recurring" element={<ProtectedRoute><Recurring /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="/payment/return" element={<ProtectedRoute><PaymentReturn /></ProtectedRoute>} />
 
