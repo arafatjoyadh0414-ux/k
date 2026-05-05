@@ -584,7 +584,16 @@ async def create_order(payload: OrderCreate, request: Request):
     except Exception as e:
         logger.warning(f"Order-placed notify failed: {e}")
 
+    # Trigger Joy Score auto-upgrade evaluation (best-effort, never blocks order)
+    upgraded = None
+    try:
+        upgraded = await evaluate_and_apply_auto_upgrade(user["user_id"])
+    except Exception as e:
+        logger.warning(f"Auto-upgrade eval failed: {e}")
+
     order.pop("_id", None)
+    if upgraded:
+        order["tier_upgraded"] = upgraded
     return order
 
 
@@ -727,6 +736,14 @@ async def admin_kyc_decision(workshop_id: str, payload: KycDecision, request: Re
                 notify_kyc_decision(ws, owner["email"])
             except Exception as e:
                 logger.warning(f"KYC notify failed: {e}")
+        # On approval, evaluate Joy Score (sets baseline + may grant initial credit)
+        if payload.decision == "approved":
+            try:
+                await evaluate_and_apply_auto_upgrade(ws["user_id"])
+                # refetch to return latest tier/credit
+                ws = await db.workshops.find_one({"workshop_id": workshop_id}, {"_id": 0})
+            except Exception as e:
+                logger.warning(f"KYC auto-upgrade eval failed: {e}")
     return ws
 
 
@@ -1965,6 +1982,148 @@ def _compute_joy_score(metrics: dict) -> dict:
     }}
 
 
+# ============= Auto-Tier-Upgrade Engine =============
+TIER_ORDER = ["silver", "gold", "platinum"]
+
+# Score thresholds and benefits unlocked at each grade
+AUTO_UPGRADE_RULES = {
+    50: {"tier": "silver",   "credit_floor_bdt": 100000,  "label": "Partner"},
+    70: {"tier": "gold",     "credit_floor_bdt": 200000,  "label": "Elite"},
+    85: {"tier": "platinum", "credit_floor_bdt": 500000,  "label": "Anchor"},
+}
+
+
+def _next_threshold(score: int) -> dict | None:
+    """Return the next score milestone above the given score, or None if at top."""
+    for thresh in sorted(AUTO_UPGRADE_RULES.keys()):
+        if score < thresh:
+            return {"score_needed": thresh, **AUTO_UPGRADE_RULES[thresh]}
+    return None
+
+
+async def _gather_score_metrics(user_id: str, workshop: dict) -> dict:
+    orders = await db.orders.find(
+        {"user_id": user_id},
+        {"_id": 0, "total_bdt": 1, "payment_method": 1,
+         "payment_status": 1, "due_date": 1, "created_at": 1}
+    ).to_list(1000)
+    total_spend = sum(o.get("total_bdt", 0) for o in orders)
+    total_orders = len(orders)
+
+    credit_util = 0.0
+    if workshop.get("credit_limit"):
+        credit_util = (workshop.get("credit_used", 0) or 0) / workshop["credit_limit"]
+
+    credit_orders = [o for o in orders if o.get("payment_method") == "credit"]
+    on_time = 1.0
+    if credit_orders:
+        late = 0
+        for o in credit_orders:
+            try:
+                due = o.get("due_date")
+                if due and o.get("payment_status") != "paid":
+                    due_dt = datetime.fromisoformat(due.replace("Z", "+00:00"))
+                    if datetime.now(timezone.utc) > due_dt:
+                        late += 1
+            except Exception:
+                pass
+        on_time = max(0.0, 1.0 - late / len(credit_orders))
+
+    months = 1
+    if orders:
+        try:
+            sorted_orders = sorted(orders, key=lambda x: x.get("created_at", ""))
+            first = datetime.fromisoformat(
+                sorted_orders[0]["created_at"].replace("Z", "+00:00")
+            )
+            months = max(1, int((datetime.now(timezone.utc) - first).days / 30))
+        except Exception:
+            pass
+
+    return {
+        "orders_total": total_orders,
+        "spend_bdt_total": total_spend,
+        "on_time_payment_rate": on_time,
+        "kyc_status": workshop.get("kyc_status", ""),
+        "credit_utilization": credit_util,
+        "active_months": months,
+    }
+
+
+async def evaluate_and_apply_auto_upgrade(user_id: str) -> dict | None:
+    """Recompute Joy Score for a workshop and apply tier/credit upgrades.
+    Idempotent — never downgrades. Logs every upgrade to `tier_upgrade_log`.
+    Returns upgrade details if applied, else None."""
+    ws = await db.workshops.find_one({"user_id": user_id}, {"_id": 0})
+    if not ws or ws.get("kyc_status") != "approved":
+        return None
+
+    metrics = await _gather_score_metrics(user_id, ws)
+    joy = _compute_joy_score(metrics)
+    score = joy["score"]
+    grade = joy["grade"]
+
+    # Find highest-threshold rule satisfied
+    eligible = None
+    for thresh in sorted(AUTO_UPGRADE_RULES.keys()):
+        if score >= thresh:
+            eligible = {"score_threshold": thresh, **AUTO_UPGRADE_RULES[thresh]}
+
+    update = {"joy_score": score, "joy_grade": grade,
+              "joy_score_at": datetime.now(timezone.utc).isoformat()}
+    upgraded = None
+
+    if eligible:
+        cur_tier = (ws.get("pricing_tier") or "silver").lower()
+        cur_idx = TIER_ORDER.index(cur_tier) if cur_tier in TIER_ORDER else -1
+        new_idx = TIER_ORDER.index(eligible["tier"])
+        cur_credit = ws.get("credit_limit") or 0
+        target_credit = eligible["credit_floor_bdt"]
+
+        new_tier = cur_tier
+        new_credit = cur_credit
+        if new_idx > cur_idx:
+            new_tier = eligible["tier"]
+            update["pricing_tier"] = new_tier
+        if target_credit > cur_credit:
+            new_credit = target_credit
+            update["credit_limit"] = new_credit
+
+        if new_tier != cur_tier or new_credit != cur_credit:
+            upgraded = {
+                "from_tier": cur_tier,
+                "to_tier": new_tier,
+                "from_credit_bdt": cur_credit,
+                "to_credit_bdt": new_credit,
+                "score": score,
+                "grade": grade,
+            }
+            # Audit log
+            await db.tier_upgrade_log.insert_one(dict({
+                "log_id": f"tup_{uuid.uuid4().hex[:10]}",
+                "user_id": user_id,
+                "workshop_id": ws["workshop_id"],
+                "company_name": ws.get("company_name", ""),
+                "score": score, "grade": grade,
+                "from_tier": cur_tier, "to_tier": new_tier,
+                "from_credit_bdt": cur_credit, "to_credit_bdt": new_credit,
+                "trigger": "auto",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            }))
+
+    await db.workshops.update_one({"user_id": user_id}, {"$set": update})
+    return upgraded
+
+
+@api_router.get("/admin/tier-upgrades")
+async def admin_list_tier_upgrades(request: Request, limit: int = 100):
+    await require_admin(request)
+    items = await db.tier_upgrade_log.find(
+        {}, {"_id": 0}
+    ).sort("created_at", -1).to_list(min(limit, 500))
+    return items
+
+
 @api_router.get("/workshop/insights")
 async def workshop_insights(request: Request):
     user = await require_user(request)
@@ -2095,6 +2254,7 @@ async def workshop_insights(request: Request):
         "top_skus": [{"sku": k, "name": sku_label.get(k, k), "qty": v} for k, v in top_skus],
         "reorder_nudges": nudges[:6],
         "joy_score": joy,
+        "next_threshold": _next_threshold(joy["score"]),
     }
 
 

@@ -33,6 +33,7 @@ import AdminPartRequests from "@/pages/AdminPartRequests";
 import AdminSuppliers from "@/pages/AdminSuppliers";
 import AdminDeliveryPersons from "@/pages/AdminDeliveryPersons";
 import AdminReturns from "@/pages/AdminReturns";
+import AdminTierUpgrades from "@/pages/AdminTierUpgrades";
 import AdminReports from "@/pages/AdminReports";
 import AdminWorkshops from "@/pages/AdminWorkshops";
 import AdminWorkshopDetail from "@/pages/AdminWorkshopDetail";
@@ -82,6 +83,7 @@ const AppRouter = () => {
       <Route path="/admin/suppliers" element={<ProtectedRoute adminOnly><AdminSuppliers /></ProtectedRoute>} />
       <Route path="/admin/delivery-persons" element={<ProtectedRoute adminOnly><AdminDeliveryPersons /></ProtectedRoute>} />
       <Route path="/admin/returns" element={<ProtectedRoute adminOnly><AdminReturns /></ProtectedRoute>} />
+      <Route path="/admin/tier-upgrades" element={<ProtectedRoute adminOnly><AdminTierUpgrades /></ProtectedRoute>} />
       <Route path="/admin/reports" element={<ProtectedRoute adminOnly><AdminReports /></ProtectedRoute>} />
 
       <Route path="*" element={<NotFound />} />

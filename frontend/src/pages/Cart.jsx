@@ -71,6 +71,16 @@ const Cart = () => {
       });
       clear();
       toast.success(`Order placed: ${data.order_id}`);
+      // Surface auto tier-upgrade if granted
+      if (data.tier_upgraded) {
+        const tu = data.tier_upgraded;
+        const tierChanged = tu.from_tier !== tu.to_tier;
+        const creditChanged = tu.from_credit_bdt !== tu.to_credit_bdt;
+        let msg = "🎉 Joy Score upgrade!";
+        if (tierChanged) msg += ` Tier: ${tu.from_tier.toUpperCase()} → ${tu.to_tier.toUpperCase()}.`;
+        if (creditChanged) msg += ` Credit limit raised to ৳${tu.to_credit_bdt.toLocaleString("en-IN")}.`;
+        setTimeout(() => toast.success(msg, { duration: 8000 }), 600);
+      }
       navigate(`/orders/${data.order_id}`);
     } catch (e) {
       toast.error(e.response?.data?.detail || "Order failed");

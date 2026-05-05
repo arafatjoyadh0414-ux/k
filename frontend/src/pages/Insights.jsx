@@ -62,7 +62,7 @@ const Insights = () => {
   if (loading) return <Layout><div className="overline">Loading insights…</div></Layout>;
   if (!data) return <Layout><div className="text-sm text-slate-600">No insight data yet — place your first order.</div></Layout>;
 
-  const { summary, monthly_spend, top_skus, reorder_nudges, joy_score } = data;
+  const { summary, monthly_spend, top_skus, reorder_nudges, joy_score, next_threshold } = data;
   const maxMonthly = Math.max(1, ...monthly_spend.map((m) => m.spend));
 
   return (
@@ -111,6 +111,51 @@ const Insights = () => {
             />
           </div>
         </section>
+
+        {/* Next tier panel */}
+        {next_threshold && (
+          <section className="industrial-card p-5 bg-gradient-to-r from-amber-50 to-rose-50 border-amber-200" data-testid="next-tier-panel">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div>
+                <div className="overline" style={{ color: "#9a3412" }}>Next milestone</div>
+                <div className="font-display text-xl mt-1">
+                  Reach <b>{next_threshold.score_needed}</b> Joy Score to unlock {" "}
+                  <span className="text-[#E11D48] uppercase tracking-wide">{next_threshold.label}</span>
+                </div>
+                <p className="text-sm text-slate-700 mt-2">
+                  Auto-upgrades to <b>{next_threshold.tier}</b> tier
+                  {" "}+ credit limit raised to <b>{fmtBDT(next_threshold.credit_floor_bdt)}</b>.
+                  No application needed — keep ordering and paying on time, the system promotes you automatically.
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="overline">You're at</div>
+                <div className="font-display text-3xl">{joy_score.score}</div>
+                <div className="text-xs text-slate-500 mt-1">+{next_threshold.score_needed - joy_score.score} to go</div>
+              </div>
+            </div>
+            {/* Progress bar */}
+            <div className="mt-4 bg-white border border-amber-200 h-3 rounded-sm overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-[#E11D48] to-amber-500 rounded-sm transition-[width] duration-700"
+                style={{ width: `${Math.min(100, (joy_score.score / next_threshold.score_needed) * 100)}%` }}
+              />
+            </div>
+          </section>
+        )}
+
+        {!next_threshold && joy_score.score >= 85 && (
+          <section className="industrial-card p-5 bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200" data-testid="anchor-tier-panel">
+            <div className="overline" style={{ color: "#5b21b6" }}>Top tier reached</div>
+            <div className="font-display text-xl mt-1">
+              You're a JOY <span className="text-purple-700 uppercase tracking-wide">Anchor</span>. Highest tier unlocked.
+            </div>
+            <p className="text-sm text-slate-700 mt-2">
+              Platinum pricing, priority delivery, first access to new stock, and hand-tuned credit terms.
+              Reach out for Anchor-only sourcing privileges.
+            </p>
+          </section>
+        )}
 
         {/* Reorder nudges */}
         {reorder_nudges?.length > 0 && (

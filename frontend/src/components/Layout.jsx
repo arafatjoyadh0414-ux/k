@@ -68,6 +68,7 @@ const Layout = ({ children }) => {
               <NavItem to="/admin/workshops" icon={Wrench} label="Workshops" testid="nav-admin-workshops" />
               <NavItem to="/admin/orders" icon={ClipboardList} label="Orders" testid="nav-admin-orders" />
               <NavItem to="/admin/returns" icon={RotateCcw} label="Returns" testid="nav-admin-returns" />
+              <NavItem to="/admin/tier-upgrades" icon={TrendingUp} label="Tier Upgrades" testid="nav-admin-tier-upgrades" />
               <NavItem to="/admin/part-requests" icon={FileQuestion} label="Part Requests" testid="nav-admin-part-requests" />
               <NavItem to="/admin/inquiries" icon={Inbox} label="Inquiries" testid="nav-admin-inquiries" />
               <NavItem to="/admin/products" icon={Package} label="Products" testid="nav-admin-products" />
