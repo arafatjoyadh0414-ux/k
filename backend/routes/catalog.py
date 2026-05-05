@@ -134,7 +134,8 @@ async def list_service_packs(request: Request):
 @api_router.get("/public/catalog")
 async def public_catalog(category: str = "", q: str = ""):
     """Anonymous catalog snapshot — used for the public /catalog page (SEO).
-    Returns retail prices only, no tier discount."""
+    Prices are NOT exposed to anonymous visitors — workshops must sign in
+    to see B2B tier pricing. Stock visibility is preserved for SEO/intent."""
     flt = {}
     if category:
         flt["category"] = category
@@ -144,7 +145,7 @@ async def public_catalog(category: str = "", q: str = ""):
     items = await db.products.find(
         flt,
         {"_id": 0, "product_id": 1, "sku": 1, "name": 1, "category": 1, "brand": 1,
-         "image_url": 1, "price_bdt": 1, "stock": 1, "is_kit": 1, "is_bundle": 1,
+         "image_url": 1, "stock": 1, "is_kit": 1, "is_bundle": 1,
          "car_fits": 1, "description": 1},
     ).sort("category", 1).to_list(500)
     # Normalize category casing on read so 'Brake' vs 'brakes' don't collide downstream

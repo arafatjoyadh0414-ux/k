@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import api, { fmtBDT } from "../lib/api";
-import { Search, ArrowRight, Package, Sparkles, Boxes } from "lucide-react";
+import { Search, ArrowRight, Package, Sparkles, Boxes, Lock } from "lucide-react";
 
 const LOGO = "https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg";
 
@@ -141,12 +141,15 @@ const PublicCatalog = () => {
                       <div className="font-semibold text-sm mt-1 leading-tight line-clamp-2">{p.name}</div>
                       <div className="text-[10px] font-mono text-slate-500 mt-0.5">{p.sku}</div>
                       <div className="mt-auto pt-3">
-                        <div className="text-xs text-slate-500">Retail from</div>
-                        <div className="font-display text-lg">{fmtBDT(p.price_bdt)}</div>
+                        <div className="text-xs text-slate-500">B2B price</div>
+                        <Link to="/" data-testid={`signin-for-price-${p.sku}`}
+                          className="inline-flex items-center gap-1.5 text-sm font-display text-[#E11D48] hover:text-[#BE123C] mt-0.5">
+                          <Lock className="w-3.5 h-3.5" /> Sign in to view
+                        </Link>
                         {p.stock > 0 ? (
-                          <div className="text-[10px] text-emerald-700 mt-0.5">In stock · {p.stock}</div>
+                          <div className="text-[10px] text-emerald-700 mt-1">In stock · {p.stock}</div>
                         ) : (
-                          <div className="text-[10px] text-amber-700 mt-0.5">Pre-order</div>
+                          <div className="text-[10px] text-amber-700 mt-1">Pre-order</div>
                         )}
                       </div>
                     </div>
