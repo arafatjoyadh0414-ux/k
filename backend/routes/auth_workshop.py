@@ -59,15 +59,14 @@ async def auth_session(request: Request, response: Response):
     user_doc = await db.users.find_one({"email": email}, {"_id": 0})
     if not user_doc:
         user_id = f"user_{uuid.uuid4().hex[:12]}"
-        # 4-digit Joy ID — sequential, starts at 1001, unique per user.
-        # Counter doc is a single row {_id: "joy_id_counter", seq: int}.
+        # 4-digit Joy ID — atomic seq from db.counters; first user = JOY-1001.
         counter = await db.counters.find_one_and_update(
             {"_id": "joy_id_counter"},
-            {"$inc": {"seq": 1}, "$setOnInsert": {"start": 1001}},
+            {"$inc": {"seq": 1}},
             upsert=True, return_document=True,
         )
-        next_seq = max(1001, int(counter.get("seq", 1001)))
-        joy_id = f"JOY-{next_seq:04d}"
+        seq = int(counter.get("seq") or 1)
+        joy_id = f"JOY-{1000 + seq:04d}"
         user_doc = {
             "user_id": user_id,
             "joy_id": joy_id,
@@ -125,15 +124,15 @@ async def auth_session(request: Request, response: Response):
 @api_router.get("/auth/me")
 async def auth_me(request: Request):
     user = await require_user(request)
-    # Backfill missing joy_id on first /me hit (idempotent, one-time per user)
+    # Backfill missing joy_id on first /me hit (idempotent, atomic counter)
     if not user.get("joy_id"):
         counter = await db.counters.find_one_and_update(
             {"_id": "joy_id_counter"},
-            {"$inc": {"seq": 1}, "$setOnInsert": {"start": 1001}},
+            {"$inc": {"seq": 1}},
             upsert=True, return_document=True,
         )
-        next_seq = max(1001, int(counter.get("seq", 1001)))
-        joy_id = f"JOY-{next_seq:04d}"
+        seq = int(counter.get("seq") or 1)
+        joy_id = f"JOY-{1000 + seq:04d}"
         await db.users.update_one(
             {"user_id": user["user_id"]},
             {"$set": {"joy_id": joy_id}},
