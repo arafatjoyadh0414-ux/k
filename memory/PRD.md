@@ -572,3 +572,44 @@ Inspired by the strategic audit. Most audit items were already built (catalog, K
 - Lint clean: routes/push.py, low_stock_scan.py, PushNotificationToggle.jsx, Profile.jsx
 - Backend started clean with new worker scheduled, i18n cache already warm (216 strings)
 
+
+
+## What's Been Implemented (2026-02-10) — Body Kits Showcase + Mobile Scroll-Spy + DWS one-liner
+
+**Body Kits Interactive Showcase** (`/app/frontend/src/components/BodyKitsShowcase.jsx`)
+- New stateful 4-tab component on the Landing page (`/`) replacing the static kit-tier strip in the JOY BEAST section.
+- Tabs: **Shadow GT**, **Cyber Beast**, **Beast Wide Body**, **Custom Atelier** — clicking/touching swaps the showcased hero image with a 700ms opacity fade transition.
+- **Shadow GT** is a 4-image gallery: auto-rotating carousel (3.8s interval), prev/next arrows on desktop, swipe gesture on touch devices, clickable thumbnail strip beneath, frame counter (e.g. `02 / 04`), and skeleton shimmer until first image loads.
+- Other 3 tabs render a single hero image (no thumbnail strip) — keeps layout clean.
+- Premium overlay: bottom gradient with `headline + blurb`, top-left badge with `name · tier`.
+- New asset folder: `/app/frontend/src/assets/body-kits/` with 6 PNGs (4 Shadow GT + 1 wide-body kit + 1 forged rims).
+- All tabs and images carry data-testids: `kit-tab-{id}`, `kit-image-{id}-{i}`, `shadow-gt-thumb-{i}`, `shadow-gt-prev`, `shadow-gt-next`.
+- Fully responsive: mobile (390px), tablet (768px), desktop (1440px); image stage `h-[300px] sm:h-[420px] lg:h-[540px]`; thumbnails responsive `w-20 h-14 sm:w-28 sm:h-20`.
+
+**Mobile Scroll-Spy Chip Nav** (`/app/frontend/src/components/MobileScrollSpyChips.jsx`)
+- Sticky horizontal-scroll chip rail under the header on viewports `<1024px` only (`lg:hidden`); desktop continues to use the top header nav.
+- 7 chips: Home → JOY BEAST → Experience → Tech → Why Joy → Get started → BD News (matches DOM order).
+- Clicking a chip optimistically highlights it then smooth-scrolls the document to the section (header offset 84px).
+- Active-chip detection uses a rAF-throttled scroll listener that picks the last section whose `getBoundingClientRect().top` has crossed the 100px header line; `rects.sort((a,b)=>a.top-b.top)` makes the heuristic robust to future DOM reorders.
+- Rail auto-centres the active chip via `rail.scrollTo({ left, behavior:'smooth' })` (rail-only, never touches document scroll).
+- New utility `.no-scrollbar` added to `/app/frontend/src/index.css`.
+
+**Section IDs added on `/app/frontend/src/pages/Landing.jsx`**
+- `#hero`, `#joy-beast`, `#experience-centre`, `#tech-stack`, `#value-prop`, `#cta`, `#bd-news` (all with `scroll-mt-28` so the sticky header doesn't clip the heading after smooth scroll).
+
+**DWS one-line summary**
+- Replaced the 3-row Dealers/Workshops/Suppliers bullet list with a single sophisticated paragraph (data-testid `dws-summary`):
+  > "A single verified network synchronising **dealers**, **workshops** and **suppliers** — wholesale parts on 30-day credit, AI-matched SKUs for the bay floor and 312+ approved B2B buyers, with KYC, credit and logistics handled end-to-end."
+
+**Tests** (iteration_15.json — 100% frontend pass, no retest needed)
+- BodyKitsShowcase tab switching, Shadow GT thumbs/arrows/auto-rotate, other-tab thumbnail hiding — all pass.
+- Mobile scroll-spy: every chip click scrolls to the right section AND retains `data-active="true"` after the 4-second settle window. Manual slow-scroll transitions through all 7 sections in DOM order.
+- Desktop 1440 → mobile-scroll-spy correctly hidden via `lg:hidden`.
+- Theme toggle, dws-summary copy, no horizontal overflow on any viewport.
+
+**Files touched**
+- NEW `/app/frontend/src/components/BodyKitsShowcase.jsx`
+- NEW `/app/frontend/src/components/MobileScrollSpyChips.jsx`
+- NEW `/app/frontend/src/assets/body-kits/*.png` (6 files)
+- EDITED `/app/frontend/src/pages/Landing.jsx` (imports, section ids, replaced kit strip, replaced DWS bullets)
+- EDITED `/app/frontend/src/index.css` (added `.no-scrollbar` utility)
