@@ -235,7 +235,10 @@ html.js-reveal-armed .reveal:not(.in-view) {
     display: inline-flex;
     gap: 2.5rem;
     white-space: nowrap;
-    animation: ticker-scroll 60s linear infinite;
+    animation: ticker-scroll 30s linear infinite;
+}
+.ticker-track:hover {
+    animation-play-state: paused;
 }
 @media (prefers-reduced-motion: reduce) {
     .ticker-track { animation: none; }

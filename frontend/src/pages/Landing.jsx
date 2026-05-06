@@ -32,7 +32,7 @@ const buildTicker = (stats, news) => {
   // Prefer worldwide cars news (refreshes every 1 hour) when available.
   const newsItems = (news || []).filter((n) => n?.title);
   if (newsItems.length) {
-    return newsItems.slice(0, 12).map((n) => {
+    return newsItems.slice(0, 30).map((n) => {
       // Google News titles often already end with " - Source". Strip a trailing duplicate.
       let title = (n.title || "").trim();
       const src = (n.source || "").trim();
