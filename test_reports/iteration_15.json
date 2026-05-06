@@ -1,0 +1,22 @@
+{
+  "summary": "Final retest of MobileScrollSpyChips bd-news/cta ordering fix. Both fixes (SECTIONS reordered to match DOM + rects.sort by top as safety net) are FULLY VERIFIED. All 7 click-and-stay tests PASS on 390x844, including chip-bd-news (scrollY=7653, only data-active=true) and chip-cta (scrollY=7352, only data-active=true). Manual slow scroll transitions exactly match the expected sequence hero \u2192 joy-beast \u2192 experience-centre \u2192 tech-stack \u2192 value-prop \u2192 cta \u2192 bd-news, with bd-news the LAST active. Body Kits regression (kit-tab-shadow-gt default aria-selected=true, 4 thumbs visible, switching to cyber-beast hides all shadow-gt-thumb-*) PASS. dws-summary present on desktop. Desktop 1440 mobile-scroll-spy computed display='none'.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "/app/frontend/src/components/MobileScrollSpyChips.jsx: Fix is solid. Both defenses are in place \u2014 SECTIONS array order matches DOM and rects.sort((a,b)=>a.top-b.top) is a resilient safety net for any future DOM re-ordering. No further action needed."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "skipped", "frontend": "100%"},
+  "test_credentials": "n/a \u2014 landing page tested unauthenticated",
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All 7 chip click-and-stay cases verified on 390x844 after 4s settle: chip-hero(scrollY=57), chip-joy-beast(2393), chip-experience-centre(4025), chip-tech-stack(4606), chip-value-prop(6091), chip-cta(7352), chip-bd-news(7653). Manual slow-scroll transition points (scrollY): hero@0, joy-beast@2400, experience-centre@4050, tech-stack@4650, value-prop@6150, cta@7350, bd-news@7650. At absolute page bottom the active chip is bd-news. Body Kits tabs + dws-summary regressions all green. Desktop 1440 mobile-scroll-spy display='none' (lg:hidden working).",
+  "rca of the issue": "Previous iteration_14 defect was caused by SECTIONS array listing bd-news BEFORE cta, while the DOM rendered cta BEFORE bd-news. The candidate loop iterated SECTIONS in array order and ended on the last id whose top<=headerOffset, which was cta. Fix applied by main agent in this iteration does two things: (1) SECTIONS reordered to [hero, joy-beast, experience-centre, tech-stack, value-prop, cta, bd-news] to match DOM, and (2) rects.sort((a,b)=>a.top-b.top) added before the candidate loop so future DOM re-ordering cannot reintroduce the same bug. Both are correct and independently sufficient."
+}

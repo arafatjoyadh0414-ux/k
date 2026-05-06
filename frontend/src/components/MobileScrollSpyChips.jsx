@@ -17,8 +17,8 @@ const SECTIONS = [
   { id: "experience-centre", label: "Experience" },
   { id: "tech-stack", label: "Tech" },
   { id: "value-prop", label: "Why Joy" },
-  { id: "bd-news", label: "BD News" },
   { id: "cta", label: "Get started" },
+  { id: "bd-news", label: "BD News" },
 ];
 
 export default function MobileScrollSpyChips() {
@@ -40,6 +40,9 @@ export default function MobileScrollSpyChips() {
         })
         .filter(Boolean);
       if (!rects.length) return;
+      // Sort by current top position so the candidate loop is robust to
+      // DOM ordering changes (e.g., a section moved without updating SECTIONS).
+      rects.sort((a, b) => a.top - b.top);
       // Prefer the last section whose top has crossed the header line.
       let candidate = rects[0].id;
       for (const r of rects) {
