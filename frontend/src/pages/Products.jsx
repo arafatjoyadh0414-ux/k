@@ -5,6 +5,14 @@ import api, { fmtBDT } from "../lib/api";
 import { useCart } from "../context/CartContext";
 import { Search, Plus, Package, Car, X } from "lucide-react";
 import { toast } from "sonner";
+import VoiceSearchButton from "../components/VoiceSearchButton";
+import { useLang } from "../context/LanguageContext";
+
+// Small wrapper that picks lang from LanguageContext (en | bn)
+const VoiceLangButton = ({ onTranscript }) => {
+  const { lang } = useLang();
+  return <VoiceSearchButton onTranscript={onTranscript} lang={lang} testid="products-voice-search" />;
+};
 
 const CATEGORIES = ["All", "Body Kits", "Brake", "Engine", "Suspension", "Electrical", "Drivetrain", "Fluids", "Modifications", "Performance", "Accessories", "Lighting", "Tyres & Wheels", "Tools", "Audio"];
 
@@ -135,11 +143,14 @@ const Products = () => {
         </div>
 
         <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-          <div className="relative flex-1 max-w-xl">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input data-testid="product-search" type="text" placeholder="Search by name, SKU, or brand…"
-              value={q} onChange={(e) => setQ(e.target.value)}
-              className="w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-[#E11D48]" />
+          <div className="relative flex-1 max-w-xl flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input data-testid="product-search" type="text" placeholder="Search by name, SKU, brand or speak…"
+                value={q} onChange={(e) => setQ(e.target.value)}
+                className="w-full pl-10 pr-3 py-2.5 border border-slate-200 rounded-sm focus:outline-none focus:ring-2 focus:ring-[#E11D48]" />
+            </div>
+            <VoiceLangButton onTranscript={setQ} />
           </div>
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map((c) => (

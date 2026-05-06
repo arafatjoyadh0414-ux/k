@@ -111,7 +111,7 @@ const Team = () => {
               onChange={(e) => setInviteRole(e.target.value)}
               className="md:col-span-4 px-4 py-2.5 text-sm border border-zinc-200 dark:border-white/10 rounded-sm bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 outline-none focus:border-[#E11D48]"
             >
-              {ROLE_OPTIONS.map((r) => <option key={r.value} value={r.value}>{r.label} — {r.desc}</option>)}
+              {ROLE_OPTIONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
             </select>
             <button
               data-testid="team-invite-submit"
@@ -122,7 +122,11 @@ const Team = () => {
               {submitting ? "Sending…" : "Send invite"}
             </button>
           </form>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-3">An email invitation is sent (when notifications are configured) with a 7-day acceptance link. You can also copy the link from the pending list below to send manually.</p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-3">
+            <strong className="text-zinc-700 dark:text-zinc-300">{ROLE_OPTIONS.find((r) => r.value === inviteRole)?.label}:</strong>{" "}
+            {ROLE_OPTIONS.find((r) => r.value === inviteRole)?.desc}.
+            An email invitation is sent (when notifications are configured) with a 7-day acceptance link. You can also copy the link from the pending list below.
+          </p>
         </div>
 
         {/* Members */}

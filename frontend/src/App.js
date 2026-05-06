@@ -48,6 +48,8 @@ import PassportPublic from "@/pages/PassportPublic";
 import Team from "@/pages/Team";
 import Fleets from "@/pages/Fleets";
 import AcceptInvite from "@/pages/AcceptInvite";
+import VisualSearch from "@/pages/VisualSearch";
+import JobCards from "@/pages/JobCards";
 
 const AppRouter = () => {
   const location = useLocation();
@@ -84,6 +86,8 @@ const AppRouter = () => {
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
       <Route path="/fleets" element={<ProtectedRoute><Fleets /></ProtectedRoute>} />
+      <Route path="/visual-search" element={<ProtectedRoute><VisualSearch /></ProtectedRoute>} />
+      <Route path="/job-cards" element={<ProtectedRoute><JobCards /></ProtectedRoute>} />
       <Route path="/accept-invite" element={<AcceptInvite />} />
       <Route path="/payment/return" element={<ProtectedRoute><PaymentReturn /></ProtectedRoute>} />
 

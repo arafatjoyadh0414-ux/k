@@ -50,6 +50,8 @@ from routes import public_stats as _public_stats_routes  # noqa: F401
 from routes import cars_news as _cars_news_routes  # noqa: F401
 from routes import team as _team_routes  # noqa: F401
 from routes import fleets as _fleets_routes  # noqa: F401
+from routes import visual_search as _visual_search_routes  # noqa: F401
+from routes import job_cards as _job_cards_routes  # noqa: F401
 from routes.recurring import start_recurring_worker
 
 # Pydantic models (kept here for back-compat). Authoritative copies live in server_models.py.

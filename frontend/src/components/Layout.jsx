@@ -6,7 +6,7 @@ import { useLang } from "../context/LanguageContext";
 import { useTheme } from "../context/ThemeContext";
 import {
   LayoutDashboard, Package, ShoppingCart, ClipboardList, UserCircle2,
-  Shield, LogOut, Wrench, Sparkles, Inbox, FileQuestion, Truck, BarChart3, Boxes, Bike, RotateCcw, Globe, Zap, TrendingUp, ScanSearch, Repeat, Menu, X, Sun, Moon, Users
+  Shield, LogOut, Wrench, Sparkles, Inbox, FileQuestion, Truck, BarChart3, Boxes, Bike, RotateCcw, Globe, Zap, TrendingUp, ScanSearch, Repeat, Menu, X, Sun, Moon, Users, Camera, Briefcase
 } from "lucide-react";
 
 const LOGO = "https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg";
@@ -92,6 +92,8 @@ const Layout = ({ children }) => {
               <NavItem to="/vin-lookup" icon={ScanSearch} label="VIN Lookup" testid="nav-vin-lookup" />
               <NavItem to="/recurring" icon={Repeat} label="Recurring" testid="nav-recurring" />
               <NavItem to="/fleets" icon={Truck} label="Fleets" testid="nav-fleets" />
+              <NavItem to="/job-cards" icon={Briefcase} label="Job Cards" testid="nav-job-cards" />
+              <NavItem to="/visual-search" icon={Camera} label="Visual Search" testid="nav-visual-search" />
               <NavItem to="/part-requests" icon={FileQuestion} label={t("nav.part_requests")} testid="nav-part-requests" />
               <NavItem to="/cart" icon={ShoppingCart} label={`${t("nav.cart")}${count ? ` (${count})` : ""}`} testid="nav-cart" />
               <NavItem to="/orders" icon={ClipboardList} label={t("nav.orders")} testid="nav-orders" />
