@@ -2,6 +2,7 @@ import React from "react";
 import { useAuth } from "../context/AuthContext";
 import { Navigate, Link } from "react-router-dom";
 import HARRIER_HERO from "../assets/harrier-hero.jpg";
+import BYD_CYBERBEAST from "../assets/byd-cyberbeast.jpg";
 import EXP_FACADE_1 from "../assets/exp/facade-1.jpg";
 import EXP_FACADE_2 from "../assets/exp/facade-2.jpg";
 import EXP_CAFE from "../assets/exp/cafe.jpg";
@@ -249,42 +250,63 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* JOY BEAST — In-house modification & body kit brand */}
+      {/* JOY BEAST — In-house premium modification & body-kit atelier */}
       <section className="bg-white">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 py-14 sm:py-20">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-            <div className="lg:col-span-7 order-2 lg:order-1">
-              <img
-                src={HARRIER_HERO}
-                alt="JOY BEAST modification — black 2022 Toyota Harrier with full sport body kit, performance wheels and red brake calipers"
-                className="w-full h-[300px] sm:h-[420px] object-cover rounded-sm border border-slate-200"
-              />
-            </div>
-            <div className="lg:col-span-5 order-1 lg:order-2">
-              <div className="overline text-[#E11D48] mb-3">JOY BEAST · The atelier</div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
+            <div className="lg:col-span-5 order-1">
+              <div className="overline text-[#E11D48] mb-3">JOY BEAST · The Atelier</div>
               <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl tracking-tight leading-[1.05]">
-                Our in-house body-kit and modification house.
+                A premium modification house. Built in Bangladesh.
               </h2>
               <p className="text-slate-600 mt-5 leading-relaxed text-sm sm:text-base">
-                Inspired by the world's great bespoke ateliers — but engineered, manufactured,
-                and fitted in Bangladesh. JOY BEAST is our modification arm: aero kits,
-                wide-body conversions, forged wheels, performance brakes and interior craftsmanship —
-                all installed at the Experience Centre with workshop-grade fitment guarantees.
+                JOY BEAST is our in-house atelier — a luxury modification brand that competes with the
+                world's finest tuning houses. Every build is hand-finished at the Experience Centre with
+                workshop-grade fitment guarantees. From bolt-on aero kits to ground-up wide-body conversions
+                and bespoke leather interiors, this is where ordinary cars become signature builds.
               </p>
-              <div className="mt-6 grid grid-cols-2 gap-3">
-                {[
-                  { t: "Shadow GT", d: "Entry sport kit" },
-                  { t: "Cyber Beast", d: "Flagship aero" },
-                  { t: "Beast Wide Body", d: "BYD Sealion 6" },
-                  { t: "Custom Atelier", d: "Bespoke builds" },
-                ].map((k) => (
-                  <div key={k.t} className="border border-slate-200 p-3 rounded-sm">
-                    <div className="font-display text-base">{k.t}</div>
-                    <div className="text-xs text-slate-500 mt-0.5">{k.d}</div>
+
+              {/* Service pillars */}
+              <div className="mt-7 space-y-4">
+                <div className="flex gap-3">
+                  <div className="shrink-0 w-9 h-9 grid place-items-center bg-slate-900 text-white rounded-sm">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 17l4-8 4 8 4-12 4 12"/><path d="M3 21h18"/></svg>
                   </div>
-                ))}
+                  <div>
+                    <div className="font-display text-base text-slate-900">Body Kits &amp; Aero</div>
+                    <div className="text-sm text-slate-600 mt-0.5">Wide-body fender flares, splitters, diffusers, side skirts, vented bonnets, ducktail spoilers — moulded in carbon-composite, painted to OEM-match.</div>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <div className="shrink-0 w-9 h-9 grid place-items-center bg-slate-900 text-white rounded-sm">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                  </div>
+                  <div>
+                    <div className="font-display text-base text-slate-900">Forged Wheels &amp; Performance Brakes</div>
+                    <div className="text-sm text-slate-600 mt-0.5">21–22" forged multi-spoke alloys, big-brake upgrades with red anodised calipers, performance pads &amp; lines.</div>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <div className="shrink-0 w-9 h-9 grid place-items-center bg-slate-900 text-white rounded-sm">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 8h18l-2 13H5L3 8z"/><path d="M8 8V5a4 4 0 0 1 8 0v3"/></svg>
+                  </div>
+                  <div>
+                    <div className="font-display text-base text-slate-900">Bespoke Interior &amp; Upholstery</div>
+                    <div className="text-sm text-slate-600 mt-0.5">Full-grain Nappa leather, Alcantara headliners, contrast stitching, custom dashboards, carbon-fibre trim, premium audio &amp; ambient lighting.</div>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <div className="shrink-0 w-9 h-9 grid place-items-center bg-slate-900 text-white rounded-sm">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                  </div>
+                  <div>
+                    <div className="font-display text-base text-slate-900">Custom Atelier Builds</div>
+                    <div className="text-sm text-slate-600 mt-0.5">Ground-up bespoke commissions — fleet liveries, one-off concept builds, and full Cyber Beast wide-body conversions on request.</div>
+                  </div>
+                </div>
               </div>
-              <div className="mt-7 flex flex-wrap gap-3">
+
+              <div className="mt-8 flex flex-wrap gap-3">
                 <a href="/inquire" data-testid="beast-inquire-link"
                    className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-700 text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors">
                   Schedule a kit consultation →
@@ -293,6 +315,33 @@ const Landing = () => {
                       className="inline-flex items-center gap-2 border border-slate-300 hover:border-slate-900 text-slate-900 px-5 py-2.5 rounded-full text-sm font-semibold transition-colors">
                   Browse all kits
                 </Link>
+              </div>
+            </div>
+
+            <div className="lg:col-span-7 order-2">
+              <div className="relative overflow-hidden rounded-sm border border-slate-200">
+                <img
+                  src={BYD_CYBERBEAST}
+                  alt="JOY BEAST Cyber Beast — modified BYD Sealion 6 with wide-body aero kit, forged wheels, and red performance brake calipers"
+                  className="w-full h-[300px] sm:h-[420px] lg:h-[540px] object-cover"
+                />
+                <div className="absolute top-3 left-3 bg-black/80 backdrop-blur text-white text-[10px] tracking-[0.2em] uppercase px-3 py-1.5 rounded-sm font-semibold">
+                  Cyber Beast · BYD Sealion 6
+                </div>
+              </div>
+              {/* Kit tier strip below image */}
+              <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[
+                  { t: "Shadow GT", d: "Entry sport" },
+                  { t: "Cyber Beast", d: "Flagship aero", featured: true },
+                  { t: "Beast Wide Body", d: "Wide-body" },
+                  { t: "Custom Atelier", d: "Bespoke" },
+                ].map((k) => (
+                  <div key={k.t} className={`p-3 rounded-sm border text-center ${k.featured ? "bg-slate-900 text-white border-slate-900" : "bg-white border-slate-200 text-slate-900"}`}>
+                    <div className="font-display text-sm">{k.t}</div>
+                    <div className={`text-[10px] uppercase tracking-wider mt-0.5 ${k.featured ? "text-slate-300" : "text-slate-500"}`}>{k.d}</div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
