@@ -1,0 +1,32 @@
+{
+  "summary": "Final retest of MobileScrollSpyChips with new scroll-listener heuristic ('last section whose top has crossed headerOffset=100'). Iteration_13 issue (chip-tech-stack and chip-joy-beast losing data-active after scroll settles) is FIXED. 6 of 7 chips now correctly retain data-active='true' for 4+ seconds after click, and no other chip is data-active='true'. However a NEW failure surfaced for chip-bd-news due to a section-order mismatch between the SECTIONS array (which lists bd-news before cta) and the actual DOM order (cta is rendered ABOVE bd-news). Manual scroll never highlights bd-news (it skips from value-prop directly to cta). Body Kits regression, dws-summary, chip-hero return, and Desktop 1440 lg:hidden all PASS.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "MobileScrollSpyChips active detection — bd-news vs cta section ordering",
+        "issue": "The SECTIONS array in /app/frontend/src/components/MobileScrollSpyChips.jsx orders ids as [..., 'value-prop', 'bd-news', 'cta'], but the actual rendered DOM has cta (top=7435, height=302) BEFORE bd-news (top=7737, height=1022). The new computeActive() loop iterates in SECTIONS array order and picks the LAST id whose top<=100, so when bd-news is at the header line (top=84) cta is even higher (top=-217), the loop finishes with candidate='cta'. RESULT: clicking chip-bd-news lands scrollY=7653 (correct — bd-news top is at 84) but data-active settles on chip-cta. RESULT: manual slow-scroll observed transitions hero(0) → joy-beast(2400) → experience-centre(4200) → tech-stack(4600) → value-prop(6200) → cta(7400) — bd-news is NEVER active. Recommended fix in MobileScrollSpyChips.jsx: sort `rects` by their absolute top position (offsetTop) before the candidate loop, OR reorder the SECTIONS array to match DOM order ['value-prop','cta','bd-news'] (and update the request's expected sequence accordingly), OR move BD News above the CTA in LandingPage so the visual flow matches the chip array.",
+        "affected_selectors": ["[data-testid='chip-bd-news']", "[data-testid='chip-cta']"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Fix bd-news/cta section-order mismatch in MobileScrollSpyChips.jsx. Easiest one-line fix: sort the rects by top before the candidate loop, e.g. `rects.sort((a,b) => a.top - b.top);` so the loop ends on the section closest to (but past) the header line regardless of SECTIONS array order. Alternatively reorder SECTIONS to ['hero','joy-beast','experience-centre','tech-stack','value-prop','cta','bd-news'] which also matches the rendered DOM (the BD News block sits at the very bottom, after the Get-started CTA)."
+  ],
+  "critical_code_review_comments": [
+    "/app/frontend/src/components/MobileScrollSpyChips.jsx (lines 35-47): the candidate loop relies on SECTIONS array order matching DOM order. Either sort `rects` by `top` ascending before the loop, or document the invariant that SECTIONS must match DOM order. Currently silent ordering bug for bd-news/cta.",
+    "/app/frontend/src/components/MobileScrollSpyChips.jsx (line 49 edge-case): the bottom snap to last-section uses SECTIONS[rects.length-1] which is 'cta' but in the actual DOM 'bd-news' is the last visible section. Same root cause — section ordering.",
+    "/app/frontend/src/components/MobileScrollSpyChips.jsx (lines 32-67): the rest of the new scroll-listener heuristic is solid — rAF-throttled, passive listener, no cleanup leaks, and correctly fixes the iteration_13 reconciliation drift for tech-stack and joy-beast. Only the section-ordering invariant needs hardening."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "skipped", "frontend": "92%"},
+  "test_credentials": "n/a — landing page tested unauthenticated",
+  "seed_data_creation": "none",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iteration_13 reconciliation bug (chip-tech-stack settling to experience-centre, chip-joy-beast settling to hero) is FIXED. New scroll-listener heuristic in MobileScrollSpyChips.jsx works correctly for 6/7 chips. Confirmed scrollY targets after click and 4s settle: chip-hero=57, chip-joy-beast=2393, chip-experience-centre=4025, chip-tech-stack=4606, chip-value-prop=6091, chip-bd-news=7653 (FAIL — active becomes cta), chip-cta=7352. Section absolute tops: hero=140, joy-beast=2477, experience-centre=4109, tech-stack=4690, value-prop=6195, cta=7436, bd-news=7737. Note cta is ABOVE bd-news in DOM but listed AFTER bd-news in SECTIONS array — that is the only remaining defect. Body Kits showcase fully regresses on desktop 1440 (kit-tab-shadow-gt aria-selected='true' default, 4 thumbs visible, switching to cyber-beast hides shadow-gt-thumb-*). dws-summary present. chip-hero from scrollY=4606 correctly returns to scrollY=57 with data-active='true'. Desktop 1440 mobile-scroll-spy computed display='none'.",
+  "rca of the issue": "MobileScrollSpyChips.jsx defines SECTIONS as [...,'value-prop','bd-news','cta'] but in LandingPage the rendered DOM order places <section id='cta'> ABOVE <section id='bd-news'> (cta absolute top 7436 vs bd-news 7737). The new active-detection loop iterates SECTIONS in array order and assigns candidate=r.id whenever r.top-100<=1, so the last id in the array order that satisfies the predicate wins. When the user lands on bd-news (top=84 — predicate true) the loop has already passed cta (top=-217 — predicate also true) and ends with candidate='cta'. Same reason manual slow scroll never lights up bd-news: by the time bd-news top crosses 100, cta has long crossed it and the array iteration ends on cta. Mitigation: sort rects by top ascending before the loop (`rects.sort((a,b)=>a.top-b.top)`), or align SECTIONS array with DOM order, or reorder DOM so BD News appears below CTA."
+}

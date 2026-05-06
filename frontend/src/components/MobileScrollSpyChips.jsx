@@ -26,35 +26,44 @@ export default function MobileScrollSpyChips() {
   const railRef = useRef(null);
   const chipRefs = useRef({});
 
-  // Observe all sections; pick the one currently most centrally visible
+  // Active-section detection: on every scroll, pick the section whose top
+  // is closest to (and at/above) the header offset. This is more reliable
+  // than intersectionRatio when multiple sections are partially visible.
   useEffect(() => {
-    const targets = SECTIONS
-      .map((s) => document.getElementById(s.id))
-      .filter(Boolean);
-    if (!targets.length) return undefined;
-
-    const visibility = new Map();
-    const obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => visibility.set(e.target.id, e.intersectionRatio));
-        let bestId = null;
-        let bestRatio = 0;
-        visibility.forEach((ratio, id) => {
-          if (ratio > bestRatio) {
-            bestRatio = ratio;
-            bestId = id;
-          }
-        });
-        if (bestId && bestRatio > 0.15) setActive(bestId);
-      },
-      {
-        // Trigger when section is roughly in the upper-middle band of viewport
-        rootMargin: "-25% 0px -55% 0px",
-        threshold: [0, 0.15, 0.35, 0.6, 0.85, 1],
+    const headerOffset = 100; // sticky header (~72px) + chip rail (~40px)
+    const computeActive = () => {
+      const rects = SECTIONS
+        .map((s) => {
+          const el = document.getElementById(s.id);
+          if (!el) return null;
+          return { id: s.id, top: el.getBoundingClientRect().top };
+        })
+        .filter(Boolean);
+      if (!rects.length) return;
+      // Prefer the last section whose top has crossed the header line.
+      let candidate = rects[0].id;
+      for (const r of rects) {
+        if (r.top - headerOffset <= 1) candidate = r.id;
       }
-    );
-    targets.forEach((el) => obs.observe(el));
-    return () => obs.disconnect();
+      // Edge case: at very bottom of page, snap to last section
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
+        candidate = rects[rects.length - 1].id;
+      }
+      setActive((prev) => (prev === candidate ? prev : candidate));
+    };
+
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        computeActive();
+        ticking = false;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    computeActive();
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   // Scroll the active chip into view inside the rail (rail-only horizontal —
