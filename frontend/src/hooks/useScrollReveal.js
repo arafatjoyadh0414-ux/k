@@ -1,37 +1,86 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
- * Tiny global scroll-reveal: any element with className `reveal` gets `.in-view`
- * added once it enters the viewport, then is unobserved. Zero deps, ~40 lines.
- * Honours `prefers-reduced-motion` via the CSS itself.
+ * Defensive scroll-reveal:
+ *   - Adds `html.js-reveal-armed` so CSS hides `.reveal` only after JS confirms
+ *     the browser has IntersectionObserver. If IO is missing or this hook never
+ *     runs, content stays visible by default (no blank-screen risk).
+ *   - Observer adds `.in-view` as elements enter the viewport.
+ *   - MutationObserver picks up `.reveal` elements added LATER (after data loads),
+ *     so we don't miss late-mounted sections.
+ *   - Safety net: a global 1500ms timeout (set on first arming) force-reveals
+ *     anything still hidden — covers Samsung Browser / older WebView quirks
+ *     where IntersectionObserver silently drops callbacks.
+ *   - Honours `prefers-reduced-motion` via the CSS itself.
  */
 export const useScrollReveal = () => {
   useEffect(() => {
-    if (typeof window === "undefined" || !("IntersectionObserver" in window)) return;
-    const els = document.querySelectorAll(".reveal:not(.in-view)");
-    if (!els.length) return;
-    const obs = new IntersectionObserver(
+    if (typeof window === "undefined") return;
+    const root = document.documentElement;
+
+    // Bail out if IO unavailable — content remains visible (no .js-reveal-armed class).
+    if (!("IntersectionObserver" in window)) {
+      document.querySelectorAll(".reveal").forEach((el) => el.classList.add("in-view"));
+      return;
+    }
+
+    root.classList.add("js-reveal-armed");
+
+    const io = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
             entry.target.classList.add("in-view");
-            obs.unobserve(entry.target);
+            io.unobserve(entry.target);
           }
         }
       },
-      { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
+      { threshold: 0.05, rootMargin: "0px 0px -20px 0px" }
     );
-    els.forEach((el) => obs.observe(el));
-    return () => obs.disconnect();
+
+    const armReveals = () => {
+      document.querySelectorAll(".reveal:not(.in-view):not([data-reveal-armed])").forEach((el) => {
+        el.setAttribute("data-reveal-armed", "1");
+        io.observe(el);
+      });
+    };
+
+    armReveals();
+
+    // Catch late-mounted .reveal nodes (data fetched after first render, route changes).
+    const mo = new MutationObserver(armReveals);
+    mo.observe(document.body, { childList: true, subtree: true });
+
+    // Universal safety: after 1.5s, force-reveal everything still hidden.
+    const safety = setTimeout(() => {
+      document
+        .querySelectorAll(".reveal:not(.in-view)")
+        .forEach((el) => el.classList.add("in-view"));
+    }, 1500);
+
+    // Belt-and-suspenders: also force-reveal on window load (covers very slow first paint).
+    const onLoad = () => {
+      setTimeout(() => {
+        document
+          .querySelectorAll(".reveal:not(.in-view)")
+          .forEach((el) => el.classList.add("in-view"));
+      }, 800);
+    };
+    window.addEventListener("load", onLoad, { once: true });
+
+    return () => {
+      io.disconnect();
+      mo.disconnect();
+      clearTimeout(safety);
+      window.removeEventListener("load", onLoad);
+    };
   }, []);
 };
 
 /**
  * Counter that ticks from 0 → target once the element scrolls into view.
- * Returns a ref to attach to the element. Pure CSS-friendly, ~50 lines.
+ * Returns a ref to attach to the element.
  */
-import { useRef, useState } from "react";
-
 export const useCountUp = (target, { duration = 1400 } = {}) => {
   const ref = useRef(null);
   const [val, setVal] = useState(0);
@@ -40,9 +89,15 @@ export const useCountUp = (target, { duration = 1400 } = {}) => {
     const el = ref.current;
     if (!el) return;
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) {
-      setVal(target); return;
+      setVal(target);
+      return;
     }
-    let raf, started = null;
+    if (!("IntersectionObserver" in window)) {
+      setVal(target);
+      return;
+    }
+    let raf,
+      started = null;
     const tick = (t) => {
       if (!started) started = t;
       const p = Math.min(1, (t - started) / duration);
@@ -60,7 +115,13 @@ export const useCountUp = (target, { duration = 1400 } = {}) => {
       { threshold: 0.5 }
     );
     obs.observe(el);
-    return () => { obs.disconnect(); if (raf) cancelAnimationFrame(raf); };
+    // Safety: snap to target after 1.5s if observer never fires.
+    const safety = setTimeout(() => setVal(target), 1500);
+    return () => {
+      obs.disconnect();
+      clearTimeout(safety);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, [target, duration]);
   return [ref, val];
 };

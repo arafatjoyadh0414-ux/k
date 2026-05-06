@@ -180,13 +180,20 @@ html.dark .grid-bg {
     z-index: 0;
 }
 
-/* Scroll-triggered reveal — toggled by .in-view from IntersectionObserver. */
+/* Scroll-triggered reveal — defensively VISIBLE by default. The hook adds
+   `html.js-reveal-armed` only when IntersectionObserver is wired, and a safety
+   timeout force-reveals everything after 1500ms if the observer never fires
+   (Samsung Browser / older WebViews can silently drop observer callbacks). */
 .reveal {
-    opacity: 0;
-    transform: translateY(20px);
+    opacity: 1;
+    transform: none;
     transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1),
                 transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
     will-change: opacity, transform;
+}
+html.js-reveal-armed .reveal:not(.in-view) {
+    opacity: 0;
+    transform: translateY(20px);
 }
 .reveal.in-view {
     opacity: 1;
@@ -194,6 +201,7 @@ html.dark .grid-bg {
 }
 @media (prefers-reduced-motion: reduce) {
     .reveal { opacity: 1; transform: none; transition: none; }
+    html.js-reveal-armed .reveal:not(.in-view) { opacity: 1; transform: none; }
 }
 
 /* Magnetic press feel — instant, performant. */
