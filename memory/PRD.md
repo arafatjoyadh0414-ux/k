@@ -613,3 +613,43 @@ Inspired by the strategic audit. Most audit items were already built (catalog, K
 - NEW `/app/frontend/src/assets/body-kits/*.png` (6 files)
 - EDITED `/app/frontend/src/pages/Landing.jsx` (imports, section ids, replaced kit strip, replaced DWS bullets)
 - EDITED `/app/frontend/src/index.css` (added `.no-scrollbar` utility)
+
+## What's Been Implemented (2026-02-10) — EC Bug Fix + Notification Prefs + Landing Stats
+
+**P0 BUG FIX — Experience Centre blank page** (`/app/frontend/src/pages/ExperienceCentre.jsx`)
+- Root cause: navigating from Landing → /experience-centre kept `html.js-reveal-armed` on the document but EC page didn't run `useScrollReveal()`. Result: every `.reveal` element on EC page stayed at `opacity: 0` → user saw a blank dark page.
+- Fix: `useScrollReveal()` is now called inside `ExperienceCentre` so the IO observer is re-armed for the new route.
+
+**Landing stat numbers updated** (`/app/frontend/src/pages/Landing.jsx`, lines 660-663)
+- `38+ Verified parts` → `1000+ Verified parts`
+- `12% Tier pricing off retail` → `10–35% Tier off retail price`
+
+**EC page enriched — sophisticated long-form** (`/app/frontend/src/components/ExperienceCentreContent.jsx`)
+- New section **04 · Signature elements** (`data-testid="ec-signature-elements"`) — 5 numbered cards (Hero Car Stage, Wheel Wall, Espresso Bar, Body-Kit Atelier, Mezzanine Theatre) with watermark Roman numerals on hover.
+- New section **05 · Timeline** (`data-testid="ec-timeline"`) — 4-stage opening journey Q4 2025 → Q3 2026 with red ticker dots and gradient separators.
+- New section **Plan your visit** (`data-testid="ec-plan-visit"`) — closing card with address, RSVP and dual CTAs (Reserve viewing + WhatsApp).
+
+**P1 — Notification Preference Center** (granular per-category push toggles)
+- Backend (`/app/backend/routes/push.py`):
+  - New `notification_prefs` field on user document with 4 categories: `order_updates`, `low_stock`, `promotional`, `daily_digest`. Defaults: order+low_stock ON, promotional+daily_digest OFF.
+  - `GET /api/push/prefs` → returns `{prefs, defaults}` for the authenticated user.
+  - `PUT /api/push/prefs` → patch any subset of category booleans; missing keys are a no-op.
+  - `send_push_to_user(...)` now accepts `category=...` (default `order_updates`); skips silently when user has opted out. The `test` category bypasses prefs so the UI test button always works.
+- Updated callers to tag categories:
+  - `/app/backend/routes/orders.py` line 209 → `category="order_updates"`
+  - `/app/backend/low_stock_scan.py` line 67 → `category="low_stock"`
+- Frontend new component `/app/frontend/src/components/NotificationPreferences.jsx`:
+  - 4 toggle rows with per-row icons (Package, AlertTriangle, Megaphone, Calendar), labels and one-line descriptions.
+  - Optimistic toggle UX with rollback on API failure; toast confirmation on each toggle.
+  - data-testids: `notification-prefs-card`, `pref-row-{id}`, `pref-toggle-{id}`, `data-checked` reflects state.
+- Wired below `<PushNotificationToggle />` on `/app/frontend/src/pages/Profile.jsx`.
+
+**Tests** (iteration_16.json — 100% pass, no retest)
+- Backend pytest: 8/8 — defaults, single-key PUT, multi-key PUT, no-op PUT, category gating (order_updates=false skips order push, low_stock independent), test bypasses prefs.
+- Frontend Playwright: 9/9 — Landing stats correct, EC page non-blank with all new testids, Profile shows prefs card with correct defaults, toggle flip persists across reload.
+
+**Files touched**
+- EDITED `/app/backend/routes/push.py`, `/app/backend/routes/orders.py`, `/app/backend/low_stock_scan.py`
+- EDITED `/app/frontend/src/pages/ExperienceCentre.jsx`, `/app/frontend/src/components/ExperienceCentreContent.jsx`, `/app/frontend/src/pages/Landing.jsx`, `/app/frontend/src/pages/Profile.jsx`
+- NEW `/app/frontend/src/components/NotificationPreferences.jsx`
+
