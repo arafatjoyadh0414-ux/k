@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../components/Layout";
+import TickerBroadcast from "../components/TickerBroadcast";
 import api, { fmtBDT, statusColor } from "../lib/api";
 import { ShieldCheck, Users, ClipboardList, Wallet, Package } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -50,6 +51,8 @@ const AdminDashboard = () => {
           <Stat icon={ClipboardList} label="In-Progress" value={stats.pending_orders} />
           <Stat icon={Wallet} label="Revenue" value={fmtBDT(stats.total_revenue_bdt)} />
         </div>
+
+        <TickerBroadcast />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="industrial-card">

@@ -39,7 +39,7 @@ const buildTicker = (stats) => {
   const credit = stats.credit_used_bdt >= 1e7
     ? `৳ ${(stats.credit_used_bdt / 1e7).toFixed(1)} CR CREDIT DEPLOYED`
     : `৳ ${(stats.credit_used_bdt / 1e5).toFixed(1)} L CREDIT DEPLOYED`;
-  return [
+  const items = [
     "● SYSTEM ONLINE",
     `${stats.workshops_count} DEALERS CONNECTED`,
     `${stats.orders_today} ORDERS SHIPPING TODAY`,
@@ -48,6 +48,10 @@ const buildTicker = (stats) => {
     `${stats.active_now} ACTIVE NOW`,
     "BANANI EXPERIENCE CENTRE · OPENS Q2 2026",
   ];
+  if (stats.featured_message) {
+    items.unshift(`★ ${stats.featured_message.toUpperCase()}`);
+  }
+  return items;
 };
 
 // Stat ticker on the capability cards — counter ramps up on scroll
