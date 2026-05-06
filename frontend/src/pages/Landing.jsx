@@ -124,17 +124,17 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* What we do — 4 pillars (sophisticated cards) */}
+      {/* What we do — 5 pillars (sophisticated cards) */}
       <section className="bg-slate-50 border-y border-slate-200">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 py-14 sm:py-16">
           <div className="overline text-slate-500 mb-2">What we do</div>
           <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl tracking-tight max-w-3xl mb-2">
-            Four businesses. One ecosystem.
+            Five businesses. One ecosystem.
           </h2>
           <p className="text-slate-600 max-w-2xl text-sm sm:text-base mb-10">
             From the bay floor to the boardroom — we cover the entire automotive aftermarket value chain.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-5">
             <div className="bg-white border border-slate-200 p-6 rounded-sm">
               <div className="overline text-[#E11D48] mb-3">01 · B2B Wholesale</div>
               <div className="font-display text-lg mb-2">Workshops &amp; Dealers</div>
@@ -169,178 +169,13 @@ const Landing = () => {
                 Demand forecasting, smart pricing, predictive insights.
               </p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Technology — VIN parts finder, AI, blockchain roadmap */}
-      <section className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-14 sm:py-20">
-          <div className="overline text-slate-500 mb-2">The technology stack</div>
-          <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl tracking-tight max-w-3xl mb-2">
-            The smartest auto-parts experience in Bangladesh.
-          </h2>
-          <p className="text-slate-600 max-w-2xl text-sm sm:text-base mb-10">
-            Every part of our platform is engineered to remove friction, surface the right answer instantly,
-            and learn from every transaction — for both B2B workshops and B2C car owners.
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
-            {/* VIN Parts Finder */}
-            <div className="border border-slate-200 rounded-sm bg-white p-6 sm:p-7 relative overflow-hidden">
-              <div className="absolute top-0 right-0 bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-sm">Live</div>
-              <div className="w-10 h-10 grid place-items-center bg-slate-900 text-white rounded-sm mb-4">
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>
-                </svg>
-              </div>
-              <div className="font-display text-lg text-slate-900">VIN Parts Finder</div>
-              <p className="text-sm text-slate-600 mt-2 leading-relaxed">
-                Scan or paste any 17-character VIN — we decode the make, model, year, trim and engine,
-                then surface every compatible part in stock with OEM cross-references. Available in the
-                <strong className="text-slate-900"> B2B portal</strong> and the
-                <strong className="text-slate-900"> B2C retail store</strong>.
+            <div className="bg-slate-900 text-white border border-slate-900 p-6 rounded-sm">
+              <div className="overline text-[#E11D48] mb-3">05 · JOY BEAST</div>
+              <div className="font-display text-lg mb-2">The atelier</div>
+              <p className="text-sm text-slate-300 leading-relaxed">
+                Our in-house premium modification house. Body kits, forged wheels, performance tuning,
+                bespoke leather interiors and custom builds — engineered in Bangladesh.
               </p>
-              <div className="mt-4 flex flex-wrap gap-2 text-[11px] uppercase tracking-wider text-slate-500">
-                <span className="border border-slate-200 px-2 py-1 rounded-sm">NHTSA + WMI</span>
-                <span className="border border-slate-200 px-2 py-1 rounded-sm">Catalog match</span>
-                <span className="border border-slate-200 px-2 py-1 rounded-sm">VIN history</span>
-              </div>
-            </div>
-
-            {/* AI Assistant */}
-            <div className="border border-slate-200 rounded-sm bg-white p-6 sm:p-7 relative overflow-hidden">
-              <div className="absolute top-0 right-0 bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-sm">Live</div>
-              <div className="w-10 h-10 grid place-items-center bg-slate-900 text-white rounded-sm mb-4">
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 8V4M8 12H4M16 12h4M12 16v4"/>
-                  <rect x="8" y="8" width="8" height="8" rx="1"/>
-                </svg>
-              </div>
-              <div className="font-display text-lg text-slate-900">JOY AI Assistant</div>
-              <p className="text-sm text-slate-600 mt-2 leading-relaxed">
-                Powered by Claude. Diagnose symptoms, recommend the right part, build a full order in chat,
-                cross-reference OEM numbers, and answer fitment questions — for the bay-floor mechanic
-                and the home car owner alike.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2 text-[11px] uppercase tracking-wider text-slate-500">
-                <span className="border border-slate-200 px-2 py-1 rounded-sm">Diagnostics</span>
-                <span className="border border-slate-200 px-2 py-1 rounded-sm">Smart reorder</span>
-                <span className="border border-slate-200 px-2 py-1 rounded-sm">Cross-ref</span>
-              </div>
-            </div>
-
-            {/* Blockchain — future */}
-            <div className="border border-slate-200 rounded-sm bg-slate-50 p-6 sm:p-7 relative overflow-hidden">
-              <div className="absolute top-0 right-0 bg-amber-100 text-amber-800 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-sm">Roadmap</div>
-              <div className="w-10 h-10 grid place-items-center bg-slate-900 text-white rounded-sm mb-4">
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="3" width="7" height="7" rx="1"/>
-                  <rect x="14" y="3" width="7" height="7" rx="1"/>
-                  <rect x="3" y="14" width="7" height="7" rx="1"/>
-                  <rect x="14" y="14" width="7" height="7" rx="1"/>
-                  <path d="M10 6.5h4M6.5 10v4M17.5 10v4M10 17.5h4"/>
-                </svg>
-              </div>
-              <div className="font-display text-lg text-slate-900">Blockchain Provenance</div>
-              <p className="text-sm text-slate-600 mt-2 leading-relaxed">
-                Coming soon. Tamper-proof part-history and ownership records on-chain — every genuine part
-                stamped with a verifiable origin trail. Anti-counterfeit, fleet-grade auditability, and
-                fraud-resistant resale value.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2 text-[11px] uppercase tracking-wider text-slate-500">
-                <span className="border border-slate-200 px-2 py-1 rounded-sm">Provenance</span>
-                <span className="border border-slate-200 px-2 py-1 rounded-sm">Anti-counterfeit</span>
-                <span className="border border-slate-200 px-2 py-1 rounded-sm">2026 roadmap</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link to="/vin-lookup" data-testid="tech-vin-link"
-                  className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-700 text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors">
-              Try the VIN parts finder →
-            </Link>
-            <a href="https://www.joyautomart.com" target="_blank" rel="noreferrer" data-testid="tech-retail-vin-link"
-               className="inline-flex items-center gap-2 border border-slate-300 hover:border-slate-900 text-slate-900 px-5 py-2.5 rounded-full text-sm font-semibold transition-colors">
-              Use it on retail store
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* Experience Centre — Bangladesh's first */}
-      <section className="bg-slate-900 text-white">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-14 sm:py-20">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-            <div className="lg:col-span-5">
-              <div className="inline-flex items-center gap-2 bg-[#E11D48] text-white text-[10px] sm:text-[11px] tracking-[0.2em] uppercase font-bold px-3 py-1.5 rounded-full mb-5">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-70"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-                </span>
-                Launching in 2 months
-              </div>
-              <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl tracking-tight leading-[1.05]">
-                The first automotive Experience Centre Bangladesh has ever seen.
-              </h2>
-              <p className="text-slate-300 mt-5 sm:mt-6 leading-relaxed text-sm sm:text-base">
-                A 1,560 sq ft flagship space on Banani Link Road — sitting beside OTTOFIX,
-                BYD and the European Luxury Car Showroom. Hero car zone. JOY Café.
-                Mezzanine viewing room. Premium consultation suite. Built for the way
-                car dealers, fleet owners, and enthusiasts actually want to experience
-                their parts and modifications.
-              </p>
-              <ul className="mt-6 space-y-2.5 text-sm text-slate-300">
-                <li className="flex items-start gap-2.5">
-                  <span className="text-[#E11D48] mt-1">▍</span>
-                  <span><strong className="text-white">Hero Car Zone</strong> — display the build, then drive it home.</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="text-[#E11D48] mt-1">▍</span>
-                  <span><strong className="text-white">JOY Café</strong> — bar-style lounge with espresso while consultations run.</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="text-[#E11D48] mt-1">▍</span>
-                  <span><strong className="text-white">Premium Consultation Suite</strong> — private office for fleet &amp; dealer accounts.</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="text-[#E11D48] mt-1">▍</span>
-                  <span><strong className="text-white">Mezzanine Viewing Room</strong> — 75–85" panel for events, training, brand experiences.</span>
-                </li>
-              </ul>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <a href="/inquire" data-testid="exp-inquire-link"
-                   className="inline-flex items-center gap-2 bg-white text-slate-900 hover:bg-slate-100 px-5 py-2.5 rounded-full text-sm font-semibold transition-colors">
-                  Reserve a private viewing →
-                </a>
-                <a href="https://www.joyautomart.com" target="_blank" rel="noreferrer" data-testid="exp-retail-link"
-                   className="inline-flex items-center gap-2 border border-white/30 hover:border-white text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors">
-                  Visit retail website
-                </a>
-              </div>
-            </div>
-            <div className="lg:col-span-7 grid grid-cols-2 gap-3">
-              <div className="col-span-2 relative overflow-hidden rounded-sm">
-                <img src={EXP_FACADE_1} alt="JOY Automart Experience Centre — front elevation, night view" className="w-full h-[280px] sm:h-[360px] object-cover" />
-                <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur text-white text-[10px] tracking-[0.2em] uppercase px-3 py-1.5 rounded-sm">Front Elevation · 24 ft wide</div>
-              </div>
-              <div className="relative overflow-hidden rounded-sm">
-                <img src={EXP_CAFE} alt="JOY Café and main showroom floor" className="w-full h-[140px] sm:h-[200px] object-cover" />
-                <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur text-white text-[9px] tracking-[0.18em] uppercase px-2 py-1 rounded-sm">JOY Café</div>
-              </div>
-              <div className="relative overflow-hidden rounded-sm">
-                <img src={EXP_MEZZANINE} alt="Mezzanine viewing room above the showroom" className="w-full h-[140px] sm:h-[200px] object-cover" />
-                <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur text-white text-[9px] tracking-[0.18em] uppercase px-2 py-1 rounded-sm">Mezzanine</div>
-              </div>
-              <div className="relative overflow-hidden rounded-sm">
-                <img src={EXP_FACADE_2} alt="Experience Centre — side angle" className="w-full h-[140px] sm:h-[200px] object-cover" />
-                <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur text-white text-[9px] tracking-[0.18em] uppercase px-2 py-1 rounded-sm">Side Elevation</div>
-              </div>
-              <div className="relative overflow-hidden rounded-sm">
-                <img src={EXP_CONFERENCE} alt="Premium consultation suite & conference room" className="w-full h-[140px] sm:h-[200px] object-cover" />
-                <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur text-white text-[9px] tracking-[0.18em] uppercase px-2 py-1 rounded-sm">Consultation Suite</div>
-              </div>
             </div>
           </div>
         </div>
@@ -449,6 +284,179 @@ const Landing = () => {
                 ))}
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Experience Centre — Bangladesh's first */}
+      <section className="bg-slate-900 text-white">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-14 sm:py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+            <div className="lg:col-span-5">
+              <div className="inline-flex items-center gap-2 bg-[#E11D48] text-white text-[10px] sm:text-[11px] tracking-[0.2em] uppercase font-bold px-3 py-1.5 rounded-full mb-5">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-70"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                </span>
+                Launching in 2 months
+              </div>
+              <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl tracking-tight leading-[1.05]">
+                The first automotive Experience Centre Bangladesh has ever seen.
+              </h2>
+              <p className="text-slate-300 mt-5 sm:mt-6 leading-relaxed text-sm sm:text-base">
+                A 1,560 sq ft flagship space on Banani Link Road — sitting beside OTTOFIX,
+                BYD and the European Luxury Car Showroom. Hero car zone. JOY Café.
+                Mezzanine viewing room. Premium consultation suite. Built for the way
+                car dealers, fleet owners, and enthusiasts actually want to experience
+                their parts and modifications.
+              </p>
+              <ul className="mt-6 space-y-2.5 text-sm text-slate-300">
+                <li className="flex items-start gap-2.5">
+                  <span className="text-[#E11D48] mt-1">▍</span>
+                  <span><strong className="text-white">Hero Car Zone</strong> — display the build, then drive it home.</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <span className="text-[#E11D48] mt-1">▍</span>
+                  <span><strong className="text-white">JOY Café</strong> — bar-style lounge with espresso while consultations run.</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <span className="text-[#E11D48] mt-1">▍</span>
+                  <span><strong className="text-white">Premium Consultation Suite</strong> — private office for fleet &amp; dealer accounts.</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <span className="text-[#E11D48] mt-1">▍</span>
+                  <span><strong className="text-white">Mezzanine Viewing Room</strong> — 75–85" panel for events, training, brand experiences.</span>
+                </li>
+              </ul>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <a href="/inquire" data-testid="exp-inquire-link"
+                   className="inline-flex items-center gap-2 bg-white text-slate-900 hover:bg-slate-100 px-5 py-2.5 rounded-full text-sm font-semibold transition-colors">
+                  Reserve a private viewing →
+                </a>
+                <a href="https://www.joyautomart.com" target="_blank" rel="noreferrer" data-testid="exp-retail-link"
+                   className="inline-flex items-center gap-2 border border-white/30 hover:border-white text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors">
+                  Visit retail website
+                </a>
+              </div>
+            </div>
+            <div className="lg:col-span-7 grid grid-cols-2 gap-3">
+              <div className="col-span-2 relative overflow-hidden rounded-sm">
+                <img src={EXP_FACADE_1} alt="JOY Automart Experience Centre — front elevation, night view" className="w-full h-[280px] sm:h-[360px] object-cover" />
+                <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur text-white text-[10px] tracking-[0.2em] uppercase px-3 py-1.5 rounded-sm">Front Elevation · 24 ft wide</div>
+              </div>
+              <div className="relative overflow-hidden rounded-sm">
+                <img src={EXP_CAFE} alt="JOY Café and main showroom floor" className="w-full h-[140px] sm:h-[200px] object-cover" />
+                <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur text-white text-[9px] tracking-[0.18em] uppercase px-2 py-1 rounded-sm">JOY Café</div>
+              </div>
+              <div className="relative overflow-hidden rounded-sm">
+                <img src={EXP_MEZZANINE} alt="Mezzanine viewing room above the showroom" className="w-full h-[140px] sm:h-[200px] object-cover" />
+                <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur text-white text-[9px] tracking-[0.18em] uppercase px-2 py-1 rounded-sm">Mezzanine</div>
+              </div>
+              <div className="relative overflow-hidden rounded-sm">
+                <img src={EXP_FACADE_2} alt="Experience Centre — side angle" className="w-full h-[140px] sm:h-[200px] object-cover" />
+                <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur text-white text-[9px] tracking-[0.18em] uppercase px-2 py-1 rounded-sm">Side Elevation</div>
+              </div>
+              <div className="relative overflow-hidden rounded-sm">
+                <img src={EXP_CONFERENCE} alt="Premium consultation suite & conference room" className="w-full h-[140px] sm:h-[200px] object-cover" />
+                <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur text-white text-[9px] tracking-[0.18em] uppercase px-2 py-1 rounded-sm">Consultation Suite</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Technology — VIN parts finder, AI, blockchain roadmap */}
+      <section className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-14 sm:py-20">
+          <div className="overline text-slate-500 mb-2">The technology stack</div>
+          <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl tracking-tight max-w-3xl mb-2">
+            The smartest auto-parts experience in Bangladesh.
+          </h2>
+          <p className="text-slate-600 max-w-2xl text-sm sm:text-base mb-10">
+            Every part of our platform is engineered to remove friction, surface the right answer instantly,
+            and learn from every transaction — for both B2B workshops and B2C car owners.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+            {/* VIN Parts Finder */}
+            <div className="border border-slate-200 rounded-sm bg-white p-6 sm:p-7 relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-sm">Live</div>
+              <div className="w-10 h-10 grid place-items-center bg-slate-900 text-white rounded-sm mb-4">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>
+                </svg>
+              </div>
+              <div className="font-display text-lg text-slate-900">VIN Parts Finder</div>
+              <p className="text-sm text-slate-600 mt-2 leading-relaxed">
+                Scan or paste any 17-character VIN — we decode the make, model, year, trim and engine,
+                then surface every compatible part in stock with OEM cross-references. Available in the
+                <strong className="text-slate-900"> B2B portal</strong> and the
+                <strong className="text-slate-900"> B2C retail store</strong>.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2 text-[11px] uppercase tracking-wider text-slate-500">
+                <span className="border border-slate-200 px-2 py-1 rounded-sm">NHTSA + WMI</span>
+                <span className="border border-slate-200 px-2 py-1 rounded-sm">Catalog match</span>
+                <span className="border border-slate-200 px-2 py-1 rounded-sm">VIN history</span>
+              </div>
+            </div>
+
+            {/* AI Assistant */}
+            <div className="border border-slate-200 rounded-sm bg-white p-6 sm:p-7 relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-sm">Live</div>
+              <div className="w-10 h-10 grid place-items-center bg-slate-900 text-white rounded-sm mb-4">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 8V4M8 12H4M16 12h4M12 16v4"/>
+                  <rect x="8" y="8" width="8" height="8" rx="1"/>
+                </svg>
+              </div>
+              <div className="font-display text-lg text-slate-900">JOY AI Assistant</div>
+              <p className="text-sm text-slate-600 mt-2 leading-relaxed">
+                Powered by Claude. Diagnose symptoms, recommend the right part, build a full order in chat,
+                cross-reference OEM numbers, and answer fitment questions — for the bay-floor mechanic
+                and the home car owner alike.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2 text-[11px] uppercase tracking-wider text-slate-500">
+                <span className="border border-slate-200 px-2 py-1 rounded-sm">Diagnostics</span>
+                <span className="border border-slate-200 px-2 py-1 rounded-sm">Smart reorder</span>
+                <span className="border border-slate-200 px-2 py-1 rounded-sm">Cross-ref</span>
+              </div>
+            </div>
+
+            {/* Blockchain — future */}
+            <div className="border border-slate-200 rounded-sm bg-slate-50 p-6 sm:p-7 relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-amber-100 text-amber-800 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-sm">Roadmap</div>
+              <div className="w-10 h-10 grid place-items-center bg-slate-900 text-white rounded-sm mb-4">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="7" height="7" rx="1"/>
+                  <rect x="14" y="3" width="7" height="7" rx="1"/>
+                  <rect x="3" y="14" width="7" height="7" rx="1"/>
+                  <rect x="14" y="14" width="7" height="7" rx="1"/>
+                  <path d="M10 6.5h4M6.5 10v4M17.5 10v4M10 17.5h4"/>
+                </svg>
+              </div>
+              <div className="font-display text-lg text-slate-900">Blockchain Provenance</div>
+              <p className="text-sm text-slate-600 mt-2 leading-relaxed">
+                Coming soon. Tamper-proof part-history and ownership records on-chain — every genuine part
+                stamped with a verifiable origin trail. Anti-counterfeit, fleet-grade auditability, and
+                fraud-resistant resale value.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2 text-[11px] uppercase tracking-wider text-slate-500">
+                <span className="border border-slate-200 px-2 py-1 rounded-sm">Provenance</span>
+                <span className="border border-slate-200 px-2 py-1 rounded-sm">Anti-counterfeit</span>
+                <span className="border border-slate-200 px-2 py-1 rounded-sm">2026 roadmap</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link to="/vin-lookup" data-testid="tech-vin-link"
+                  className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-700 text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors">
+              Try the VIN parts finder →
+            </Link>
+            <a href="https://www.joyautomart.com" target="_blank" rel="noreferrer" data-testid="tech-retail-vin-link"
+               className="inline-flex items-center gap-2 border border-slate-300 hover:border-slate-900 text-slate-900 px-5 py-2.5 rounded-full text-sm font-semibold transition-colors">
+              Use it on retail store
+            </a>
           </div>
         </div>
       </section>
