@@ -777,3 +777,178 @@ async def vin_history(vin: str, request: Request):
         },
         "timeline": timeline,
     }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Vehicle Health Passport — token-based public sharing for used-car listings
+# ─────────────────────────────────────────────────────────────────────────────
+async def _build_passport_payload(vin_n: str, user: dict) -> dict:
+    """Compose the same data the /vin/history endpoint returns, plus workshop signature."""
+    photos = await db.vin_customer_photos.find(
+        {"vin": vin_n}, {"_id": 0, "image_b64": 0},
+    ).sort("created_at", -1).to_list(100)
+    orders = await db.orders.find(
+        {"vehicle_vin": vin_n, "user_id": user["user_id"]},
+        {"_id": 0, "order_id": 1, "items": 1, "total_bdt": 1, "status": 1,
+         "company_name": 1, "created_at": 1},
+    ).sort("created_at", -1).to_list(100)
+    correction = await db.vin_corrections.find_one({"vin": vin_n}, {"_id": 0})
+    decoded = await db.vin_cache.find_one({"vin": vin_n}, {"_id": 0}) or {}
+    if correction:
+        decoded = {**decoded, **{k: v for k, v in correction.items() if v}}
+
+    timeline = []
+    for o in orders:
+        item_summary = ", ".join(it.get("name", "") for it in (o.get("items") or [])[:3])
+        if len(o.get("items") or []) > 3:
+            item_summary += f" +{len(o['items']) - 3} more"
+        timeline.append({
+            "type": "order", "date": o.get("created_at"),
+            "company_name": o.get("company_name", "Workshop"),
+            "title": item_summary or "Parts ordered",
+            "note": f"BDT {int(o.get('total_bdt', 0)):,} · {o.get('status', '')}",
+        })
+    for p in photos:
+        timeline.append({
+            "type": "photo", "date": p.get("created_at"),
+            "company_name": p.get("company_name", "Unknown workshop"),
+            "title": "Photo on record", "note": p.get("note", ""),
+        })
+    if correction and correction.get("created_at"):
+        c_summary = " ".join(str(x) for x in [
+            correction.get("year"), correction.get("make"), correction.get("model")
+        ] if x).strip()
+        timeline.append({
+            "type": "verification", "date": correction.get("created_at"),
+            "company_name": correction.get("company_name", "Unknown workshop"),
+            "title": "VIN data verified", "note": c_summary,
+        })
+    timeline.sort(key=lambda x: x.get("date") or "", reverse=True)
+
+    workshop_count = len({p.get("company_name") for p in photos if p.get("company_name")})
+    if user.get("company_name"):
+        workshop_count = max(workshop_count, 1)
+    dates = [t["date"] for t in timeline if t.get("date")]
+
+    workshop = {
+        "company_name": user.get("company_name") or "JOY Automart partner",
+        "kyc_tier": user.get("tier") or "silver",
+        "kyc_approved": user.get("kyc_status") == "approved",
+    }
+
+    return {
+        "vin": vin_n,
+        "decoded": decoded,
+        "workshop": workshop,
+        "stats": {
+            "order_count": len(orders),
+            "total_spend_bdt": round(sum(o.get("total_bdt", 0) for o in orders)),
+            "workshop_count": workshop_count,
+            "photo_count": len(photos),
+            "first_seen": min(dates) if dates else None,
+            "last_seen": max(dates) if dates else None,
+        },
+        "timeline": timeline,
+    }
+
+
+def _passport_token() -> str:
+    import secrets
+    return secrets.token_urlsafe(8)
+
+
+@api_router.post("/vin/passport/generate")
+async def generate_passport(payload: dict, request: Request):
+    """Workshop generates a shareable Vehicle Health Passport for a VIN they own.
+    Returns a public token + share URL that anyone (no login) can view."""
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(401, "Login required")
+    vin_n = _normalize_vin(payload.get("vin", ""))
+    if not _vin_valid(vin_n):
+        raise HTTPException(400, "Invalid VIN.")
+
+    # Re-use existing token if a fresh one was generated < 30 days ago for the
+    # same workshop+VIN combo, so the share link stays stable.
+    existing = await db.vin_passports.find_one(
+        {"vin": vin_n, "user_id": user["user_id"]}, {"_id": 0},
+    )
+    if existing and existing.get("token"):
+        token = existing["token"]
+    else:
+        token = _passport_token()
+        # tiny collision guard
+        while await db.vin_passports.find_one({"token": token}, {"_id": 0}):
+            token = _passport_token()
+
+    snapshot = await _build_passport_payload(vin_n, user)
+    snapshot["generated_at"] = datetime.now(timezone.utc).isoformat()
+
+    await db.vin_passports.update_one(
+        {"vin": vin_n, "user_id": user["user_id"]},
+        {"$set": {
+            "token": token,
+            "vin": vin_n,
+            "user_id": user["user_id"],
+            "snapshot": snapshot,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }, "$setOnInsert": {"created_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True,
+    )
+
+    origin = (request.headers.get("origin") or "").rstrip("/")
+    if not origin:
+        # Fall back to host header (deployed domain)
+        host = request.headers.get("host", "")
+        scheme = request.url.scheme or "https"
+        origin = f"{scheme}://{host}" if host else ""
+    share_url = f"{origin}/p/{token}" if origin else f"/p/{token}"
+
+    return {
+        "token": token,
+        "share_url": share_url,
+        "pdf_url": f"/api/vin/passport/{token}.pdf",
+        "view_url": f"/api/vin/passport/{token}",
+    }
+
+
+@api_router.get("/vin/passport/{token}.pdf")
+async def passport_pdf(token: str, request: Request):
+    """Public PDF render of a passport. No login required — token IS the auth."""
+    from fastapi.responses import Response
+    from passport_pdf import render_passport_pdf
+
+    rec = await db.vin_passports.find_one({"token": token}, {"_id": 0})
+    if not rec:
+        raise HTTPException(404, "Passport not found")
+    snapshot = rec.get("snapshot") or {}
+
+    origin = (request.headers.get("origin") or "").rstrip("/")
+    if not origin:
+        host = request.headers.get("host", "")
+        scheme = request.url.scheme or "https"
+        origin = f"{scheme}://{host}" if host else ""
+    snapshot["share_url"] = f"{origin}/p/{token}" if origin else f"/p/{token}"
+
+    pdf_bytes = render_passport_pdf(snapshot)
+    fn = f"passport-{rec.get('vin', token)}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{fn}"'},
+    )
+
+
+@api_router.get("/vin/passport/{token}")
+async def view_passport(token: str):
+    """Public, login-free passport view. Returns the snapshot only — never sensitive
+    user/workshop data beyond the workshop signature."""
+    rec = await db.vin_passports.find_one({"token": token}, {"_id": 0, "user_id": 0})
+    if not rec:
+        raise HTTPException(404, "Passport not found or expired")
+    return {
+        "token": token,
+        "vin": rec.get("vin"),
+        "snapshot": rec.get("snapshot") or {},
+        "updated_at": rec.get("updated_at"),
+    }

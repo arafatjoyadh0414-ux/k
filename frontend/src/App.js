@@ -43,6 +43,7 @@ import AdminProducts from "@/pages/AdminProducts";
 import Driver from "@/pages/Driver";
 import VinLookup from "@/pages/VinLookup";
 import Recurring from "@/pages/Recurring";
+import PassportPublic from "@/pages/PassportPublic";
 
 const AppRouter = () => {
   const location = useLocation();
@@ -58,6 +59,7 @@ const AppRouter = () => {
       <Route path="/inquire/:sku" element={<Inquire />} />
       <Route path="/catalog" element={<PublicCatalog />} />
       <Route path="/driver/:driverId" element={<Driver />} />
+      <Route path="/p/:token" element={<PassportPublic />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/privacy" element={<Privacy />} />
 
