@@ -40,16 +40,16 @@
              or by <noscript> CSS if JS is disabled. SEO bots that execute JS see the React app directly;
              bots that don't execute JS still see this content via noscript. -->
         <div id="prerender-shell" style="display:none;margin:0;padding:0;font-family:'IBM Plex Sans',Helvetica,Arial,sans-serif;color:#0f172a;line-height:1.55;background:#ffffff;">
-          <header style="border-bottom:1px solid #e2e8f0;background:#0f172a;color:#ffffff;">
-            <div style="max-width:1100px;margin:0 auto;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-              <div style="display:flex;align-items:center;gap:12px;">
-                <img src="https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg" alt="JOY Automart" width="40" height="40" style="display:block;" />
-                <div>
-                  <div style="font-size:18px;font-weight:700;letter-spacing:-0.01em;">JOY Automart</div>
-                  <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#cbd5e1;">B2B Workshop Portal · Bangladesh</div>
+          <header style="background:#ffffff;border-bottom:1px solid #e2e8f0;">
+            <div style="max-width:1280px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <img src="https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg" alt="JOY Automart" width="32" height="32" style="display:block;" />
+                <div style="line-height:1.1;">
+                  <div style="font-size:15px;font-weight:700;letter-spacing:-0.01em;color:#0f172a;">JOY Automart</div>
+                  <div style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#64748b;margin-top:1px;">B2B Platform · Bangladesh</div>
                 </div>
               </div>
-              <a href="/dashboard" style="background:#E11D48;color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;padding:10px 18px;border-radius:4px;">Sign in</a>
+              <a href="/dashboard" style="background:#0f172a;color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;padding:8px 18px;border-radius:9999px;">Sign in →</a>
             </div>
           </header>
 
@@ -125,28 +125,46 @@
         </noscript>
         <div id="root"></div>
         <script>
-          // Show the pre-render shell only as a fallback if React hasn't mounted within 2.5s
-          // (slow network or broken JS). Once React mounts, we just leave the shell hidden.
+          // Continuously sync prerender-shell visibility with React mount state.
+          // If React mounts (root has children), shell stays hidden — even if it was
+          // previously revealed by the 2.5s slow-network fallback.
           (function(){
-            var mounted = false;
-            function check(){
-              var root = document.getElementById('root');
-              if (root && root.children && root.children.length > 0) { mounted = true; }
+            var shell = null;
+            var rootEl = null;
+            function nodes(){
+              if(!shell) shell = document.getElementById('prerender-shell');
+              if(!rootEl) rootEl = document.getElementById('root');
             }
-            // Check frequently; if mounted, we're done.
-            var iv = setInterval(function(){
-              check();
-              if (mounted) { clearInterval(iv); }
+            function reactMounted(){
+              nodes();
+              return rootEl && rootEl.children && rootEl.children.length > 0;
+            }
+            function hideShell(){ nodes(); if(shell) shell.style.display = 'none'; }
+            function showShell(){ nodes(); if(shell) shell.style.display = 'block'; }
+
+            // Poll every 100ms forever (cheap) and keep shell hidden whenever React is mounted.
+            setInterval(function(){
+              if(reactMounted()) hideShell();
             }, 100);
+
             // After 2.5s, if React still hasn't mounted, reveal the static shell as a fallback.
             setTimeout(function(){
-              check();
-              if (!mounted) {
-                var shell = document.getElementById('prerender-shell');
-                if (shell) { shell.style.display = 'block'; }
-              }
-              clearInterval(iv);
+              if(!reactMounted()) showShell();
             }, 2500);
+
+            // MutationObserver: any time #root gets children, hide shell immediately.
+            try {
+              var obs = new MutationObserver(function(){
+                if(reactMounted()) hideShell();
+              });
+              var startObs = function(){
+                nodes();
+                if(rootEl) obs.observe(rootEl, { childList: true, subtree: false });
+              };
+              if(document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', startObs);
+              } else { startObs(); }
+            } catch(e) { /* old browsers — interval fallback above is enough */ }
           })();
         </script>
     </body>
