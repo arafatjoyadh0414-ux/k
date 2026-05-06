@@ -21,12 +21,12 @@ const Landing = () => {
     <div className="min-h-screen bg-white" data-testid="landing-page">
       {/* Sophisticated, slim white header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30 backdrop-blur supports-[backdrop-filter]:bg-white/85">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-2.5 group" data-testid="header-logo-link">
-            <img src={LOGO} alt="JOY Automart" className="w-7 h-7 sm:w-8 sm:h-8 object-contain" />
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 h-16 sm:h-[72px] flex items-center justify-between gap-4">
+          <Link to="/" className="flex items-center gap-3 group" data-testid="header-logo-link" aria-label="JOY Automart — Go to home">
+            <img src={LOGO} alt="JOY Automart" className="w-11 h-11 sm:w-12 sm:h-12 object-contain rounded-sm transition-transform group-hover:scale-105" />
             <div className="leading-tight">
-              <div className="font-display text-[15px] sm:text-base text-slate-900 tracking-tight">JOY Automart</div>
-              <div className="text-[9px] sm:text-[10px] uppercase tracking-[0.18em] text-slate-500 -mt-0.5">B2B Platform · Bangladesh</div>
+              <div className="font-display text-lg sm:text-xl text-slate-900 tracking-tight font-semibold">JOY Automart</div>
+              <div className="text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-slate-500 mt-0.5">B2B Platform · Bangladesh</div>
             </div>
           </Link>
           <nav className="flex items-center gap-1 sm:gap-2">
@@ -47,10 +47,9 @@ const Landing = () => {
             <button
               data-testid="top-login-button"
               onClick={handleLogin}
-              className="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-slate-700 text-white text-[13px] sm:text-sm font-medium px-4 sm:px-5 py-2 rounded-full transition-colors"
+              className="inline-flex items-center bg-slate-900 hover:bg-slate-700 text-white text-[13px] sm:text-sm font-medium px-5 sm:px-6 py-2.5 rounded-full transition-colors whitespace-nowrap"
             >
               Sign in
-              <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none"><path d="M5 12L10 8L5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
           </nav>
         </div>
@@ -61,30 +60,9 @@ const Landing = () => {
         <div className="w-full overflow-hidden">
           <img
             src={HERO}
-            alt="2022 Toyota Harrier with Modelista body kit on a Dhaka avenue with the JOY Automart building in the skyline"
+            alt="Aggressive 2022 Toyota Harrier sport SUV with Modelista body kit — JOY Automart brand campaign for car dealers, workshops & suppliers"
             className="w-full h-[280px] sm:h-[400px] md:h-[500px] lg:h-[560px] object-cover"
           />
-        </div>
-
-        {/* Live activity strip — runs below the hero image, smart proof point */}
-        <div className="border-y border-slate-200 bg-slate-50">
-          <div className="max-w-7xl mx-auto px-5 sm:px-6 py-3 flex items-center gap-3 sm:gap-5 text-xs sm:text-[13px] text-slate-700 overflow-x-auto whitespace-nowrap">
-            <span className="inline-flex items-center gap-2 font-semibold text-slate-900">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E11D48] opacity-60"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#E11D48]"></span>
-              </span>
-              Live activity
-            </span>
-            <span className="text-slate-300">·</span>
-            <span><span className="font-semibold text-slate-900">47</span> orders shipping today</span>
-            <span className="text-slate-300">·</span>
-            <span><span className="font-semibold text-slate-900">৳ 18.2 Cr</span> credit deployed</span>
-            <span className="text-slate-300">·</span>
-            <span><span className="font-semibold text-slate-900">312</span> workshops onboarded</span>
-            <span className="text-slate-300 hidden sm:inline">·</span>
-            <span className="hidden sm:inline">Last order <span className="font-semibold text-slate-900">2 min ago</span></span>
-          </div>
         </div>
       </section>
 
@@ -128,14 +106,45 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Metric cards */}
+      {/* Persona cards — explicit dealer / workshop / supplier mention */}
+      <section className="max-w-7xl mx-auto px-5 sm:px-6 pb-14">
+        <div className="overline text-slate-500 mb-2">Built for three sides of the trade</div>
+        <h2 className="font-display text-2xl sm:text-3xl tracking-tight mb-6">One platform. Every player.</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+          {[
+            {
+              k: "For Car Dealers",
+              t: "Source faster, finance smarter",
+              d: "Wholesale parts at dealer pricing, body kit fitments, service-bay supply, and inventory financing — keep showroom prep flowing."
+            },
+            {
+              k: "For Auto Workshops",
+              t: "Order on credit, fix in hours",
+              d: "Verified parts, AI-assisted diagnostics, 30-day credit terms, and live order tracking — built for the bay floor."
+            },
+            {
+              k: "For Suppliers",
+              t: "Reach 312+ verified buyers",
+              d: "Onboard your catalog, fulfil B2B orders nationwide, and settle invoices digitally. We handle KYC, credit, and logistics."
+            },
+          ].map(({ k, t, d }) => (
+            <div key={k} className="border border-slate-200 p-5 rounded-sm bg-white">
+              <div className="overline text-[#E11D48]">{k}</div>
+              <div className="font-display text-xl mt-2">{t}</div>
+              <p className="text-sm text-slate-600 mt-2 leading-relaxed">{d}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Capability cards */}
       <section className="max-w-7xl mx-auto px-5 sm:px-6 pb-14">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
           {[
             { k: "38+ Parts", t: "Verified catalog", d: "Brakes, suspension, engine, fluids, lighting, electrical, drivetrain — all in stock." },
             { k: "6 Signature Kits", t: "Body kits, fitted", d: "From Shadow GT entry to Cyber Beast flagship + JOY Beast Wide Body for BYD Sealion 6." },
             { k: "Tier Pricing", t: "Silver · Gold · Platinum", d: "Up to 12% off retail, applied automatically. Volume discounts stack on top." },
-            { k: "30-day Credit", t: "Credit-backed orders", d: "Approved workshops get a credit limit. Order today, settle in 30. Track usage in the dashboard." },
+            { k: "30-day Credit", t: "Inventory financing", d: "Approved dealers & workshops get a credit limit. Order today, settle in 30. Track usage live." },
           ].map(({ k, t, d }) => (
             <div key={k} className="border border-slate-200 p-5 rounded-sm bg-white">
               <div className="overline text-slate-500">{k}</div>
