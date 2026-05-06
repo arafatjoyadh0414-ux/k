@@ -308,3 +308,36 @@ Inspired by the strategic audit. Most audit items were already built (catalog, K
 - PWA setup (P1)
 - Multi-user team accounts with RBAC + invitations (P2)
 - Shareable PDF for VIN Service History (P2)
+
+## 2026-02-10 — P0 mobile blank-screen bug + Experience Centre redesign + global responsive safety
+
+**🔴 P0 — Mobile blank-screen bug RESOLVED:**
+- Root cause: `useScrollReveal` hook ran once at mount when Landing.jsx returned `null` during `loading` state, found 0 `.reveal` elements, hit early return, and never re-fired when content rendered. CSS kept `opacity: 0` indefinitely on Samsung Browser / slow 4G.
+- Fix in `/app/frontend/src/hooks/useScrollReveal.js`:
+  - CSS-default-VISIBLE pattern: `.reveal { opacity: 1 }`. The hidden state only applies when `html.js-reveal-armed` class is present (added by JS only after IO is confirmed wired).
+  - MutationObserver picks up `.reveal` elements added later (data-fetch-driven renders, route changes).
+  - Hard 1.5s `setTimeout` safety force-reveals all stragglers regardless of IO callbacks.
+  - Belt-and-suspenders: `window.load` event triggers another safety pass.
+- CSS in `/app/frontend/src/index.css`: `.reveal { opacity: 1 }` default + `html.js-reveal-armed .reveal:not(.in-view) { opacity: 0; transform: translateY(20px) }`.
+- Verified: `invisible reveals = 0` at 320 / 360 / 390 / 414 / 768 / 1024 / 1440 / 1920 px.
+
+**🎨 Experience Centre fully redesigned with 7 new architectural concept renders:**
+- New assets in `/app/frontend/src/assets/experience-centre/`: ec-hero-interior, ec-day-night-facade, ec-facade-variations, ec-interior-luxe, ec-cafe-wheels, ec-mod-zone, ec-architecture-overview.
+- New `ExpTile` helper component (premium glassmorphic captions, fluid aspect ratios).
+- Section structure:
+  - **Hero**: Premium interior panorama with "CONCEPT RENDERS · PHASE 1" + "SHOWROOM 65×24 ft" badges
+  - **01 · Storefront** (2 tiles): Façade Studies Day & Night, Showroom Atmosphere
+  - **02 · Interior** (3 tiles): Architecture Perspective, JOY Café & Wheel Wall, Showroom Volume 65×24 ft
+  - **03 · Blueprint**: Full multi-panel architecture document (object-contain)
+  - **4 feature cards**: Hero Car Zone, JOY Café, Consultation Suite, Mezzanine
+- All tiles have unique `data-testid` (ec-tile-day-night, ec-tile-facade-variations, ec-tile-interior-luxe, ec-tile-cafe-wheels, ec-tile-mod-zone, ec-tile-architecture).
+
+**📐 Global responsive safety:**
+- `html, body { overflow-x: hidden; max-width: 100vw }` in `/app/frontend/src/index.css`
+- `img, video, svg { max-width: 100% }` global
+- New `xs: 400px` breakpoint added in `/app/frontend/tailwind.config.js`
+- Verified ZERO horizontal overflow at 8 viewports (320/360/390/414/768/1024/1440/1920).
+
+**Test results: iter9 — 100% backend (10/10 pytest) + 100% frontend on 8 viewports + Theme toggle + Live ticker + 6 EC tiles + all CTAs.**
+
+**Joy ID counter**: verified unique sequential JOY-1001 through JOY-1009 in production DB, counter at seq=11, zero duplicates. Iter8 carry-over observation was stale — no fix needed.
