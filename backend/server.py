@@ -46,6 +46,7 @@ from routes import driver as _driver_routes  # noqa: F401
 from routes import vin as _vin_routes  # noqa: F401
 from routes import recurring as _recurring_routes  # noqa: F401
 from routes import customer_photos as _cust_photos_routes  # noqa: F401
+from routes import public_stats as _public_stats_routes  # noqa: F401
 from routes.recurring import start_recurring_worker
 
 # Pydantic models (kept here for back-compat). Authoritative copies live in server_models.py.

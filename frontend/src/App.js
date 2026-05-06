@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
 import { LanguageProvider } from "@/context/LanguageContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AuthCallback from "@/components/AuthCallback";
 import ChatWidget from "@/components/ChatWidget";
@@ -104,13 +105,15 @@ function App() {
     <div className="App">
       <BrowserRouter>
         <AuthProvider>
-          <LanguageProvider>
-            <CartProvider>
-              <AppRouter />
-              <ChatWidget />
-              <Toaster richColors position="top-right" />
-            </CartProvider>
-          </LanguageProvider>
+          <ThemeProvider>
+            <LanguageProvider>
+              <CartProvider>
+                <AppRouter />
+                <ChatWidget />
+                <Toaster richColors position="top-right" />
+              </CartProvider>
+            </LanguageProvider>
+          </ThemeProvider>
         </AuthProvider>
       </BrowserRouter>
     </div>

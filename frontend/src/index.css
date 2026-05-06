@@ -70,6 +70,19 @@ html, body, #root {
     -moz-osx-font-smoothing: grayscale;
 }
 
+/* Dark mode root — pitch background for futuristic look */
+html.dark,
+html.dark body,
+html.dark #root {
+    background: #09090B;
+    color: #E4E4E7;
+    color-scheme: dark;
+}
+html.dark ::selection {
+    background: #E11D48;
+    color: white;
+}
+
 h1, h2, h3, h4, h5, .font-display {
     font-family: "Cabinet Grotesk", "IBM Plex Sans", sans-serif;
     letter-spacing: -0.02em;
@@ -129,6 +142,7 @@ h1, h2, h3, h4, h5, .font-display {
     opacity: 0.035;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
 }
+html.dark .grain-overlay { opacity: 0.06; }
 
 /* Engineering grid background — fades at top/bottom via mask-image. */
 .grid-bg {
@@ -138,6 +152,11 @@ h1, h2, h3, h4, h5, .font-display {
     background-size: 32px 32px;
     -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
             mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+}
+html.dark .grid-bg {
+    background-image:
+      linear-gradient(to right, rgba(225, 29, 72, 0.10) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(225, 29, 72, 0.10) 1px, transparent 1px);
 }
 
 .grid-bg-dark {
@@ -212,3 +231,45 @@ h1, h2, h3, h4, h5, .font-display {
 
 /* Custom selection color across the landing for brand consistency. */
 .fut::selection { background: #E11D48; color: #fff; }
+
+/* ─────────────────────────────────────────────────────────────────────
+   Dark-mode landing: red/black duotone. Two-color rule.
+   - Light mode: white + red (clean, premium, daylight)
+   - Dark mode:  near-black + red (futuristic, premium, night)
+   We override surface colors INSIDE .fut so the auth'd app stays light.
+   ───────────────────────────────────────────────────────────────────── */
+html.dark .fut { background-color: #09090B; color: #E4E4E7; }
+html.dark .fut .bg-white { background-color: #09090B !important; }
+html.dark .fut .bg-zinc-50,
+html.dark .fut .bg-zinc-50\/40,
+html.dark .fut .bg-zinc-50\/50 { background-color: #18181B !important; }
+html.dark .fut .text-zinc-900 { color: #FAFAFA !important; }
+html.dark .fut .text-zinc-700 { color: #D4D4D8 !important; }
+html.dark .fut .text-zinc-600 { color: #A1A1AA !important; }
+html.dark .fut .text-zinc-500 { color: #71717A !important; }
+html.dark .fut .border-zinc-200,
+html.dark .fut .border-zinc-300 { border-color: rgba(255,255,255,0.08) !important; }
+html.dark .fut .hairline { border-color: rgba(255,255,255,0.08) !important; }
+html.dark .fut .from-white { --tw-gradient-from: rgba(9,9,11,0.95) !important; }
+html.dark .fut .via-white\/50 { --tw-gradient-via: rgba(9,9,11,0.5) !important; }
+
+/* Dark-mode primary CTAs use red instead of slate */
+html.dark .fut button.bg-zinc-900,
+html.dark .fut a.bg-zinc-900,
+html.dark .fut button.bg-zinc-950,
+html.dark .fut a.bg-zinc-950 {
+    background-color: #E11D48 !important;
+    color: #fff !important;
+}
+html.dark .fut button.bg-zinc-900:hover,
+html.dark .fut a.bg-zinc-900:hover,
+html.dark .fut button.bg-zinc-950:hover,
+html.dark .fut a.bg-zinc-950:hover {
+    background-color: #BE123C !important;
+}
+
+/* Already-dark sections (Experience Centre, JOY BEAST card) stay dark in both modes */
+html.dark .fut .bg-zinc-950 { background-color: #050507 !important; }
+
+/* Footer & feature cards — make borders visible on dark bg */
+html.dark .fut .industrial-card { background-color: #18181B; border-color: rgba(255,255,255,0.08); }

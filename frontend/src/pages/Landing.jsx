@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import { Navigate, Link } from "react-router-dom";
+import axios from "axios";
 import { useScrollReveal, useCountUp } from "../hooks/useScrollReveal";
 import HARRIER_HERO from "../assets/harrier-hero.jpg";
 import BYD_CYBERBEAST from "../assets/byd-cyberbeast.jpg";
@@ -14,15 +16,39 @@ import EXP_NIGHT from "../assets/exp/night-00.jpg";
 const LOGO = "https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg";
 const HERO = HARRIER_HERO;
 
-// Top ticker — system-style live ribbon
-const TICKER = [
-  "● SYSTEM ONLINE",
-  "312 DEALERS CONNECTED",
-  "47 ORDERS SHIPPING TODAY",
-  "৳ 18.2 CR CREDIT DEPLOYED",
-  "LATEST ORDER · 2 MIN AGO",
-  "BANANI EXPERIENCE CENTRE · OPENS Q2 2026",
-];
+// Build live ticker from real platform stats (cached 5min on backend)
+const formatAgo = (iso) => {
+  if (!iso) return null;
+  const ms = Date.now() - new Date(iso).getTime();
+  const min = Math.max(1, Math.round(ms / 60000));
+  if (min < 60) return `${min} MIN AGO`;
+  const h = Math.round(min / 60);
+  if (h < 24) return `${h} HR AGO`;
+  return "RECENTLY";
+};
+const buildTicker = (stats) => {
+  if (!stats) {
+    return [
+      "● SYSTEM ONLINE",
+      "BANGLADESH'S FIRST B2B AUTOMOTIVE PLATFORM",
+      "VIN PARTS FINDER · 17-CHAR DECODE",
+      "BANANI EXPERIENCE CENTRE · OPENS Q2 2026",
+    ];
+  }
+  const ago = formatAgo(stats.last_order_at);
+  const credit = stats.credit_used_bdt >= 1e7
+    ? `৳ ${(stats.credit_used_bdt / 1e7).toFixed(1)} CR CREDIT DEPLOYED`
+    : `৳ ${(stats.credit_used_bdt / 1e5).toFixed(1)} L CREDIT DEPLOYED`;
+  return [
+    "● SYSTEM ONLINE",
+    `${stats.workshops_count} DEALERS CONNECTED`,
+    `${stats.orders_today} ORDERS SHIPPING TODAY`,
+    credit,
+    ago ? `LATEST ORDER · ${ago}` : "LATEST ORDER · LIVE",
+    `${stats.active_now} ACTIVE NOW`,
+    "BANANI EXPERIENCE CENTRE · OPENS Q2 2026",
+  ];
+};
 
 // Stat ticker on the capability cards — counter ramps up on scroll
 const StatCounter = ({ to, suffix = "", className = "" }) => {
@@ -32,9 +58,38 @@ const StatCounter = ({ to, suffix = "", className = "" }) => {
   );
 };
 
+const ThemeToggle = () => {
+  const { theme, toggle } = useTheme();
+  const isDark = theme === "dark";
+  return (
+    <button
+      data-testid="theme-toggle"
+      onClick={toggle}
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      className="magnetic relative inline-flex items-center justify-center w-9 h-9 rounded-full border hairline dark:border-white/10 hover:border-zinc-900 dark:hover:border-white text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white transition-colors"
+    >
+      {isDark ? (
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      ) : (
+        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      )}
+    </button>
+  );
+};
+
 const Landing = () => {
   const { user, loading } = useAuth();
+  const [stats, setStats] = useState(null);
   useScrollReveal();
+
+  useEffect(() => {
+    let mounted = true;
+    axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/public/stats`)
+      .then((r) => { if (mounted) setStats(r.data); })
+      .catch(() => { /* ticker falls back to baseline copy */ });
+    return () => { mounted = false; };
+  }, []);
+
   if (loading) return null;
   if (user) return <Navigate to={user.role === "admin" ? "/admin" : "/dashboard"} replace />;
 
@@ -44,31 +99,33 @@ const Landing = () => {
     window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
   };
 
+  const TICKER = buildTicker(stats);
+
   return (
-    <div className="min-h-screen bg-white fut" data-testid="landing-page">
+    <div className="min-h-screen bg-white dark:bg-zinc-950 fut" data-testid="landing-page">
       {/* Subtle SVG noise grain — fixed, behind interactive layers */}
       <div className="grain-overlay" aria-hidden="true" />
 
-      {/* Top live activity ribbon — 24px tall, monospaced, marquee */}
-      <div className="bg-zinc-950 text-zinc-400 text-[10px] tracking-[0.18em] uppercase overflow-hidden h-7 flex items-center" aria-hidden="true">
+      {/* Top live activity ribbon — wired to /api/public/stats, 5-min cache */}
+      <div className="bg-zinc-950 dark:bg-black text-zinc-400 dark:text-[#FFB1C1] text-[10px] tracking-[0.18em] uppercase overflow-hidden h-7 flex items-center border-b border-transparent dark:border-[#E11D48]/30" aria-hidden="true">
         <div className="ticker-track px-4">
           {[...TICKER, ...TICKER].map((t, i) => (
             <span key={i} className="font-mono inline-flex items-center gap-2">
               <span>{t}</span>
-              <span className="text-zinc-700">/</span>
+              <span className="text-zinc-700 dark:text-[#E11D48]/40">/</span>
             </span>
           ))}
         </div>
       </div>
 
       {/* Glassmorphic sticky header */}
-      <header className="sticky top-0 z-30 backdrop-blur-xl bg-white/70 border-b hairline">
+      <header className="sticky top-0 z-30 backdrop-blur-xl bg-white/70 dark:bg-zinc-950/70 border-b hairline dark:border-white/10">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 h-16 sm:h-[72px] flex items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-3 group" data-testid="header-logo-link" aria-label="JOY Automart — Go to home">
             <img src={LOGO} alt="JOY Automart" className="w-11 h-11 sm:w-12 sm:h-12 object-contain rounded-sm transition-transform group-hover:scale-105" />
             <div className="leading-tight">
-              <div className="font-display text-lg sm:text-xl text-zinc-900 tracking-tight font-semibold">JOY Automart</div>
-              <div className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-zinc-500 mt-0.5">B2B Platform · Bangladesh</div>
+              <div className="font-display text-lg sm:text-xl text-zinc-900 dark:text-white tracking-tight font-semibold">JOY Automart</div>
+              <div className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400 mt-0.5">B2B Platform · Bangladesh</div>
             </div>
           </Link>
           <nav className="flex items-center gap-1 sm:gap-2">
@@ -76,29 +133,30 @@ const Landing = () => {
               href="https://www.joyautomart.com"
               target="_blank"
               rel="noreferrer"
-              className="hidden lg:inline-flex items-center px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors"
+              className="hidden lg:inline-flex items-center px-3 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
               data-testid="header-retail-link"
             >
               Retail Store
             </a>
             <Link
               to="/catalog"
-              className="hidden sm:inline-flex items-center px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors"
+              className="hidden sm:inline-flex items-center px-3 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
               data-testid="header-catalog-link"
             >
               Catalog
             </Link>
             <a
               href="https://wa.me/8801886799533"
-              className="hidden md:inline-flex items-center px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors"
+              className="hidden md:inline-flex items-center px-3 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
               data-testid="header-whatsapp-link"
             >
               WhatsApp
             </a>
+            <ThemeToggle />
             <button
               data-testid="top-login-button"
               onClick={handleLogin}
-              className="magnetic inline-flex items-center bg-zinc-950 hover:bg-[#E11D48] text-white text-[13px] sm:text-sm font-medium px-5 sm:px-6 py-2.5 rounded-full whitespace-nowrap"
+              className="magnetic inline-flex items-center bg-zinc-950 dark:bg-[#E11D48] hover:bg-[#E11D48] dark:hover:bg-[#BE123C] text-white text-[13px] sm:text-sm font-medium px-5 sm:px-6 py-2.5 rounded-full whitespace-nowrap"
             >
               Sign in
             </button>
