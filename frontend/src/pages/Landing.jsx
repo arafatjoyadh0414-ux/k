@@ -173,6 +173,102 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* Technology — VIN parts finder, AI, blockchain roadmap */}
+      <section className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-14 sm:py-20">
+          <div className="overline text-slate-500 mb-2">The technology stack</div>
+          <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl tracking-tight max-w-3xl mb-2">
+            The smartest auto-parts experience in Bangladesh.
+          </h2>
+          <p className="text-slate-600 max-w-2xl text-sm sm:text-base mb-10">
+            Every part of our platform is engineered to remove friction, surface the right answer instantly,
+            and learn from every transaction — for both B2B workshops and B2C car owners.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+            {/* VIN Parts Finder */}
+            <div className="border border-slate-200 rounded-sm bg-white p-6 sm:p-7 relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-sm">Live</div>
+              <div className="w-10 h-10 grid place-items-center bg-slate-900 text-white rounded-sm mb-4">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>
+                </svg>
+              </div>
+              <div className="font-display text-lg text-slate-900">VIN Parts Finder</div>
+              <p className="text-sm text-slate-600 mt-2 leading-relaxed">
+                Scan or paste any 17-character VIN — we decode the make, model, year, trim and engine,
+                then surface every compatible part in stock with OEM cross-references. Available in the
+                <strong className="text-slate-900"> B2B portal</strong> and the
+                <strong className="text-slate-900"> B2C retail store</strong>.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2 text-[11px] uppercase tracking-wider text-slate-500">
+                <span className="border border-slate-200 px-2 py-1 rounded-sm">NHTSA + WMI</span>
+                <span className="border border-slate-200 px-2 py-1 rounded-sm">Catalog match</span>
+                <span className="border border-slate-200 px-2 py-1 rounded-sm">VIN history</span>
+              </div>
+            </div>
+
+            {/* AI Assistant */}
+            <div className="border border-slate-200 rounded-sm bg-white p-6 sm:p-7 relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-sm">Live</div>
+              <div className="w-10 h-10 grid place-items-center bg-slate-900 text-white rounded-sm mb-4">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 8V4M8 12H4M16 12h4M12 16v4"/>
+                  <rect x="8" y="8" width="8" height="8" rx="1"/>
+                </svg>
+              </div>
+              <div className="font-display text-lg text-slate-900">JOY AI Assistant</div>
+              <p className="text-sm text-slate-600 mt-2 leading-relaxed">
+                Powered by Claude. Diagnose symptoms, recommend the right part, build a full order in chat,
+                cross-reference OEM numbers, and answer fitment questions — for the bay-floor mechanic
+                and the home car owner alike.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2 text-[11px] uppercase tracking-wider text-slate-500">
+                <span className="border border-slate-200 px-2 py-1 rounded-sm">Diagnostics</span>
+                <span className="border border-slate-200 px-2 py-1 rounded-sm">Smart reorder</span>
+                <span className="border border-slate-200 px-2 py-1 rounded-sm">Cross-ref</span>
+              </div>
+            </div>
+
+            {/* Blockchain — future */}
+            <div className="border border-slate-200 rounded-sm bg-slate-50 p-6 sm:p-7 relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-amber-100 text-amber-800 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-sm">Roadmap</div>
+              <div className="w-10 h-10 grid place-items-center bg-slate-900 text-white rounded-sm mb-4">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="7" height="7" rx="1"/>
+                  <rect x="14" y="3" width="7" height="7" rx="1"/>
+                  <rect x="3" y="14" width="7" height="7" rx="1"/>
+                  <rect x="14" y="14" width="7" height="7" rx="1"/>
+                  <path d="M10 6.5h4M6.5 10v4M17.5 10v4M10 17.5h4"/>
+                </svg>
+              </div>
+              <div className="font-display text-lg text-slate-900">Blockchain Provenance</div>
+              <p className="text-sm text-slate-600 mt-2 leading-relaxed">
+                Coming soon. Tamper-proof part-history and ownership records on-chain — every genuine part
+                stamped with a verifiable origin trail. Anti-counterfeit, fleet-grade auditability, and
+                fraud-resistant resale value.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2 text-[11px] uppercase tracking-wider text-slate-500">
+                <span className="border border-slate-200 px-2 py-1 rounded-sm">Provenance</span>
+                <span className="border border-slate-200 px-2 py-1 rounded-sm">Anti-counterfeit</span>
+                <span className="border border-slate-200 px-2 py-1 rounded-sm">2026 roadmap</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link to="/vin-lookup" data-testid="tech-vin-link"
+                  className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-700 text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors">
+              Try the VIN parts finder →
+            </Link>
+            <a href="https://www.joyautomart.com" target="_blank" rel="noreferrer" data-testid="tech-retail-vin-link"
+               className="inline-flex items-center gap-2 border border-slate-300 hover:border-slate-900 text-slate-900 px-5 py-2.5 rounded-full text-sm font-semibold transition-colors">
+              Use it on retail store
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* Experience Centre — Bangladesh's first */}
       <section className="bg-slate-900 text-white">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 py-14 sm:py-20">
@@ -293,6 +389,15 @@ const Landing = () => {
                   <div>
                     <div className="font-display text-base text-slate-900">Bespoke Interior &amp; Upholstery</div>
                     <div className="text-sm text-slate-600 mt-0.5">Full-grain Nappa leather, Alcantara headliners, contrast stitching, custom dashboards, carbon-fibre trim, premium audio &amp; ambient lighting.</div>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <div className="shrink-0 w-9 h-9 grid place-items-center bg-slate-900 text-white rounded-sm">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></svg>
+                  </div>
+                  <div>
+                    <div className="font-display text-base text-slate-900">Performance Tuning</div>
+                    <div className="text-sm text-slate-600 mt-0.5">ECU remaps, stage-1/2 power packs, sport exhausts, lowering springs &amp; coilovers, cold-air intakes — dyno-validated upgrades for measurable gains.</div>
                   </div>
                 </div>
                 <div className="flex gap-3">
