@@ -95,6 +95,50 @@ async def unsubscribe(payload: PushSubscribePayload, request: Request):
     return {"ok": True}
 
 
+# ============= Notification preference center =============
+# Granular per-category toggles so users can opt out of categories they don't
+# want without losing the main browser push subscription.
+
+DEFAULT_PREFS = {
+    "order_updates": True,   # order shipped / delivered / cancelled / packed
+    "low_stock": True,       # restock alerts on low/out-of-stock SKUs
+    "promotional": False,    # featured offers, news, marketing nudges
+    "daily_digest": False,   # 1x/day platform summary
+}
+
+# Category that bypasses prefs (UI test button must always work to verify setup)
+ALWAYS_ON = {"test"}
+
+
+class NotificationPrefsPayload(BaseModel):
+    order_updates: Optional[bool] = None
+    low_stock: Optional[bool] = None
+    promotional: Optional[bool] = None
+    daily_digest: Optional[bool] = None
+
+
+async def _get_user_prefs(user_id: str) -> dict:
+    user = await db.users.find_one({"user_id": user_id}, {"_id": 0, "notification_prefs": 1})
+    stored = (user or {}).get("notification_prefs") or {}
+    return {**DEFAULT_PREFS, **{k: v for k, v in stored.items() if k in DEFAULT_PREFS}}
+
+
+@api_router.get("/push/prefs")
+async def get_prefs(request: Request):
+    user = await require_user(request)
+    return {"prefs": await _get_user_prefs(user["user_id"]), "defaults": DEFAULT_PREFS}
+
+
+@api_router.put("/push/prefs")
+async def update_prefs(payload: NotificationPrefsPayload, request: Request):
+    user = await require_user(request)
+    update = {f"notification_prefs.{k}": v for k, v in payload.model_dump(exclude_none=True).items()}
+    if not update:
+        return {"prefs": await _get_user_prefs(user["user_id"])}
+    await db.users.update_one({"user_id": user["user_id"]}, {"$set": update})
+    return {"prefs": await _get_user_prefs(user["user_id"])}
+
+
 # ============= Send helper =============
 async def send_push_to_user(
     user_id: str,
@@ -104,10 +148,23 @@ async def send_push_to_user(
     url: str = "/dashboard",
     tag: Optional[str] = None,
     icon: Optional[str] = None,
+    category: str = "order_updates",
 ) -> int:
     """Push a notification to every subscription owned by user_id.
     Returns number of successful pushes. Best-effort — never raises into caller.
-    Removes subscriptions that return 404/410 (browser unsubscribed)."""
+    Removes subscriptions that return 404/410 (browser unsubscribed).
+
+    Honours per-user notification_prefs: if the user has opted out of `category`,
+    skip silently (returns 0). The `test` category bypasses prefs so the UI's
+    "Send test" button always works.
+    """
+    # Respect user preferences (skip if opted out)
+    if category not in ALWAYS_ON:
+        prefs = await _get_user_prefs(user_id)
+        if not prefs.get(category, True):
+            logger.info(f"push: user {user_id} opted out of category={category}")
+            return 0
+
     priv_pem = _vapid_private_pem()
     if not (priv_pem and VAPID_PUBLIC_KEY):
         logger.info("push: VAPID not configured, skipping")
@@ -169,5 +226,6 @@ async def send_test(request: Request):
         body="If you can see this, push notifications are working on this device.",
         url="/dashboard",
         tag="test",
+        category="test",
     )
     return {"sent": sent}

@@ -151,6 +151,111 @@ const ExperienceCentreContent = ({ showCTAs = true }) => (
           </li>
         ))}
       </ul>
+
+      {/* Signature elements — sophisticated long-form showcase */}
+      <div className="mt-14 sm:mt-20 lg:mt-24" data-testid="ec-signature-elements">
+        <div className="flex items-baseline justify-between mb-6 sm:mb-8 flex-wrap gap-2">
+          <div>
+            <div className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.24em] text-[#E11D48]">04 · Signature elements</div>
+            <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl text-white tracking-tight mt-1">
+              Five signatures. One unforgettable visit.
+            </h3>
+          </div>
+          <div className="text-xs sm:text-sm text-zinc-400 max-w-md">
+            Every detail is hand-curated — from the espresso pull to the wheel-wall lighting temperature.
+          </div>
+        </div>
+        <ol className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+          {[
+            { n: "I", t: "Hero Car Stage", d: "Rotating spotlight build under cinema-grade lighting. Photographable from every angle without a flash." },
+            { n: "II", t: "Wheel Wall", d: "Forged 19–22\" alloys arranged like art. Backlit, captioned with offset, weight and finish." },
+            { n: "III", t: "Espresso Bar", d: "JOY Café — single-origin espresso, sparkling water, and a curated reading rack while consultations run." },
+            { n: "IV", t: "Body-Kit Atelier", d: "Live carbon-composite samples, paint swatches and a digital stitch-pattern selector for bespoke interior commissions." },
+            { n: "V", t: "Mezzanine Theatre", d: "85\" panel, fully wired for product launches, dealer training and private brand previews." },
+          ].map(({ n, t, d }) => (
+            <li
+              key={n}
+              className="group relative rounded-md sm:rounded-lg border border-white/10 bg-gradient-to-br from-white/[0.04] to-white/[0.01] backdrop-blur-sm p-5 sm:p-6 overflow-hidden hover:border-[#E11D48]/60 transition-colors"
+            >
+              <div className="absolute -top-4 -right-4 font-display text-[80px] leading-none text-white/[0.04] group-hover:text-[#E11D48]/20 transition-colors select-none">{n}</div>
+              <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#E11D48] mb-2">Signature {n}</div>
+              <div className="font-display text-lg text-white tracking-tight">{t}</div>
+              <div className="text-xs sm:text-sm text-zinc-400 mt-2 leading-relaxed">{d}</div>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      {/* Timeline — opening milestones */}
+      <div className="mt-14 sm:mt-20 border-t border-white/10 pt-10 sm:pt-14" data-testid="ec-timeline">
+        <div className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.24em] text-[#E11D48] mb-2">05 · Timeline</div>
+        <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl text-white tracking-tight mb-8">
+          From blueprint to doors-open.
+        </h3>
+        <ol className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          {[
+            { q: "Q4 2025", t: "Lease & permits", d: "Madani Avenue site secured. BRTA & municipal approvals filed." },
+            { q: "Q1 2026", t: "Fit-out", d: "Façade, flooring, mezzanine steel and JOY Café build-out." },
+            { q: "Q2 2026", t: "Soft launch", d: "Private viewings for fleet & dealer partners. Wheel-wall installation complete." },
+            { q: "Q3 2026", t: "Public opening", d: "First public Hero Car drop. Mezzanine theatre programming begins." },
+          ].map(({ q, t, d }, i) => (
+            <li key={q} className="relative">
+              <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#E11D48]">{q}</div>
+              <div className="mt-2 h-px bg-gradient-to-r from-[#E11D48] via-white/20 to-transparent" />
+              <div className="font-display text-base sm:text-lg text-white tracking-tight mt-3">{t}</div>
+              <div className="text-xs sm:text-sm text-zinc-400 mt-1.5 leading-relaxed">{d}</div>
+              <div className="absolute -left-1 top-4 w-2 h-2 rounded-full bg-[#E11D48] ring-4 ring-[#E11D48]/20 hidden sm:block" />
+              {i < 3 && <div className="absolute top-5 right-0 w-px h-full bg-white/5 hidden sm:block" />}
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      {/* Plan your visit — sophisticated closing card */}
+      <div
+        className="mt-14 sm:mt-20 rounded-xl sm:rounded-2xl border border-white/10 bg-gradient-to-br from-[#E11D48]/15 via-white/[0.02] to-transparent p-6 sm:p-10 lg:p-14 relative overflow-hidden"
+        data-testid="ec-plan-visit"
+      >
+        <div className="absolute inset-0 grid-bg-dark opacity-30 pointer-events-none" aria-hidden="true" />
+        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-end">
+          <div className="lg:col-span-7">
+            <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#FFB1C1] mb-3">Plan your visit</div>
+            <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl text-white tracking-tight leading-tight">
+              Reserve a private viewing before public opening.
+            </h3>
+            <p className="text-zinc-400 mt-4 max-w-xl text-sm sm:text-base leading-relaxed">
+              We're inviting fleet operators, dealer principals and serious enthusiasts for one-on-one
+              walkthroughs during Q2 2026. Espresso on us. Bring your build sheet.
+            </p>
+          </div>
+          <div className="lg:col-span-5 grid grid-cols-2 gap-3 sm:gap-4">
+            <div className="border border-white/10 rounded-md p-3 sm:p-4 bg-black/30 backdrop-blur-sm">
+              <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">Address</div>
+              <div className="font-display text-sm sm:text-base text-white mt-1.5 leading-snug">Madani Avenue<br/>Banani · Dhaka</div>
+            </div>
+            <div className="border border-white/10 rounded-md p-3 sm:p-4 bg-black/30 backdrop-blur-sm">
+              <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">RSVP</div>
+              <div className="font-display text-sm sm:text-base text-white mt-1.5 leading-snug">+880 1886-799533<br/>WhatsApp preferred</div>
+            </div>
+          </div>
+        </div>
+        <div className="relative z-10 mt-8 flex flex-wrap gap-3">
+          <a
+            href="/inquire"
+            data-testid="ec-rsvp-link"
+            className="magnetic inline-flex items-center gap-2 bg-white text-zinc-900 hover:bg-zinc-100 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm font-semibold whitespace-nowrap"
+          >
+            Reserve a private viewing →
+          </a>
+          <a
+            href="https://wa.me/8801886799533"
+            data-testid="ec-whatsapp-link"
+            className="magnetic inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1ca352] text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm font-semibold whitespace-nowrap transition-colors"
+          >
+            Message on WhatsApp
+          </a>
+        </div>
+      </div>
     </div>
   </section>
 );

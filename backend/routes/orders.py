@@ -207,7 +207,8 @@ async def admin_update_order_status(order_id: str, payload: OrderStatusUpdate, r
         if title_body:
             for uid in owner_ids:
                 await send_push_to_user(uid, title=title_body[0], body=title_body[1],
-                                        url=f"/orders", tag=f"order-{fresh['order_id']}")
+                                        url=f"/orders", tag=f"order-{fresh['order_id']}",
+                                        category="order_updates")
     except Exception as e:
         logger.warning(f"Push notify failed: {e}")
     return fresh

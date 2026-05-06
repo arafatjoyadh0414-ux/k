@@ -1,0 +1,23 @@
+{
+  "summary": "Iteration 16 — full both-side test of (1) Notification preference center API + UI, (2) EC blank-page bug fix, (3) Landing stat copy, (4) EC sophisticated long-form sections. All 8 backend pytest tests PASSED (push prefs GET defaults, PUT single/multi-key/no-op, /push/test bypass when all disabled, category gating with order_updates=false, low_stock independence). All 9 frontend assertions PASSED: Landing shows 1000+/6/10–35%/30d (38+ and '12% Tier' removed); /experience-centre renders non-blank with all 9 expected testids visible (ec-signature-elements, ec-timeline, ec-plan-visit, all 6 ec-tile-* + headline + 'Five signatures' + 'Q4 2025'/'Q3 2026'); /profile shows notification-prefs-card with 4 rows in correct defaults (order_updates=true, low_stock=true, promotional=false, daily_digest=false); clicking pref-toggle-promotional flips data-checked false→true, PUT persists (verified via subsequent GET returns promotional:true), state survives full page reload. Final cleanup via PUT defaults completed.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iter16_push_prefs.py",
+    "/app/test_reports/pytest/iter16_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "/app/backend/routes/push.py — Clean implementation. _get_user_prefs filters stored keys to known DEFAULT_PREFS keys (good defense against schema drift). category-gating uses prefs.get(category, True) which fails-open if a future category isn't in DEFAULT_PREFS — acceptable but worth a comment.",
+    "/app/frontend/src/components/NotificationPreferences.jsx — Optimistic update with rollback on error is correctly implemented. data-testid + aria attributes are all present. No issues.",
+    "/app/frontend/src/pages/ExperienceCentre.jsx — useScrollReveal() called at top of component fixes the blank-page issue cleanly; the comment in the file explains the root cause well."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter16_push_prefs.py"],
+  "success_rate": {"backend": "100% (8/8)", "frontend": "100% (9/9)"},
+  "test_credentials": "Bearer test-token-workshop-1 (workshop1@test.com), Bearer test-token-admin-1 (admin@joyautomart.com)",
+  "seed_data_creation": "none — workshop1 prefs reset to DEFAULTS at end of each pytest module and after frontend test (clean state preserved)",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All iter16 features verified working. Push prefs API persists to db.users.notification_prefs sub-doc. workshop1 baseline left at defaults {order_updates:true, low_stock:true, promotional:false, daily_digest:false}. EC page now requires useScrollReveal() in the page component (NOT just the shared content component) — keep this in mind if EC content is ever moved to a different route. Landing stats are now '1000+ Verified parts' / '6 BD Cities served' / '10–35% Tier off retail price' / '30d Net credit terms'.",
+  "rca of the issue": "Previous bug (blank EC page) — Landing.jsx mounted useScrollReveal() and added html.js-reveal-armed, but its IntersectionObserver was torn down on Landing unmount. ExperienceCentre.jsx relied on the .reveal CSS class but never armed an observer of its own, so when navigating directly via /experience-centre or via SPA from Landing, all .reveal sections kept opacity:0. Fix verified: useScrollReveal() now called in ExperienceCentre.jsx, all sections render visible."
+}

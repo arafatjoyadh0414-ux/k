@@ -64,7 +64,7 @@ async def _scan_once() -> int:
         url = f"/products?search={sku}"
         for uid in buyer_ids:
             try:
-                pushed_total += await send_push_to_user(uid, title=title, body=body, url=url, tag=f"low-stock-{sku}")
+                pushed_total += await send_push_to_user(uid, title=title, body=body, url=url, tag=f"low-stock-{sku}", category="low_stock")
             except Exception as e:  # noqa
                 logger.warning(f"low-stock push failed for {uid}/{sku}: {e}")
 

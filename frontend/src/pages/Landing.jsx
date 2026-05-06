@@ -657,9 +657,9 @@ const Landing = () => {
 
           {/* What you get + How it works combined */}
           <div className="lg:col-span-5 grid grid-cols-2 gap-3">
-            <Stat n="38+" l="Verified parts" />
+            <Stat n="1000+" l="Verified parts" />
             <Stat n="6" l="Body-kit lines" />
-            <Stat n="12%" l="Tier pricing off retail" />
+            <Stat n="10–35%" l="Tier off retail price" />
             <Stat n="30d" l="Credit terms" />
           </div>
         </div>

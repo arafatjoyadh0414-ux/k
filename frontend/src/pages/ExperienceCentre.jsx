@@ -2,8 +2,13 @@ import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import ExperienceCentreContent from "../components/ExperienceCentreContent";
+import { useScrollReveal } from "../hooks/useScrollReveal";
 
 const ExperienceCentre = () => {
+  // Arm the IntersectionObserver locally — without this, `.reveal` content
+  // stays invisible after navigating from Landing (which set
+  // html.js-reveal-armed but cleaned up its own observer on unmount).
+  useScrollReveal();
   useEffect(() => {
     document.title = "Experience Centre — JOY Automart";
     window.scrollTo(0, 0);

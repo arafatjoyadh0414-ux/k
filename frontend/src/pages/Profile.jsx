@@ -4,6 +4,7 @@ import api, { statusColor } from "../lib/api";
 import { Upload, FileCheck, FileX, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import PushNotificationToggle from "../components/PushNotificationToggle";
+import NotificationPreferences from "../components/NotificationPreferences";
 
 const DOC_TYPES = [
   { key: "trade_license", label: "Trade License", required: true },
@@ -88,6 +89,7 @@ const Profile = () => {
         </div>
 
         <PushNotificationToggle />
+        <NotificationPreferences />
 
         {ws?.kyc_status === "rejected" && ws?.kyc_remark && (
           <div className="border border-red-200 bg-red-50 p-3 rounded-sm text-sm">
