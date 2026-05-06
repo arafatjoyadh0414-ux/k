@@ -192,3 +192,20 @@ def notify_delivery_assigned(order: dict, email: str) -> None:
         body += f"<br/>Expected delivery: {order['expected_delivery_date']}"
     cta = ("View Order", f"{APP_URL}/orders/{order.get('order_id')}" if APP_URL else None)
     send_email(email, f"JOY · Rider assigned ({order.get('order_id')})", _layout(title, body, *cta))
+
+
+
+async def notify_team_invite(email: str, workshop_name: str, token: str, role: str) -> None:
+    """Async wrapper to keep the call site non-blocking. Best-effort — no-op when keys missing."""
+    if not email:
+        return
+    title = f"You're invited to join {workshop_name} on JOY Automart"
+    accept_url = f"{APP_URL}/accept-invite?token={token}" if APP_URL else f"https://b2bjoymart.com/accept-invite?token={token}"
+    role_label = role.replace("_", " ").title()
+    body = (
+        f"<b>{workshop_name}</b> has invited you to join their workspace as a "
+        f"<b>{role_label}</b> on JOY Automart — Bangladesh's first AI-powered B2B auto parts platform."
+        "<br/><br/>Click the button below to accept and start ordering parts under their account."
+        "<br/><br/><i>This invitation expires in 7 days.</i>"
+    )
+    send_email(email, title, _layout(title, body, "Accept invitation", accept_url))

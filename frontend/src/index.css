@@ -348,3 +348,28 @@ html.dark .portal-shell button.bg-zinc-900 {
     background-color: #E11D48 !important;
     color: white !important;
 }
+
+/* Premium polish: table headers, divider rows, code/mono */
+html.dark .portal-shell thead { background-color: #0F0F11 !important; }
+html.dark .portal-shell tbody tr:hover { background-color: rgba(255,255,255,0.03) !important; }
+html.dark .portal-shell .divide-zinc-200 > * + *,
+html.dark .portal-shell .divide-slate-200 > * + * { border-color: rgba(255,255,255,0.06) !important; }
+html.dark .portal-shell code,
+html.dark .portal-shell pre { background-color: rgba(255,255,255,0.04) !important; color: #FAFAFA !important; }
+
+/* Glass effect for sticky headers / sidebar in dark mode */
+html.dark .portal-shell header.sticky { backdrop-filter: blur(12px) saturate(140%); }
+
+/* Subtle inner border highlight for industrial-cards (premium feel) */
+html.dark .portal-shell .industrial-card { box-shadow: inset 0 1px 0 rgba(255,255,255,0.04); }
+html.dark .portal-shell .industrial-card:hover {
+    border-color: rgba(225,29,72,0.4) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 1px rgba(225,29,72,0.1);
+}
+
+/* Light-mode portal polish — subtle premium shadows on cards */
+html:not(.dark) .portal-shell .industrial-card { box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+html:not(.dark) .portal-shell .industrial-card:hover {
+    border-color: rgba(225,29,72,0.4) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+}

@@ -83,6 +83,8 @@ async def auth_session(request: Request, response: Response):
             await db.workshops.insert_one({
                 "workshop_id": workshop_id,
                 "user_id": user_id,
+                "owner_user_id": user_id,
+                "member_user_ids": [],
                 "company_name": "",
                 "contact_phone": "",
                 "address": "",

@@ -45,6 +45,9 @@ import Driver from "@/pages/Driver";
 import VinLookup from "@/pages/VinLookup";
 import Recurring from "@/pages/Recurring";
 import PassportPublic from "@/pages/PassportPublic";
+import Team from "@/pages/Team";
+import Fleets from "@/pages/Fleets";
+import AcceptInvite from "@/pages/AcceptInvite";
 
 const AppRouter = () => {
   const location = useLocation();
@@ -79,6 +82,9 @@ const AppRouter = () => {
       <Route path="/vin-lookup" element={<ProtectedRoute><VinLookup /></ProtectedRoute>} />
       <Route path="/recurring" element={<ProtectedRoute><Recurring /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+      <Route path="/team" element={<ProtectedRoute><Team /></ProtectedRoute>} />
+      <Route path="/fleets" element={<ProtectedRoute><Fleets /></ProtectedRoute>} />
+      <Route path="/accept-invite" element={<AcceptInvite />} />
       <Route path="/payment/return" element={<ProtectedRoute><PaymentReturn /></ProtectedRoute>} />
 
       <Route path="/admin" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
