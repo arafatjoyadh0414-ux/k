@@ -1,0 +1,37 @@
+{
+  "summary": "Frontend-only Landing page testing for the new BodyKitsShowcase tabs, Shadow GT carousel/thumbnails, mobile scroll-spy chips, dws-summary, theme toggle and viewport responsiveness across mobile (390), tablet (768) and desktop (1440). Almost all acceptance criteria pass. One critical bug found: clicking chips in MobileScrollSpyChips does not actually scroll the page to the target section.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Mobile scroll-spy chip navigation",
+        "issue": "Clicking any chip (chip-tech-stack, chip-cta, etc.) does NOT scroll the page to the target section. Verified: after clicking chip-tech-stack on a 390x844 viewport and waiting 3.5s, window.scrollY remained at ~101 and #tech-stack was still at top:4589 (off-screen). Because no scroll occurs, the IntersectionObserver never updates `data-active` on any chip — chip-hero stays data-active='true' even after clicking other chips. Auto-highlight while the user manually scrolls also failed to promote tech-stack/cta to active in the same session. Likely root cause: the `scrollIntoView({block:'nearest'})` call inside the `useEffect([active])` on the rail chip runs in the same tick as `window.scrollTo` from `onChip`, and since the active chip at that moment is still `hero` (state hasn't changed yet), `block:'nearest'` may anchor the document scroll back to the hero chip's position. Fix suggestion: (a) remove or guard the rail-chip scrollIntoView so it never affects the document scroll (use `inline:'center', block:'nearest'` only on the rail element using rail.scrollLeft = chip.offsetLeft - rail.clientWidth/2 + chip.clientWidth/2) OR (b) optimistically setActive(id) inside onChip BEFORE calling window.scrollTo so the right chip is targeted. Affected testids: chip-hero, chip-joy-beast, chip-experience-centre, chip-tech-stack, chip-value-prop, chip-bd-news, chip-cta.",
+        "affected_selectors": ["[data-testid='mobile-scroll-spy']", "[data-testid='chip-tech-stack']", "[data-testid='chip-cta']"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Fix MobileScrollSpyChips so that tapping a chip actually smooth-scrolls to the section. Suggest: in `onChip`, remove the chip-rail `scrollIntoView` from being a side-effect of state change, OR call it only after window.scrollTo finishes, OR use rail.scrollTo({left:...}) instead of element.scrollIntoView({block:'nearest'}) to avoid affecting page scroll. Also call setActive(id) directly inside onChip for instant feedback."
+  ],
+  "critical_code_review_comments": [
+    "/app/frontend/src/components/MobileScrollSpyChips.jsx: `el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })` inside the [active] effect can scroll any scrollable ancestor including the document — this is the prime suspect for the chip click bug. Use rail-only horizontal scroll: `railRef.current.scrollTo({ left: el.offsetLeft - rail.clientWidth/2 + el.clientWidth/2, behavior: 'smooth' })`.",
+    "/app/frontend/src/components/MobileScrollSpyChips.jsx: `onChip` does not setActive(id) — the chip stays unhighlighted until the IntersectionObserver eventually catches the new section, which feels laggy. Optimistically setActive(id) on click for instant UX."
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "skipped",
+    "frontend": "92%"
+  },
+  "test_credentials": "n/a — landing page tested unauthenticated",
+  "seed_data_creation": "none",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All BodyKitsShowcase acceptance criteria pass on desktop & mobile: 4 tabs visible, Shadow GT default active with 4 thumbnails + prev/next arrows + counter (verified 01/04 → click thumb-2 → 03/04 → next → 04/04 → prev → 03/04 → auto-rotate after ~3.8s advances counter). Cyber Beast / Wide Body / Custom Atelier tabs correctly hide thumbnail strip and arrows. dws-summary present with the new single-line copy. Mobile scroll-spy chips render only at <1024px (verified hidden at 1440, visible at 768 & 390). Theme toggle works (html.dark applied). No horizontal overflow at any viewport. 401 console errors are expected — they come from /api/auth/me probe for unauthenticated landing visitors. ONLY remaining bug is that clicking a chip does not scroll the document — see frontend_issues.integration_issues[0].",
+  "rca of the issue": "Mobile scroll-spy chip click handler `onChip` calls window.scrollTo({top, behavior:'smooth'}) on the document. However, the component's [active] useEffect calls `chipRefs.current[active].scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' })` — and the spec for scrollIntoView with `block:'nearest'` may scroll ANY scrollable ancestor (including the window) to keep the element in view. At the moment of the click, active is still the previous section (e.g. 'hero'), so when state churn or IntersectionObserver fires, scrollIntoView for the rail chip can re-anchor the document and effectively cancel/override the window.scrollTo target. Reproduction: open landing on 390x844, click [data-testid='chip-tech-stack'], wait 3s, check window.scrollY — observed ~101, expected ~4500. Mitigation: replace element.scrollIntoView with rail-only horizontal scroll using `railRef.current.scrollTo({ left, behavior:'smooth' })` so the document scroll is never touched."
+}

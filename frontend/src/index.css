@@ -13,6 +13,11 @@ img, video, svg {
     height: auto;
 }
 
+/* Utility: hide scrollbar while preserving scroll behaviour (used in
+   thumbnail strips and mobile chip nav) */
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
 /* Hide Emergent platform-injected "Made with Emergent" badge */
 #emergent-badge,
 [id^="emergent-badge"],

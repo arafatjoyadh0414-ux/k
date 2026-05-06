@@ -5,7 +5,6 @@ import { Navigate, Link } from "react-router-dom";
 import axios from "axios";
 import { useScrollReveal, useCountUp } from "../hooks/useScrollReveal";
 import HARRIER_HERO from "../assets/harrier-hero.jpg";
-import BYD_CYBERBEAST from "../assets/byd-cyberbeast.jpg";
 // Experience Centre — premium architectural concept renders (interior + exterior)
 import EC_HERO from "../assets/experience-centre/ec-hero-interior.png";
 import EC_DAY_NIGHT from "../assets/experience-centre/ec-day-night-facade.png";
@@ -15,6 +14,8 @@ import EC_CAFE_WHEELS from "../assets/experience-centre/ec-cafe-wheels.png";
 import EC_MOD_ZONE from "../assets/experience-centre/ec-mod-zone.png";
 import EC_ARCHITECTURE from "../assets/experience-centre/ec-architecture-overview.png";
 import InstallPwaButton from "../components/InstallPwaButton";
+import BodyKitsShowcase from "../components/BodyKitsShowcase";
+import MobileScrollSpyChips from "../components/MobileScrollSpyChips";
 
 const LOGO = "https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg";
 const HERO = HARRIER_HERO;
@@ -129,7 +130,7 @@ const BangladeshNewsSection = () => {
   const rest = items.slice(1, 7);
 
   return (
-    <section className="bg-white dark:bg-zinc-950 border-y border-zinc-200 dark:border-white/10">
+    <section id="bd-news" className="bg-white dark:bg-zinc-950 border-y border-zinc-200 dark:border-white/10 scroll-mt-28">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 reveal">
         <div className="flex items-end justify-between flex-wrap gap-3 mb-6 sm:mb-8">
           <div>
@@ -315,8 +316,11 @@ const Landing = () => {
         </div>
       </header>
 
+      {/* Mobile/tablet scroll-spy chip nav — desktop uses top header instead */}
+      <MobileScrollSpyChips />
+
       {/* Full-width hero image at the very top — clean, no overlays on the picture */}
-      <section className="relative">
+      <section id="hero" className="relative scroll-mt-28">
         <div className="w-full overflow-hidden">
           <img
             src={HERO}
@@ -407,7 +411,7 @@ const Landing = () => {
       </section>
 
       {/* JOY BEAST — In-house premium modification & body-kit atelier */}
-      <section className="bg-white">
+      <section id="joy-beast" className="bg-white scroll-mt-28">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 py-14 sm:py-20 reveal">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
             <div className="lg:col-span-5 order-1">
@@ -484,30 +488,7 @@ const Landing = () => {
             </div>
 
             <div className="lg:col-span-7 order-2">
-              <div className="relative overflow-hidden rounded-sm border border-zinc-200">
-                <img
-                  src={BYD_CYBERBEAST}
-                  alt="JOY BEAST Cyber Beast — modified BYD Sealion 6 with wide-body aero kit, forged wheels, and red performance brake calipers"
-                  className="w-full h-[300px] sm:h-[420px] lg:h-[540px] object-cover"
-                />
-                <div className="absolute top-3 left-3 bg-black/80 backdrop-blur text-white text-[10px] tracking-[0.2em] uppercase px-3 py-1.5 rounded-sm font-semibold">
-                  Cyber Beast · BYD Sealion 6
-                </div>
-              </div>
-              {/* Kit tier strip below image */}
-              <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {[
-                  { t: "Shadow GT", d: "Entry sport" },
-                  { t: "Cyber Beast", d: "Flagship aero", featured: true },
-                  { t: "Beast Wide Body", d: "Wide-body" },
-                  { t: "Custom Atelier", d: "Bespoke" },
-                ].map((k) => (
-                  <div key={k.t} className={`p-3 rounded-sm border text-center ${k.featured ? "bg-zinc-900 text-white border-zinc-900" : "bg-white border-zinc-200 text-zinc-900"}`}>
-                    <div className="font-display text-sm">{k.t}</div>
-                    <div className={`text-[10px] uppercase tracking-wider mt-0.5 ${k.featured ? "text-zinc-300" : "text-zinc-500"}`}>{k.d}</div>
-                  </div>
-                ))}
-              </div>
+              <BodyKitsShowcase />
             </div>
           </div>
         </div>
@@ -516,7 +497,7 @@ const Landing = () => {
       {/* Bangladesh Auto Pulse — moved to bottom of page */}
 
       {/* Experience Centre — TEASER strip linking to dedicated /experience-centre page */}
-      <section className="bg-zinc-950 text-zinc-300 relative overflow-hidden border-y border-white/10">
+      <section id="experience-centre" className="bg-zinc-950 text-zinc-300 relative overflow-hidden border-y border-white/10 scroll-mt-28">
         <div className="aurora-blob" aria-hidden="true" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 relative z-10 reveal">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center">
@@ -560,7 +541,7 @@ const Landing = () => {
       </section>
 
       {/* Technology — VIN parts finder, AI, blockchain roadmap */}
-      <section className="bg-white border-b hairline relative overflow-hidden">
+      <section id="tech-stack" className="bg-white border-b hairline relative overflow-hidden scroll-mt-28">
         <div className="absolute inset-0 grid-bg" aria-hidden="true" />
         <div className="max-w-7xl mx-auto px-5 sm:px-6 py-14 sm:py-20 relative z-10 reveal">
           <div className="font-mono text-[11px] uppercase tracking-[0.24em] text-zinc-500 mb-2">The technology stack</div>
@@ -657,7 +638,7 @@ const Landing = () => {
       </section>
 
       {/* Condensed value proposition — replaces 3 verbose sections (personas + capabilities + how-it-works) */}
-      <section className="max-w-7xl mx-auto px-5 sm:px-6 py-10 sm:py-14 reveal">
+      <section id="value-prop" className="max-w-7xl mx-auto px-5 sm:px-6 py-10 sm:py-14 reveal scroll-mt-28">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
           {/* Three audiences — single tight row */}
           <div className="lg:col-span-7">
@@ -665,11 +646,13 @@ const Landing = () => {
             <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl tracking-tight text-zinc-900 mb-5 leading-tight">
               Dealers source. Workshops fix. Suppliers sell.
             </h2>
-            <ul className="space-y-2.5 text-sm sm:text-base text-zinc-700">
-              <li className="flex gap-2.5"><span className="text-[#E11D48] font-mono text-xs mt-1.5 shrink-0">DEALERS</span><span>Wholesale parts + body-kit fitments + 30-day inventory credit.</span></li>
-              <li className="flex gap-2.5"><span className="text-[#E11D48] font-mono text-xs mt-1.5 shrink-0">WORKSHOPS</span><span>Verified SKUs, AI part-finder, live tracking, credit terms — built for the bay floor.</span></li>
-              <li className="flex gap-2.5"><span className="text-[#E11D48] font-mono text-xs mt-1.5 shrink-0">SUPPLIERS</span><span>Reach 312+ verified buyers · we handle KYC, credit & logistics.</span></li>
-            </ul>
+            <p className="text-sm sm:text-base text-zinc-700 leading-relaxed max-w-2xl" data-testid="dws-summary">
+              <span className="font-mono text-[11px] tracking-[0.2em] uppercase text-[#E11D48] mr-2">D · W · S</span>
+              A single verified network synchronising <span className="font-semibold text-zinc-900">dealers</span>,
+              <span className="font-semibold text-zinc-900"> workshops</span> and
+              <span className="font-semibold text-zinc-900"> suppliers</span> — wholesale parts on 30-day credit,
+              AI-matched SKUs for the bay floor and 312+ approved B2B buyers, with KYC, credit and logistics handled end-to-end.
+            </p>
           </div>
 
           {/* What you get + How it works combined */}
@@ -755,7 +738,7 @@ const Landing = () => {
       </section>
 
       {/* Bottom CTA */}
-      <section className="border-t border-zinc-200 bg-zinc-50">
+      <section id="cta" className="border-t border-zinc-200 bg-zinc-50 scroll-mt-28">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 py-12 flex flex-col lg:flex-row lg:items-end justify-between gap-6">
           <div>
             <div className="overline mb-2 text-zinc-500">Apply now</div>
