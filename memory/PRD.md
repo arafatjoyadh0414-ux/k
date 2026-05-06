@@ -431,3 +431,30 @@ Inspired by the strategic audit. Most audit items were already built (catalog, K
 
 **Tests passed**: iter12 — 18/18 backend pytest (real Claude vision call ~12s, MIME rejection, auth, full CRUD, status transitions, to-cart tier pricing, regression on stats/news/products/orders) + 100% frontend selectors + sidebar nav + responsive (320/360/768/1440 px) + hydration warning gone.
 
+
+## 2026-02-10 — Iter13 · Header rename ("Trade Portal") + Auto-translation engine (every word/letter)
+
+**🔄 Header rename**: "Workshop Portal" → **"Trade Portal"** (covers workshops + car dealers + suppliers — the 3 audiences JOY serves). Updated `header.workshop` key in `LanguageContext.jsx` to "Trade Portal" / "ট্রেড পোর্টাল".
+
+**🌐 Auto-translation engine — works on EVERY word + letter in the app**:
+- Backend `/app/backend/routes/i18n.py` → `POST /api/i18n/translate { lang: "bn", texts: [...] }` returns `{ translations: { src → bn } }`
+- Powered by **Claude Sonnet 4.5** via `emergentintegrations` + EMERGENT_LLM_KEY
+- Mongo-cached in `db.i18n_cache` (sha256 hash + lang composite key) — each unique English phrase translated only once across the entire user base, ever
+- Smart system prompt:
+  - Keeps brand names (JOY Automart, Toyota, BYD, Stripe, NHTSA, VIN, KYC, BDT) in English
+  - Keeps product SKUs, IDs, numbers, currency symbols (৳), dates AS-IS
+  - Uses natural everyday Bangla used by Dhaka workshop owners (not formal/literary)
+  - Keeps universally-used English mechanic terms (brake, engine, oil, tyre, battery, AC, GPS, VIN) in Latin script
+  - Returns strict JSON array; falls back to original on parse failures
+  - Rejects pure-numeric / punctuation / symbol-only strings to avoid wasted tokens
+- Frontend hook `/app/frontend/src/hooks/useAutoTranslate.js`:
+  - Wired at `App.js` level so it runs on EVERY page automatically
+  - Walks the DOM with a TreeWalker, collects text nodes, skips `<script>`, `<style>`, `<code>`, `<pre>`, `<input>`, `<textarea>`, `<option>`, `<select>` and `font-mono` / `tabular-nums` / `joy-no-translate` / `ticker-track` classes (preserves SKUs, prices, tickers)
+  - localStorage cache (`ja_i18n_cache_bn_v1`) — first paint of previously-seen strings is INSTANT (no network)
+  - Stashes original text on each text node so toggling back to English is instant + lossless
+  - MutationObserver re-runs on dynamically rendered content (post-data-fetch UI, route changes)
+  - 250ms debounce + chunked API calls (60 strings per request) for efficient translation
+  - Silent fail — if Claude is down, page still works in English
+- Verified end-to-end: VIN Lookup body translated, Dashboard fully translated, sidebar nav translated (16 items), 68 unique strings cached after one page visit.
+
+**Tests**: backend endpoint smoke-tested with 10 strings (all 10 translated correctly with brand-name preservation rules); frontend visually verified at 360px (mobile) and 1440px (desktop); cache populated and persists in localStorage.

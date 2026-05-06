@@ -50,9 +50,11 @@ import Fleets from "@/pages/Fleets";
 import AcceptInvite from "@/pages/AcceptInvite";
 import VisualSearch from "@/pages/VisualSearch";
 import JobCards from "@/pages/JobCards";
+import useAutoTranslate from "@/hooks/useAutoTranslate";
 
 const AppRouter = () => {
   const location = useLocation();
+  useAutoTranslate();
   // Check URL fragment for session_id - process synchronously to avoid race conditions
   if (location.hash?.includes("session_id=")) {
     return <AuthCallback />;
