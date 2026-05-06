@@ -43,15 +43,14 @@ const Landing = () => {
       <section className="max-w-7xl mx-auto px-6 pt-12 pb-16 lg:pt-16 lg:pb-20 grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
         <div className="lg:col-span-7">
           <div className="overline text-[#E11D48] mb-4">For Repair Workshops · Dhaka &amp; Nationwide</div>
-          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl leading-[1.05] tracking-tight">
-            Wholesale auto parts.<br />
-            Credit you can build on.<br />
-            <span className="text-[#E11D48]">Built for the bay floor.</span>
+          <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl leading-[1.05] tracking-tight">
+            B2B platform built for<br />
+            car dealers, workshops<br />
+            <span className="text-[#E11D48]">&amp; suppliers.</span>
           </h1>
           <p className="text-base sm:text-lg text-slate-600 mt-6 max-w-xl leading-relaxed">
-            JOY Automart's B2B portal gives Bangladesh's auto-repair workshops verified parts,
-            transparent tier pricing, 30-day credit, and an AI assistant that knows cars as well
-            as your master mechanic.
+            One technology platform for Bangladesh's automotive trade — wholesale distribution,
+            inventory financing, import operations, and digital procurement, all under one roof.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -78,26 +77,23 @@ const Landing = () => {
           </div>
         </div>
 
-        {/* Hero image — Harrier on Gulshan with JOY Automart building signage */}
+        {/* Hero image — Modelista-kitted Harrier on Gulshan with JOY Automart building */}
         <div className="lg:col-span-5 relative">
           <div className="relative border border-slate-200 rounded-sm overflow-hidden shadow-sm">
             <img
               src={HERO}
-              alt="2022 Toyota Harrier on a Dhaka avenue with the JOY Automart building in the skyline"
+              alt="2022 Toyota Harrier with Modelista body kit on a Dhaka avenue with the JOY Automart building in the skyline"
               className="w-full h-[360px] sm:h-[420px] lg:h-[460px] object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent" />
-            <div className="absolute bottom-4 left-4 right-4 bg-white border border-slate-200 p-4">
-              <div className="overline">Live order</div>
-              <div className="text-sm font-semibold mt-1">ORD-20260209-A12B</div>
-              <div className="flex items-center justify-between mt-2 text-xs">
-                <span className="text-slate-600">Brake Disc Rotor x 4</span>
-                <span className="font-semibold">৳ 18,000</span>
-              </div>
-              <div className="mt-3 h-1.5 bg-slate-100 overflow-hidden">
-                <div className="h-full bg-[#E11D48]" style={{ width: "65%" }} />
-              </div>
-              <div className="overline mt-2">Shipped · ETA Tomorrow</div>
+            {/* Compact live-order ribbon — no inner detail tabs */}
+            <div className="absolute bottom-3 left-3 right-3 sm:left-4 sm:right-4 bg-white/95 backdrop-blur border border-slate-200 px-3 py-2 flex items-center gap-3 text-xs">
+              <span className="inline-block w-2 h-2 rounded-full bg-[#E11D48] animate-pulse" />
+              <span className="overline">Live Order</span>
+              <span className="text-slate-300">·</span>
+              <span className="font-semibold text-slate-900 truncate">ORD-A12B</span>
+              <span className="text-slate-300">·</span>
+              <span className="text-slate-600 hidden sm:inline">Shipped</span>
+              <span className="ml-auto font-semibold">৳ 18,000</span>
             </div>
           </div>
         </div>
