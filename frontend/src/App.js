@@ -52,6 +52,7 @@ import VisualSearch from "@/pages/VisualSearch";
 import JobCards from "@/pages/JobCards";
 import PublicJobCard from "@/pages/PublicJobCard";
 import AuditLog from "@/pages/AuditLog";
+import ExperienceCentre from "@/pages/ExperienceCentre";
 import useAutoTranslate from "@/hooks/useAutoTranslate";
 
 const AppRouter = () => {
@@ -93,6 +94,7 @@ const AppRouter = () => {
       <Route path="/visual-search" element={<ProtectedRoute><VisualSearch /></ProtectedRoute>} />
       <Route path="/job-cards" element={<ProtectedRoute><JobCards /></ProtectedRoute>} />
       <Route path="/jc/:token" element={<PublicJobCard />} />
+      <Route path="/experience-centre" element={<ExperienceCentre />} />
       <Route path="/activity" element={<ProtectedRoute><AuditLog /></ProtectedRoute>} />
       <Route path="/accept-invite" element={<AcceptInvite />} />
       <Route path="/payment/return" element={<ProtectedRoute><PaymentReturn /></ProtectedRoute>} />

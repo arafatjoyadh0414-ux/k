@@ -498,3 +498,29 @@ Inspired by the strategic audit. Most audit items were already built (catalog, K
 - Frontend visual: BD news section renders beautifully on Landing, Activity Log shows entries with role icons, Job Cards has Share/PDF buttons in expanded view, Public Job Card share page renders correctly with all data
 - Lint clean: Python (3 modules) + JS (4 files)
 
+
+## 2026-02-10 — Iter15 · Landing layout commercial polish
+
+**1. Experience Centre extracted to dedicated page** (`/experience-centre`)
+- New `/app/frontend/src/components/ExperienceCentreContent.jsx` (reusable EC content with all 6 architectural tiles + bands + features)
+- New `/app/frontend/src/pages/ExperienceCentre.jsx` — sticky breadcrumb header ("← Back to JOY Automart"), self-contained dark page, document.title set, scrolls to top on mount
+- App route added: `/experience-centre`
+- Header nav (Landing) gets new **"Experience Centre"** tab between Catalog and WhatsApp (`data-testid="header-experience-centre-link"`)
+- On Landing, the verbose inline EC section (~190 lines) is replaced with a tight 2-column TEASER strip showcasing the interior render + headline + "Tour the Experience Centre →" CTA → links to `/experience-centre`
+
+**2. Bangladesh Auto Pulse moved to bottom of Landing** (right above the footer)
+- Was previously between worldwide ticker and EC section (mid-page)
+- Now positioned just above `<footer>` — gives the BD news section dedicated visual real estate without breaking the main hero → CTA flow
+
+**3. Three verbose middle sections condensed into one tight unified section**
+- Removed: separate "Built for three sides of the trade" persona-cards section, separate 4-card "Capability cards" section, separate 4-step "How it works" section
+- Added: single condensed section with 2-column hero (3 audience bullets + 4 stat tiles) followed by 4-step `how it works` row separated by a subtle border
+- Saves ~140 lines of JSX, drops scroll length significantly, keeps every key message
+- New `Stat` helper component for the small data tiles
+
+**Tests / Verification**:
+- Lint clean (Landing.jsx, ExperienceCentre.jsx, ExperienceCentreContent.jsx, App.js)
+- Mobile (360px), tablet (768px), desktop (1440px) all overflow-free
+- All testids preserved: `header-experience-centre-link`, `exp-centre-tab`, `ec-back-link`, `ec-tile-*`, `bd-news-hero`, `bd-news-list`
+- 6 EC tiles render correctly on the dedicated page
+

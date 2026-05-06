@@ -101,6 +101,14 @@ const ExpTile = ({ src, caption, ratio = "aspect-[4/3]", testid, fit = "cover" }
   </figure>
 );
 
+// Compact stat block for the condensed value-prop section
+const Stat = ({ n, l }) => (
+  <div className="border border-zinc-200 rounded-sm p-4 bg-white">
+    <div className="font-display text-2xl sm:text-3xl text-zinc-900">{n}</div>
+    <div className="overline text-zinc-500 mt-0.5 text-[10px]">{l}</div>
+  </div>
+);
+
 // Bangladesh Auto Pulse — local automotive news section (hourly refresh)
 const BangladeshNewsSection = () => {
   const [items, setItems] = useState([]);
@@ -279,6 +287,13 @@ const Landing = () => {
               data-testid="header-catalog-link"
             >
               Catalog
+            </Link>
+            <Link
+              to="/experience-centre"
+              className="hidden md:inline-flex items-center px-3 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-[#E11D48] dark:hover:text-[#FFB1C1] transition-colors"
+              data-testid="header-experience-centre-link"
+            >
+              Experience Centre
             </Link>
             <a
               href="https://wa.me/8801886799533"
@@ -498,162 +513,49 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Bangladesh Auto Pulse — local news, refreshes hourly */}
-      <BangladeshNewsSection />
+      {/* Bangladesh Auto Pulse — moved to bottom of page */}
 
-      {/* Experience Centre — Bangladesh's first (dark, aurora-glowing) */}
-      <section className="bg-zinc-950 text-zinc-300 relative overflow-hidden">
+      {/* Experience Centre — TEASER strip linking to dedicated /experience-centre page */}
+      <section className="bg-zinc-950 text-zinc-300 relative overflow-hidden border-y border-white/10">
         <div className="aurora-blob" aria-hidden="true" />
-        <div className="absolute inset-0 grid-bg-dark opacity-50" aria-hidden="true" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20 lg:py-24 relative z-10 reveal">
-
-          {/* Header — copy + CTAs */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-end mb-8 sm:mb-10 lg:mb-12">
-            <div className="lg:col-span-7">
-              <div className="inline-flex items-center gap-2 backdrop-blur-md bg-[#E11D48]/15 border border-[#E11D48]/40 text-[#FFB1C1] font-mono text-[10px] sm:text-[11px] tracking-[0.2em] uppercase font-bold px-3 py-1.5 rounded-full mb-5">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FFB1C1] opacity-70"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FFB1C1]"></span>
-                </span>
-                Banani · Madani Avenue · Opens Q2 2026
-              </div>
-              <h2 className="font-display text-[28px] xs:text-[32px] sm:text-4xl md:text-5xl lg:text-[56px] xl:text-6xl tracking-tighter leading-[1.02] text-white">
-                The first automotive Experience Centre Bangladesh has ever seen.
-              </h2>
-              <p className="text-zinc-400 mt-4 sm:mt-5 leading-relaxed text-sm sm:text-base max-w-2xl">
-                A 1,560 sq ft flagship space on Madani Avenue, sitting beside OTTOFIX, BYD and the
-                European Luxury Car Showroom. 65 ft × 24 ft, G+1 — designed to make every customer
-                experience parts the way enthusiasts deserve.
-              </p>
-            </div>
-            <div className="lg:col-span-5 flex flex-wrap gap-3 lg:justify-end">
-              <a href="/inquire" data-testid="exp-inquire-link"
-                 className="magnetic inline-flex items-center gap-2 bg-white text-zinc-900 hover:bg-zinc-100 px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap">
-                Reserve a private viewing →
-              </a>
-              <a href="https://www.joyautomart.com" target="_blank" rel="noreferrer" data-testid="exp-retail-link"
-                 className="magnetic inline-flex items-center gap-2 backdrop-blur-md bg-white/5 border border-white/20 hover:border-white/60 text-white px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap">
-                Visit retail website
-              </a>
-            </div>
-          </div>
-
-          {/* HERO panoramic — sets the scale (dimensions visible in image) */}
-          <figure className="relative overflow-hidden rounded-md sm:rounded-lg border border-white/10 group bg-zinc-900">
-            <img
-              src={EC_INTERIOR_LUXE}
-              alt="JOY Automart Experience Centre — premium interior concept renders showing showroom lounge, modification zone, hero car display, and consultation areas"
-              className="w-full h-[220px] xs:h-[260px] sm:h-[360px] md:h-[460px] lg:h-[560px] object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.02]"
-              loading="lazy"
-            />
-            <figcaption className="absolute top-3 sm:top-4 left-3 sm:left-4 flex items-center gap-2 backdrop-blur-md bg-black/55 border border-white/15 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.18em] text-zinc-100">Concept renders · Phase 1</span>
-            </figcaption>
-            <figcaption className="absolute top-3 sm:top-4 right-3 sm:right-4 hidden sm:flex items-center gap-2 backdrop-blur-md bg-[#E11D48]/85 px-3 py-1.5 rounded-full">
-              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-white font-bold">Showroom · 65 ft × 24 ft</span>
-            </figcaption>
-          </figure>
-
-          {/* Two-band gallery: EXTERIOR + INTERIOR */}
-          <div className="mt-6 sm:mt-8 lg:mt-10 space-y-6 sm:space-y-8">
-
-            {/* Storefront band */}
-            <div>
-              <div className="flex items-baseline justify-between mb-3 sm:mb-4 flex-wrap gap-2">
-                <div>
-                  <div className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.24em] text-[#E11D48]">01 · Storefront</div>
-                  <h3 className="font-display text-xl sm:text-2xl lg:text-3xl text-white tracking-tight mt-1">Architectural presence — day &amp; night.</h3>
-                </div>
-                <div className="text-xs sm:text-sm text-zinc-400 max-w-md">
-                  Glass façade · 18 ft height · illuminated JOY logo · oriented to Madani Avenue traffic.
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                <ExpTile
-                  src={EC_MOD_ZONE}
-                  caption="Façade Studies · Day & Night"
-                  ratio="aspect-[16/10]"
-                  testid="ec-tile-day-night"
-                />
-                <ExpTile
-                  src={EC_DAY_NIGHT}
-                  caption="Showroom Atmosphere · Madani Avenue, Dhaka"
-                  ratio="aspect-[16/10]"
-                  testid="ec-tile-facade-variations"
-                />
-              </div>
-            </div>
-
-            {/* Interior band */}
-            <div>
-              <div className="flex items-baseline justify-between mb-3 sm:mb-4 flex-wrap gap-2">
-                <div>
-                  <div className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.24em] text-[#E11D48]">02 · Interior</div>
-                  <h3 className="font-display text-xl sm:text-2xl lg:text-3xl text-white tracking-tight mt-1">Premium spaces, engineered for the bay floor.</h3>
-                </div>
-                <div className="text-xs sm:text-sm text-zinc-400 max-w-md">
-                  Hero car zone · JOY Café bar · wheel wall · modification consultation desks · mezzanine office.
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                <ExpTile
-                  src={EC_HERO}
-                  caption="Architecture · Interior Perspective"
-                  ratio="aspect-[4/3]"
-                  testid="ec-tile-interior-luxe"
-                />
-                <ExpTile
-                  src={EC_CAFE_WHEELS}
-                  caption="JOY Café · Wheel Wall"
-                  ratio="aspect-[4/3]"
-                  testid="ec-tile-cafe-wheels"
-                />
-                <ExpTile
-                  src={EC_FACADE_VARIATIONS}
-                  caption="Showroom Volume · 65 ft × 24 ft"
-                  ratio="aspect-[4/3]"
-                  testid="ec-tile-mod-zone"
-                />
-              </div>
-            </div>
-
-            {/* Architecture / floor plan */}
-            <div>
-              <div className="flex items-baseline justify-between mb-3 sm:mb-4 flex-wrap gap-2">
-                <div>
-                  <div className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.24em] text-[#E11D48]">03 · Blueprint</div>
-                  <h3 className="font-display text-xl sm:text-2xl lg:text-3xl text-white tracking-tight mt-1">Floor plans &amp; building section.</h3>
-                </div>
-                <div className="text-xs sm:text-sm text-zinc-400 max-w-md">
-                  Linear customer journey · entrance → hero car → experience → premium consultation.
-                </div>
-              </div>
-              <ExpTile
-                src={EC_ARCHITECTURE}
-                caption="Front elevation · interior perspective · mezzanine · ground floor plan · building section"
-                ratio="aspect-[16/9] sm:aspect-[21/9]"
-                testid="ec-tile-architecture"
-                fit="contain"
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 relative z-10 reveal">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center">
+            <div className="lg:col-span-5">
+              <img
+                src={EC_INTERIOR_LUXE}
+                alt="JOY Automart Experience Centre — concept render"
+                className="w-full h-48 sm:h-64 lg:h-80 object-cover rounded-md border border-white/10"
+                loading="lazy"
               />
             </div>
+            <div className="lg:col-span-7">
+              <div className="inline-flex items-center gap-2 backdrop-blur-md bg-[#E11D48]/15 border border-[#E11D48]/40 text-[#FFB1C1] font-mono text-[10px] sm:text-[11px] tracking-[0.2em] uppercase font-bold px-3 py-1.5 rounded-full mb-4">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#FFB1C1] animate-pulse" />
+                Banani · Madani Avenue · Opens Q2 2026
+              </div>
+              <h2 className="font-display text-2xl sm:text-3xl lg:text-5xl tracking-tighter leading-[1.05] text-white">
+                Bangladesh's first automotive Experience Centre.
+              </h2>
+              <p className="text-zinc-400 mt-3 sm:mt-4 leading-relaxed text-sm sm:text-base max-w-xl">
+                1,560 sq ft on Madani Avenue · hero car zone · JOY Café · mezzanine showroom.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Link
+                  to="/experience-centre"
+                  data-testid="exp-centre-tab"
+                  className="magnetic inline-flex items-center gap-2 bg-white text-zinc-900 hover:bg-zinc-100 px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap"
+                >
+                  Tour the Experience Centre →
+                </Link>
+                <a
+                  href="/inquire"
+                  className="magnetic inline-flex items-center gap-2 backdrop-blur-md bg-white/5 border border-white/20 hover:border-white/60 text-white px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap"
+                >
+                  Reserve a private viewing
+                </a>
+              </div>
+            </div>
           </div>
-
-          {/* Feature bullets — what makes it different */}
-          <ul className="mt-8 sm:mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            {[
-              ["Hero Car Zone", "Display the build, then drive it home."],
-              ["JOY Café", "Bar lounge with espresso while consultations run."],
-              ["Consultation Suite", "Private space for fleet & dealer accounts."],
-              ["Mezzanine", "75–85” panel for events, training, brand experiences."],
-            ].map(([title, body]) => (
-              <li key={title} className="rounded-md sm:rounded-lg border border-white/10 bg-white/[0.03] backdrop-blur-sm p-4 sm:p-5">
-                <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#E11D48] mb-1.5">▍</div>
-                <div className="font-display text-base sm:text-lg text-white tracking-tight">{title}</div>
-                <div className="text-xs sm:text-sm text-zinc-400 mt-1.5 leading-relaxed">{body}</div>
-              </li>
-            ))}
-          </ul>
         </div>
       </section>
 
@@ -754,75 +656,49 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Persona cards — explicit dealer / workshop / supplier mention */}
-      <section className="max-w-7xl mx-auto px-5 sm:px-6 pb-14">
-        <div className="overline text-zinc-500 mb-2">Built for three sides of the trade</div>
-        <h2 className="font-display text-2xl sm:text-3xl tracking-tight mb-6">One platform. Every player.</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
-          {[
-            {
-              k: "For Car Dealers",
-              t: "Source faster, finance smarter",
-              d: "Wholesale parts at dealer pricing, body kit fitments, service-bay supply, and inventory financing — keep showroom prep flowing."
-            },
-            {
-              k: "For Auto Workshops",
-              t: "Order on credit, fix in hours",
-              d: "Verified parts, AI-assisted diagnostics, 30-day credit terms, and live order tracking — built for the bay floor."
-            },
-            {
-              k: "For Suppliers",
-              t: "Reach 312+ verified buyers",
-              d: "Onboard your catalog, fulfil B2B orders nationwide, and settle invoices digitally. We handle KYC, credit, and logistics."
-            },
-          ].map(({ k, t, d }) => (
-            <div key={k} className="border border-zinc-200 p-5 rounded-sm bg-white">
-              <div className="overline text-[#E11D48]">{k}</div>
-              <div className="font-display text-xl mt-2">{t}</div>
-              <p className="text-sm text-zinc-600 mt-2 leading-relaxed">{d}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* Condensed value proposition — replaces 3 verbose sections (personas + capabilities + how-it-works) */}
+      <section className="max-w-7xl mx-auto px-5 sm:px-6 py-10 sm:py-14 reveal">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
+          {/* Three audiences — single tight row */}
+          <div className="lg:col-span-7">
+            <div className="overline text-zinc-500 mb-1.5">One platform · every player</div>
+            <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl tracking-tight text-zinc-900 mb-5 leading-tight">
+              Dealers source. Workshops fix. Suppliers sell.
+            </h2>
+            <ul className="space-y-2.5 text-sm sm:text-base text-zinc-700">
+              <li className="flex gap-2.5"><span className="text-[#E11D48] font-mono text-xs mt-1.5 shrink-0">DEALERS</span><span>Wholesale parts + body-kit fitments + 30-day inventory credit.</span></li>
+              <li className="flex gap-2.5"><span className="text-[#E11D48] font-mono text-xs mt-1.5 shrink-0">WORKSHOPS</span><span>Verified SKUs, AI part-finder, live tracking, credit terms — built for the bay floor.</span></li>
+              <li className="flex gap-2.5"><span className="text-[#E11D48] font-mono text-xs mt-1.5 shrink-0">SUPPLIERS</span><span>Reach 312+ verified buyers · we handle KYC, credit & logistics.</span></li>
+            </ul>
+          </div>
 
-      {/* Capability cards */}
-      <section className="max-w-7xl mx-auto px-5 sm:px-6 pb-14">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
-          {[
-            { k: "38+ Parts", t: "Verified catalog", d: "Brakes, suspension, engine, fluids, lighting, electrical, drivetrain — all in stock." },
-            { k: "6 Signature Kits", t: "Body kits, fitted", d: "From Shadow GT entry to Cyber Beast flagship + JOY Beast Wide Body for BYD Sealion 6." },
-            { k: "Tier Pricing", t: "Silver · Gold · Platinum", d: "Up to 12% off retail, applied automatically. Volume discounts stack on top." },
-            { k: "30-day Credit", t: "Inventory financing", d: "Approved dealers & workshops get a credit limit. Order today, settle in 30. Track usage live." },
-          ].map(({ k, t, d }) => (
-            <div key={k} className="border border-zinc-200 p-5 rounded-sm bg-white">
-              <div className="overline text-zinc-500">{k}</div>
-              <div className="font-display text-xl mt-1.5">{t}</div>
-              <p className="text-sm text-zinc-600 mt-2 leading-relaxed">{d}</p>
-            </div>
-          ))}
+          {/* What you get + How it works combined */}
+          <div className="lg:col-span-5 grid grid-cols-2 gap-3">
+            <Stat n="38+" l="Verified parts" />
+            <Stat n="6" l="Body-kit lines" />
+            <Stat n="12%" l="Tier pricing off retail" />
+            <Stat n="30d" l="Credit terms" />
+          </div>
         </div>
-      </section>
 
-      {/* How it works */}
-      <section className="max-w-7xl mx-auto px-5 sm:px-6 pb-14">
-        <div className="overline text-zinc-500">How it works</div>
-        <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl tracking-tight mt-2 mb-8">
-          From signup to delivery in 4 steps
-        </h2>
-        <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {[
-            { n: "01", t: "Sign up free", d: "Google sign-in, then upload your trade license for KYC." },
-            { n: "02", t: "Get approved", d: "We verify your shop and assign a tier + credit limit (typically same day)." },
-            { n: "03", t: "Order anytime", d: "Browse catalog, paste SKUs, or chat with the AI to build orders fast." },
-            { n: "04", t: "Track + settle", d: "Live tracking, PDF invoice, and 7-day return window. Pay COD, online, or on credit." },
-          ].map(({ n, t, d }) => (
-            <li key={n} className="border-l-[3px] border-[#E11D48] pl-4">
-              <div className="overline text-[#E11D48]">{n}</div>
-              <div className="font-semibold text-base mt-1">{t}</div>
-              <p className="text-sm text-zinc-600 mt-1.5 leading-relaxed">{d}</p>
-            </li>
-          ))}
-        </ol>
+        {/* How it works — 4 steps, single condensed row */}
+        <div className="mt-10 sm:mt-12 pt-8 sm:pt-10 border-t border-zinc-200">
+          <div className="overline text-zinc-500 mb-3">How it works</div>
+          <ol className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            {[
+              { n: "01", t: "Sign up", d: "Google + trade license." },
+              { n: "02", t: "Get approved", d: "Tier + credit, same day." },
+              { n: "03", t: "Order", d: "Catalog, SKU paste, or AI." },
+              { n: "04", t: "Track + settle", d: "Live tracking, COD or credit." },
+            ].map(({ n, t, d }) => (
+              <li key={n} className="border-l-[3px] border-[#E11D48] pl-3 sm:pl-4">
+                <div className="overline text-[#E11D48]">{n}</div>
+                <div className="font-semibold text-sm sm:text-base mt-0.5 text-zinc-900">{t}</div>
+                <p className="text-xs sm:text-sm text-zinc-600 mt-1 leading-snug">{d}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
       </section>
 
       {/* Live order showcase — repositioned as smart card */}
@@ -897,6 +773,9 @@ const Landing = () => {
           </button>
         </div>
       </section>
+
+      {/* Bangladesh Auto Pulse — at the very bottom, just above the footer */}
+      <BangladeshNewsSection />
 
       <footer className="border-t border-zinc-200 bg-white">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 py-10">
