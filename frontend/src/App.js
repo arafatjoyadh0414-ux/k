@@ -50,6 +50,8 @@ import Fleets from "@/pages/Fleets";
 import AcceptInvite from "@/pages/AcceptInvite";
 import VisualSearch from "@/pages/VisualSearch";
 import JobCards from "@/pages/JobCards";
+import PublicJobCard from "@/pages/PublicJobCard";
+import AuditLog from "@/pages/AuditLog";
 import useAutoTranslate from "@/hooks/useAutoTranslate";
 
 const AppRouter = () => {
@@ -90,6 +92,8 @@ const AppRouter = () => {
       <Route path="/fleets" element={<ProtectedRoute><Fleets /></ProtectedRoute>} />
       <Route path="/visual-search" element={<ProtectedRoute><VisualSearch /></ProtectedRoute>} />
       <Route path="/job-cards" element={<ProtectedRoute><JobCards /></ProtectedRoute>} />
+      <Route path="/jc/:token" element={<PublicJobCard />} />
+      <Route path="/activity" element={<ProtectedRoute><AuditLog /></ProtectedRoute>} />
       <Route path="/accept-invite" element={<AcceptInvite />} />
       <Route path="/payment/return" element={<ProtectedRoute><PaymentReturn /></ProtectedRoute>} />
 

@@ -53,6 +53,7 @@ from routes import fleets as _fleets_routes  # noqa: F401
 from routes import visual_search as _visual_search_routes  # noqa: F401
 from routes import job_cards as _job_cards_routes  # noqa: F401
 from routes import i18n as _i18n_routes  # noqa: F401
+from routes import audit as _audit_routes  # noqa: F401
 from routes.recurring import start_recurring_worker
 
 # Pydantic models (kept here for back-compat). Authoritative copies live in server_models.py.
@@ -411,6 +412,33 @@ async def startup():
         start_recurring_worker()
     except Exception as e:
         logger.warning(f"Recurring worker start failed: {e}")
+
+    # Pre-warm Bengali i18n cache for top UI strings (background, non-blocking)
+    try:
+        import asyncio as _asyncio
+        from i18n_prewarm_strings import PREWARM_STRINGS
+        from routes.i18n import translate_strings, TranslateReq
+
+        async def _prewarm():
+            try:
+                # Skip strings already cached
+                cached = set()
+                async for d in db.i18n_cache.find({"lang": "bn"}, {"_id": 0, "src": 1}):
+                    if d.get("src"):
+                        cached.add(d["src"])
+                missing = [s for s in PREWARM_STRINGS if s not in cached]
+                if not missing:
+                    logger.info(f"i18n prewarm: all {len(PREWARM_STRINGS)} strings already cached")
+                    return
+                logger.info(f"i18n prewarm: warming {len(missing)} strings (cached: {len(cached)})")
+                await translate_strings(TranslateReq(lang="bn", texts=missing))
+                logger.info(f"i18n prewarm: complete ({len(missing)} new strings cached)")
+            except Exception as e:  # noqa
+                logger.warning(f"i18n prewarm failed: {e}")
+
+        _asyncio.create_task(_prewarm())
+    except Exception as e:
+        logger.warning(f"i18n prewarm scheduling failed: {e}")
 
     # Idempotent seed: only insert SKUs not already in DB
     existing_skus = set()

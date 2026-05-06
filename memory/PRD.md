@@ -458,3 +458,43 @@ Inspired by the strategic audit. Most audit items were already built (catalog, K
 - Verified end-to-end: VIN Lookup body translated, Dashboard fully translated, sidebar nav translated (16 items), 68 unique strings cached after one page visit.
 
 **Tests**: backend endpoint smoke-tested with 10 strings (all 10 translated correctly with brand-name preservation rules); frontend visually verified at 360px (mobile) and 1440px (desktop); cache populated and persists in localStorage.
+
+## 2026-02-10 — Iter14 · Audit log + BD news + Job Card PDF + PWA + i18n prewarm (5 P1 features)
+
+**🟢 Audit log per teammate**
+- New `/app/backend/routes/audit.py` with `log_audit()` helper + `GET /api/audit-log` (workshop-scoped, owner sees all members; members see only their own)
+- Wired into `routes/job_cards.py` create/update/delete (extensible to orders/returns/fleets later)
+- Frontend `/app/frontend/src/pages/AuditLog.jsx` → `/activity` route. Date-range filter (7/30/90/365 days), per-teammate filter from member list, action labels with role icons
+- Sidebar nav adds **Activity** (History icon)
+
+**🟢 Bangladesh-only news section**
+- Backend `routes/cars_news.py` extended: 4 new BD-specific queries (Bangladesh car market, Dhaka automotive, BRTA/fuel price, Bangladesh Toyota/BYD/Mahindra) → `GET /api/public/cars-news/bangladesh`
+- 1-hour cache, MongoDB persistence (`google_news_bd_v1`), 12 max items
+- Frontend Landing: new **Bangladesh Auto Pulse** section between worldwide ticker and Experience Centre. Magazine layout with FEATURED hero card + 6-card sidebar grid. All headlines clickable with source attribution and date stamps
+- Verified: 12 real BD headlines from The Daily Star, Business Standard, IEEFA, BSS, Dhaka Tribune, Lowy Institute
+
+**🟢 Shareable Job Card PDF**
+- New `/app/backend/job_card_pdf.py` — Reportlab A4 PDF generator with brand red accent, header, customer + vehicle blocks, complaint, parts table with subtotals, totals (parts + labour), notes block, footer with share URL
+- Backend endpoints: `GET /api/job-cards/{id}/share` (creates token + URLs), `GET /api/job-cards/{id}/pdf` (auth download), `GET /api/job-cards/public/{token}.pdf` (public PDF), `GET /api/job-cards/public/{token}` (public JSON for React renderer)
+- Frontend: Share/PDF buttons in JobCards expanded view (clipboard auto-copy + open in new tab), new `/app/frontend/src/pages/PublicJobCard.jsx` → `/jc/:token` public route — magazine-style customer-facing card with download CTA
+- Verified end-to-end: PDF downloads correctly (3.1 KB), public share page renders Mr. Rahman's job card with all parts and pricing
+
+**🟢 PWA setup**
+- `/app/frontend/public/manifest.webmanifest` — JOY logo icons (192/512), standalone display, dark theme color, 4 shortcut links (VIN, Visual, Job Cards, Cart)
+- `/app/frontend/public/service-worker.js` — network-first for HTML/API, stale-while-revalidate for static assets, **special cart caching strategy** (network-first with cache fallback for `/api/cart` so workshops see their cart even offline)
+- Registered in `index.js` (production-only by default; opt-in via `REACT_APP_ENABLE_SW=1` for dev)
+- `/app/frontend/src/components/InstallPwaButton.jsx` — uses `beforeinstallprompt`/`appinstalled` events. Hidden on iOS (Share-sheet flow) and when already installed
+- Wired into Landing header next to Sign-in (visible on Chrome/Edge desktop + Android)
+- `index.html` updated with `apple-mobile-web-app-*` meta tags
+
+**🟢 i18n cache pre-warm**
+- New `/app/backend/i18n_prewarm_strings.py` — curated list of 187 most-visited UI strings (nav, landing, dashboard, products, orders, cart, profile, VIN, visual search, job cards, team, fleets, returns)
+- `server.py` startup task runs `_prewarm()` async — diffs against existing `db.i18n_cache` and translates only missing strings (idempotent, restart-safe)
+- Background fire-and-forget — never blocks startup; logs progress
+- Result: First Bengali page-load is now near-instant for new users (most common strings pre-translated and persisted)
+
+**Tests**: 
+- Backend smoke: BD news returns 12 items, PDF download HTTP 200 with correct content-type, audit log captures job card create with full user attribution, prewarm completes 187 strings on startup
+- Frontend visual: BD news section renders beautifully on Landing, Activity Log shows entries with role icons, Job Cards has Share/PDF buttons in expanded view, Public Job Card share page renders correctly with all data
+- Lint clean: Python (3 modules) + JS (4 files)
+

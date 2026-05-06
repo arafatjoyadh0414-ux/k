@@ -32,6 +32,11 @@ if (typeof window !== 'undefined') {
     hideEmergentBadge();
     const obs = new MutationObserver(() => hideEmergentBadge());
     obs.observe(document.body, { childList: true, subtree: true });
+
+    // PWA service worker registration (production-only by default; dev opt-in via REACT_APP_ENABLE_SW)
+    if ('serviceWorker' in navigator && (process.env.NODE_ENV === 'production' || process.env.REACT_APP_ENABLE_SW === '1')) {
+      navigator.serviceWorker.register('/service-worker.js').catch(() => { /* ignore registration failures */ });
+    }
   });
 }
 

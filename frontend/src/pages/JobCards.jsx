@@ -242,6 +242,46 @@ const JobCardExpanded = ({ card, onChange }) => {
       <button onClick={pushToCart} disabled={pushing || !card.parts?.length} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#E11D48] hover:bg-[#BE123C] text-white px-5 py-2 rounded-sm text-sm font-semibold disabled:opacity-50" data-testid={`jc-push-cart-${card.job_id}`}>
         <ShoppingCart className="w-4 h-4" /> {pushing ? "Pushing…" : "Push parts to cart"}
       </button>
+      <ShareJobCardActions card={card} />
+    </div>
+  );
+};
+
+const ShareJobCardActions = ({ card }) => {
+  const [shareUrl, setShareUrl] = useState("");
+  const [copied, setCopied] = useState(false);
+  const generate = async () => {
+    try {
+      const r = await api.get(`/job-cards/${card.job_id}/share`);
+      setShareUrl(r.data.share_url);
+      navigator.clipboard?.writeText(r.data.share_url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast.success("Share link copied");
+    } catch (e) { toast.error(e.response?.data?.detail || "Failed"); }
+  };
+  const pdfUrl = `${process.env.REACT_APP_BACKEND_URL}/api/job-cards/${card.job_id}/pdf`;
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+      <button
+        onClick={generate}
+        className="inline-flex items-center gap-1.5 border border-zinc-200 dark:border-white/10 hover:border-[#E11D48] hover:text-[#E11D48] text-zinc-700 dark:text-zinc-300 px-3 py-1.5 rounded-sm font-semibold transition-colors"
+        data-testid={`jc-share-${card.job_id}`}
+      >
+        {copied ? "Link copied ✓" : "Share with customer"}
+      </button>
+      <a
+        href={pdfUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex items-center gap-1.5 border border-zinc-200 dark:border-white/10 hover:border-[#E11D48] hover:text-[#E11D48] text-zinc-700 dark:text-zinc-300 px-3 py-1.5 rounded-sm font-semibold transition-colors"
+        data-testid={`jc-pdf-${card.job_id}`}
+      >
+        Download PDF
+      </a>
+      {shareUrl && (
+        <a href={shareUrl} target="_blank" rel="noreferrer" className="text-zinc-500 dark:text-zinc-400 underline truncate max-w-xs">{shareUrl}</a>
+      )}
     </div>
   );
 };

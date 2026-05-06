@@ -1,28 +1,18 @@
-"""WMS Lite — Job Card → Parts Order workflow.
+"""WMS Lite — Job Card → Parts Order workflow."""
 
-Workshop creates a Job Card for a customer's vehicle (VIN/plate, complaint,
-mechanic). Adds required parts as line items (linking to catalog SKUs).
-Auto-pushes to a draft cart with one tap.
-
-Schema:
-  job_cards: {
-    job_id, workshop_id, created_by,
-    customer_name, customer_phone, vehicle_brand, vehicle_model, vehicle_year, vehicle_plate, vin,
-    complaint, mechanic_name?, status (open|in_progress|completed|cancelled),
-    parts: [{sku, name, quantity, price_bdt, source: "catalog"|"manual"}],
-    labour_charge_bdt?, notes?,
-    created_at, updated_at, completed_at?
-  }
-"""
-
+import secrets
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import List, Optional
 
 from fastapi import HTTPException, Request
+from fastapi.responses import Response
 from pydantic import BaseModel
 
 from core import api_router, db, logger, require_user, tier_price
+from job_card_pdf import render_job_card_pdf
+from routes.audit import log_audit
+import os
 
 
 VALID_STATUSES = {"open", "in_progress", "completed", "cancelled"}
@@ -143,6 +133,11 @@ async def create_job_card(payload: JobCardCreate, request: Request):
     await db.job_cards.insert_one(dict(doc))
     doc["total_bdt"] = _job_total(doc)
     doc["parts_count"] = len(doc.get("parts") or [])
+    await log_audit(
+        user=user, workshop_id=workshop_id, action="job_card.create",
+        target_type="job_card", target_id=job_id,
+        summary=f"Created job card for {doc['customer_name']} · {doc['vehicle_brand']} {doc['vehicle_model']}",
+    )
     return doc
 
 
@@ -186,6 +181,18 @@ async def update_job_card(job_id: str, payload: JobCardUpdate, request: Request)
     )
     if res.matched_count == 0:
         raise HTTPException(404, "Job card not found")
+    summary_bits = []
+    if "status" in update:
+        summary_bits.append(f"status → {update['status']}")
+    if "parts" in update:
+        summary_bits.append(f"{len(update['parts'])} parts")
+    if "labour_charge_bdt" in update:
+        summary_bits.append(f"labour ৳{update['labour_charge_bdt']}")
+    await log_audit(
+        user=user, workshop_id=workshop_id, action="job_card.update",
+        target_type="job_card", target_id=job_id,
+        summary=f"Updated {job_id}: {', '.join(summary_bits) or 'fields'}",
+    )
     return await get_job_card(job_id, request)
 
 
@@ -196,6 +203,11 @@ async def delete_job_card(job_id: str, request: Request):
     res = await db.job_cards.delete_one({"job_id": job_id, "workshop_id": workshop_id})
     if res.deleted_count == 0:
         raise HTTPException(404, "Job card not found")
+    await log_audit(
+        user=user, workshop_id=workshop_id, action="job_card.delete",
+        target_type="job_card", target_id=job_id,
+        summary=f"Deleted {job_id}",
+    )
     return {"ok": True}
 
 
@@ -239,4 +251,95 @@ async def job_card_to_cart(job_id: str, request: Request):
         "items": cart_items,
         "missing_skus": missing,
         "tier": tier,
+    }
+
+
+# ============= PDF + Public Share =============
+APP_URL = os.environ.get("APP_URL") or os.environ.get("EMERGENT_PREVIEW_URL") or ""
+
+
+@api_router.get("/job-cards/{job_id}/share")
+async def get_or_create_share_token(job_id: str, request: Request):
+    """Owner/member-only — returns a stable public share token + URL."""
+    user = await require_user(request)
+    workshop_id = await _user_workshop_id(user)
+    card = await db.job_cards.find_one({"job_id": job_id, "workshop_id": workshop_id}, {"_id": 0})
+    if not card:
+        raise HTTPException(404, "Job card not found")
+    token = card.get("share_token")
+    if not token:
+        token = secrets.token_urlsafe(20)
+        await db.job_cards.update_one(
+            {"job_id": job_id, "workshop_id": workshop_id},
+            {"$set": {"share_token": token, "shared_at": datetime.now(timezone.utc).isoformat()}},
+        )
+    base = APP_URL.rstrip("/") or "https://b2bjoymart.com"
+    share_url = f"{base}/jc/{token}"
+    pdf_url = f"{base}/api/job-cards/public/{token}.pdf"
+    return {"token": token, "share_url": share_url, "pdf_url": pdf_url}
+
+
+@api_router.get("/job-cards/{job_id}/pdf")
+async def download_job_card_pdf(job_id: str, request: Request):
+    """Authenticated PDF download for the workshop."""
+    user = await require_user(request)
+    workshop_id = await _user_workshop_id(user)
+    card = await db.job_cards.find_one({"job_id": job_id, "workshop_id": workshop_id}, {"_id": 0})
+    if not card:
+        raise HTTPException(404, "Job card not found")
+    workshop = await db.workshops.find_one({"workshop_id": workshop_id}, {"_id": 0})
+    # Ensure share token exists so PDF can include the public link
+    token = card.get("share_token")
+    if not token:
+        token = secrets.token_urlsafe(20)
+        await db.job_cards.update_one({"job_id": job_id, "workshop_id": workshop_id},
+                                      {"$set": {"share_token": token}})
+    base = APP_URL.rstrip("/") or "https://b2bjoymart.com"
+    share_url = f"{base}/jc/{token}"
+    pdf = render_job_card_pdf(card, workshop, share_url)
+    return Response(content=pdf, media_type="application/pdf",
+                    headers={"Content-Disposition": f'inline; filename="{job_id}.pdf"'})
+
+
+@api_router.get("/job-cards/public/{token}.pdf")
+async def public_job_card_pdf(token: str):
+    """Public PDF — accessed by customers via the share link."""
+    card = await db.job_cards.find_one({"share_token": token}, {"_id": 0})
+    if not card:
+        raise HTTPException(404, "Job card not found")
+    workshop = await db.workshops.find_one({"workshop_id": card.get("workshop_id")}, {"_id": 0})
+    base = APP_URL.rstrip("/") or "https://b2bjoymart.com"
+    share_url = f"{base}/jc/{token}"
+    pdf = render_job_card_pdf(card, workshop, share_url)
+    filename = card.get("job_id") or "job_card"
+    return Response(content=pdf, media_type="application/pdf",
+                    headers={"Content-Disposition": f'inline; filename="{filename}.pdf"'})
+
+
+@api_router.get("/job-cards/public/{token}")
+async def public_job_card_json(token: str):
+    """Public JSON for the React share-page renderer."""
+    card = await db.job_cards.find_one({"share_token": token}, {"_id": 0})
+    if not card:
+        raise HTTPException(404, "Job card not found")
+    workshop = await db.workshops.find_one({"workshop_id": card.get("workshop_id")},
+                                            {"_id": 0, "company_name": 1, "city": 1, "contact_phone": 1, "joy_id": 1})
+    return {
+        "job_id": card.get("job_id"),
+        "customer_name": card.get("customer_name"),
+        "vehicle_brand": card.get("vehicle_brand"),
+        "vehicle_model": card.get("vehicle_model"),
+        "vehicle_year": card.get("vehicle_year"),
+        "vehicle_plate": card.get("vehicle_plate"),
+        "vin": card.get("vin"),
+        "complaint": card.get("complaint"),
+        "mechanic_name": card.get("mechanic_name"),
+        "parts": card.get("parts") or [],
+        "labour_charge_bdt": card.get("labour_charge_bdt"),
+        "status": card.get("status"),
+        "notes": card.get("notes"),
+        "total_bdt": _job_total(card),
+        "created_at": card.get("created_at"),
+        "shared_at": card.get("shared_at"),
+        "workshop": workshop,
     }

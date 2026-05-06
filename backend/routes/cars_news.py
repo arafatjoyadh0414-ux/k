@@ -167,3 +167,81 @@ async def get_cars_news():
         "topics": [q.split(" when:")[0] for q in NEWS_QUERIES],
     }
 
+
+# Bangladesh-specific news — separate query for richer Dhaka coverage
+BD_NEWS_QUERIES = [
+    "Bangladesh car market when:7d",
+    "Dhaka automotive when:7d",
+    "Bangladesh BRTA OR fuel price when:7d",
+    "Bangladesh Toyota OR BYD OR Mahindra when:14d",
+]
+_BD_CACHE: dict = {"at": 0.0, "items": [], "fetched_at": None}
+BD_MAX_ITEMS = 12
+
+
+def _fetch_bd_news() -> List[dict]:
+    buckets: List[List[dict]] = []
+    for q in BD_NEWS_QUERIES:
+        buckets.append(_fetch_one_query(q))
+    seen: set = set()
+    out: List[dict] = []
+    max_per = max(len(b) for b in buckets) if buckets else 0
+    for i in range(max_per):
+        for bucket in buckets:
+            if i < len(bucket):
+                item = bucket[i]
+                key = re.sub(r"[^a-z0-9]+", "", item["title"].lower())[:80]
+                if key in seen:
+                    continue
+                seen.add(key)
+                out.append(item)
+                if len(out) >= BD_MAX_ITEMS:
+                    return out
+    return out
+
+
+async def _refresh_bd_cache(force: bool = False) -> dict:
+    now = time.time()
+    if not force and _BD_CACHE["items"] and (now - _BD_CACHE["at"]) < CACHE_TTL_SECONDS:
+        return _BD_CACHE
+    try:
+        loop = asyncio.get_event_loop()
+        items = await loop.run_in_executor(None, _fetch_bd_news)
+        if items:
+            _BD_CACHE["items"] = items
+            _BD_CACHE["at"] = now
+            _BD_CACHE["fetched_at"] = datetime.now(timezone.utc).isoformat()
+            try:
+                await db.cars_news_cache.update_one(
+                    {"_id": "google_news_bd_v1"},
+                    {"$set": {"items": items, "fetched_at": _BD_CACHE["fetched_at"]}},
+                    upsert=True,
+                )
+            except Exception:
+                pass
+    except Exception as e:
+        logger.warning(f"bd-news fetch failed: {e}")
+        if not _BD_CACHE["items"]:
+            try:
+                doc = await db.cars_news_cache.find_one({"_id": "google_news_bd_v1"}, {"_id": 0})
+                if doc and doc.get("items"):
+                    _BD_CACHE["items"] = doc["items"]
+                    _BD_CACHE["fetched_at"] = doc.get("fetched_at")
+                    _BD_CACHE["at"] = now
+            except Exception:
+                pass
+    return _BD_CACHE
+
+
+@api_router.get("/public/cars-news/bangladesh")
+async def get_bd_cars_news():
+    """Public — Bangladesh-specific automotive news (refreshes every 1 hour)."""
+    cache = await _refresh_bd_cache(force=False)
+    return {
+        "items": cache.get("items") or [],
+        "count": len(cache.get("items") or []),
+        "fetched_at": cache.get("fetched_at"),
+        "ttl_seconds": CACHE_TTL_SECONDS,
+        "topic": "Bangladesh automotive",
+    }
+
