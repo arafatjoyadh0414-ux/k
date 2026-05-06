@@ -28,7 +28,22 @@ const formatAgo = (iso) => {
   if (h < 24) return `${h} HR AGO`;
   return "RECENTLY";
 };
-const buildTicker = (stats) => {
+const buildTicker = (stats, news) => {
+  // Prefer worldwide cars news (refreshes every 1 hour) when available.
+  const newsItems = (news || []).filter((n) => n?.title);
+  if (newsItems.length) {
+    return newsItems.slice(0, 12).map((n) => {
+      // Google News titles often already end with " - Source". Strip a trailing duplicate.
+      let title = (n.title || "").trim();
+      const src = (n.source || "").trim();
+      if (src && title.toLowerCase().endsWith(`- ${src.toLowerCase()}`)) {
+        title = title.slice(0, -1 * (src.length + 2)).trim().replace(/\s+-\s*$/, "");
+      }
+      const srcSuffix = src ? ` · ${src.toUpperCase()}` : "";
+      return `📰 ${title.toUpperCase()}${srcSuffix}`;
+    });
+  }
+  // Fallback to platform stats
   if (!stats) {
     return [
       "● SYSTEM ONLINE",
@@ -107,6 +122,7 @@ const ThemeToggle = () => {
 const Landing = () => {
   const { user, loading } = useAuth();
   const [stats, setStats] = useState(null);
+  const [news, setNews] = useState([]);
   useScrollReveal();
 
   useEffect(() => {
@@ -114,6 +130,9 @@ const Landing = () => {
     axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/public/stats`)
       .then((r) => { if (mounted) setStats(r.data); })
       .catch(() => { /* ticker falls back to baseline copy */ });
+    axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/public/cars-news`)
+      .then((r) => { if (mounted) setNews(r.data?.items || []); })
+      .catch(() => { /* fall back to platform stats */ });
     return () => { mounted = false; };
   }, []);
 
@@ -126,16 +145,23 @@ const Landing = () => {
     window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
   };
 
-  const TICKER = buildTicker(stats);
+  const TICKER = buildTicker(stats, news);
 
   return (
     <div className="min-h-screen bg-white dark:bg-zinc-950 fut" data-testid="landing-page">
       {/* Subtle SVG noise grain — fixed, behind interactive layers */}
       <div className="grain-overlay" aria-hidden="true" />
 
-      {/* Top live activity ribbon — wired to /api/public/stats, 5-min cache */}
-      <div className="bg-zinc-950 dark:bg-black text-zinc-400 dark:text-[#FFB1C1] text-[10px] tracking-[0.18em] uppercase overflow-hidden h-7 flex items-center border-b border-transparent dark:border-[#E11D48]/30" aria-hidden="true">
-        <div className="ticker-track px-4">
+      {/* Top live activity ribbon — Worldwide automotive news (1h refresh) with platform stats fallback */}
+      <div className="bg-zinc-950 dark:bg-black text-zinc-400 dark:text-[#FFB1C1] text-[10px] tracking-[0.18em] uppercase overflow-hidden h-7 flex items-center border-b border-transparent dark:border-[#E11D48]/30 relative" aria-label={news.length ? "Worldwide automotive news ticker" : "Live platform activity ticker"}>
+        <div className="hidden sm:flex items-center gap-1.5 bg-[#E11D48] text-white font-mono text-[9px] tracking-[0.22em] uppercase font-bold px-2.5 h-full pl-3 pr-2 flex-shrink-0">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
+          </span>
+          {news.length ? "Live · World Auto News" : "Live"}
+        </div>
+        <div className="ticker-track px-4 flex-1 min-w-0">
           {[...TICKER, ...TICKER].map((t, i) => (
             <span key={i} className="font-mono inline-flex items-center gap-2">
               <span>{t}</span>
@@ -148,14 +174,14 @@ const Landing = () => {
       {/* Glassmorphic sticky header */}
       <header className="sticky top-0 z-30 backdrop-blur-xl bg-white/70 dark:bg-zinc-950/70 border-b hairline dark:border-white/10">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 h-16 sm:h-[72px] flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-3 group" data-testid="header-logo-link" aria-label="JOY Automart — Go to home">
-            <img src={LOGO} alt="JOY Automart" className="w-11 h-11 sm:w-12 sm:h-12 object-contain rounded-sm transition-transform group-hover:scale-105" />
-            <div className="leading-tight">
-              <div className="font-display text-lg sm:text-xl text-zinc-900 dark:text-white tracking-tight font-semibold">JOY Automart</div>
-              <div className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400 mt-0.5">B2B Platform · Bangladesh</div>
+          <Link to="/" className="flex items-center gap-2.5 sm:gap-3 group min-w-0 flex-shrink" data-testid="header-logo-link" aria-label="JOY Automart — Go to home">
+            <img src={LOGO} alt="JOY Automart" className="w-9 h-9 sm:w-11 sm:h-11 lg:w-12 lg:h-12 object-contain rounded-sm transition-transform group-hover:scale-105 flex-shrink-0" />
+            <div className="leading-tight min-w-0">
+              <div className="font-display text-base sm:text-lg lg:text-xl text-zinc-900 dark:text-white tracking-tight font-semibold whitespace-nowrap">JOY Automart</div>
+              <div className="hidden xs:block font-mono text-[9px] sm:text-[10px] lg:text-[11px] uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400 mt-0.5 whitespace-nowrap">B2B · Bangladesh</div>
             </div>
           </Link>
-          <nav className="flex items-center gap-1 sm:gap-2">
+          <nav className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
             <a
               href="https://www.joyautomart.com"
               target="_blank"
@@ -183,7 +209,7 @@ const Landing = () => {
             <button
               data-testid="top-login-button"
               onClick={handleLogin}
-              className="magnetic inline-flex items-center bg-zinc-950 dark:bg-[#E11D48] hover:bg-[#E11D48] dark:hover:bg-[#BE123C] text-white text-[13px] sm:text-sm font-medium px-5 sm:px-6 py-2.5 rounded-full whitespace-nowrap"
+              className="magnetic inline-flex items-center bg-zinc-950 dark:bg-[#E11D48] hover:bg-[#E11D48] dark:hover:bg-[#BE123C] text-white text-[13px] sm:text-sm font-medium px-3.5 sm:px-5 lg:px-6 py-2 sm:py-2.5 rounded-full whitespace-nowrap"
             >
               Sign in
             </button>

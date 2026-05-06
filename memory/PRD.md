@@ -374,3 +374,17 @@ Inspired by the strategic audit. Most audit items were already built (catalog, K
 
 **Open polish (LOW priority):** React hydration warning from visual-editor instrumentation inside `<option>` element on Team.jsx — non-blocking dev warning, not visible to end users.
 
+
+## 2026-02-10 — Iter11 · Header bug fix + Live World Auto News ticker
+
+**🔴 Mobile header bug fixed**: "JOY Automart" + "B2B PLATFORM · BANGLADESH" was wrapping awkwardly on Samsung Browser at narrow viewports. Tightened typography (xs:text-base, sm:text-lg, lg:text-xl), shrunk logo on mobile (w-9 → w-12), shortened subtitle to "B2B · Bangladesh", added `whitespace-nowrap` + `flex-shrink-0` on the action nav, hid subtitle below 400px (xs breakpoint). Result: clean single-line brand on every viewport from 320px up.
+
+**📰 Live World Auto News ticker**: Replaced the static rotating platform ticker with REAL automotive news from worldwide sources (refreshes every 1 hour).
+- Backend: `/app/backend/routes/cars_news.py` → `GET /api/public/cars-news`
+- Source: Google News RSS (free, no API keys) — query: `automotive industry when:1d`, region en-US worldwide
+- 1-hour in-memory cache + DB persistence (`cars_news_cache` collection) for cold-start fallback
+- Returns up to 12 cleaned headlines `{title, source, link, pub_date}`
+- Frontend: live "● LIVE · WORLD AUTO NEWS" red badge + scrolling headlines (📰 emoji + uppercase title + source). Falls back to platform stats if news fetch fails.
+- Strips duplicate trailing `- Source` from Google News titles for clean display
+
+**Status**: Verified working at 320 / 360 / 1440 px. Real headlines confirmed: "Dozens of House Republicans Weigh In on Auto Market Access for China · Alliance for American Manufacturing", "Korean manufacturer DUCK IL Industries announces $21M investment in Auburn", etc.
