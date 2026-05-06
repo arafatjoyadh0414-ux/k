@@ -1,0 +1,45 @@
+{
+  "summary": "Iter 9 testing: focused on the mobile blank-screen fix on Landing + Experience Centre redesign + responsive validation across 8 viewports (320, 360, 390, 414, 768, 1024, 1440, 1920). Backend smoke regression also run (public stats/catalog/categories, auth, VIN passport). Result: 10/10 backend tests pass and ALL 8 viewports show 0px horizontal overflow + 5/5 .reveal sections become .in-view (the blank-screen bug is fixed). All 6 Experience Centre tiles render (ec-tile-day-night, ec-tile-facade-variations, ec-tile-interior-luxe, ec-tile-cafe-wheels, ec-tile-mod-zone, ec-tile-architecture). Theme toggle works without breaking reveals. Ticker is rendering live data from /api/public/stats. CTAs have correct hrefs (Reserve→/inquire confirmed by navigation; Browse all kits→/kits; Sign in→/dashboard; Schedule a kit consultation→/inquire; Visit retail website→external).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "Inherited from iter8: joy_id counter still produces JOY-1001 for new users; iter8 P0 fix not yet verified (test_iter9_regression only checks format, not uniqueness across users). See iteration_8.json action items."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "responsive_validation": {
+    "viewports_tested": ["320x600", "360x720", "390x844", "414x896", "768x1024", "1024x768", "1440x900", "1920x1080"],
+    "horizontal_overflow_px_per_viewport": {"320": 0, "360": 0, "390": 0, "414": 0, "768": 0, "1024": 0, "1440": 0, "1920": 0},
+    "reveal_sections": {"total_per_viewport": 5, "in_view_per_viewport": 5, "not_in_view_per_viewport": 0, "js_reveal_armed": true},
+    "after_theme_toggle": {"reveal_total": 5, "reveal_not_in_view": 0},
+    "experience_centre_tiles_found": 6,
+    "ticker_visible": true,
+    "blank_screen_bug": "RESOLVED — useScrollReveal hook + .reveal default opacity:1 fix verified across all viewports."
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter9_regression.py",
+    "/app/test_reports/pytest/iter9_results.xml"
+  ],
+  "action_items": [
+    "(Carry-over from iter8) P0 — Fix joy_id counter so unique sequential JOY-XXXX is generated per user; do one-time migration for the 2 existing JOY-1001 collisions. Code path: backend/routes/auth_workshop.py L62-70 + L130-141. Replace `$setOnInsert:{start:1001}` + `max(1001, seq)` with `$setOnInsert:{seq:1000}` + plain `int(counter['seq'])`."
+  ],
+  "critical_code_review_comments": [
+    "useScrollReveal.js fix is sound — defaulting .reveal to opacity:1 + arming hidden state ONLY after JS confirms IO is wired (via html.js-reveal-armed class) makes the page resilient when JS fails / loads slowly / hook bails. Good progressive-enhancement posture.",
+    "Landing.jsx Experience Centre section uses 6 distinct data-testids — all present at all viewports. ExpTile helper is clean and reusable.",
+    "Hot reload: index.css line 1-20 setting overflow-x:hidden globally on html/body is a sledgehammer fix; works but masks any future legitimate overflow bug. Consider using `overflow-x:clip` (modern, doesn't create scroll context) and adding a CI lint to flag elements wider than 100vw.",
+    "Sign-in CTA in header sits behind a fixed nav at certain scroll positions causing is_visible=False at >0 scroll positions; not blocking but worth z-index/positioning audit.",
+    "/api/public/stats `active_now` still uses unset last_seen_at field per iter8 — same minor issue persists (always shows floor of 8)."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter9_regression.py"],
+  "success_rate": {"backend": "100% (10/10 pytest)", "frontend": "100% on tested flows (responsive, reveals, testids, CTAs hrefs, theme toggle, ticker)"},
+  "test_credentials": "Bearer admin-test-token-rosie-broadcast (admin), Bearer test-token-admin-1 (admin), Bearer test-token-workshop-1 (KYC-approved gold workshop). All seeded.",
+  "seed_data_creation": "test_iter9_regression creates one vin_passport for VIN 1HGBH41JXMN109186 under test-workshop-1 (idempotent — re-runs reuse existing). No teardown but harmless for regression DB.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "The blank-screen bug fix is verified across 8 viewports — DO NOT re-test responsiveness unless Landing.jsx, useScrollReveal.js, or index.css change. The joy_id counter bug from iter8 is still open per the iteration_8 report; main agent should fix it and a future testing agent should re-run test_iter8_passport_ticker_joyid::TestAuthMeJoyId::test_joy_id_unique_across_users. Iter9 regression file (test_iter9_regression.py) covers public stats/catalog/categories + auth + VIN passport happy path. Use VIN 1HGBH41JXMN109186 for VIN testing — it satisfies the 17-char alnum validator. PDF route is /api/vin/passport/{token}.pdf (NOT /api/vin/{vin}/passport.pdf as the review request stated).",
+  "rca of the issue": "N/A — blank-screen bug verified resolved; no new RCA required. Iter8 joy_id RCA still applies unchanged."
+}
