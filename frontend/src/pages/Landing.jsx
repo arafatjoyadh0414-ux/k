@@ -2,6 +2,12 @@ import React from "react";
 import { useAuth } from "../context/AuthContext";
 import { Navigate, Link } from "react-router-dom";
 import HARRIER_HERO from "../assets/harrier-hero.jpg";
+import EXP_FACADE_1 from "../assets/exp/facade-1.jpg";
+import EXP_FACADE_2 from "../assets/exp/facade-2.jpg";
+import EXP_CAFE from "../assets/exp/cafe.jpg";
+import EXP_MEZZANINE from "../assets/exp/mezzanine.jpg";
+import EXP_CONFERENCE from "../assets/exp/conference.jpg";
+import EXP_NIGHT from "../assets/exp/night-00.jpg";
 
 const LOGO = "https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg";
 const HERO = HARRIER_HERO;
@@ -30,6 +36,15 @@ const Landing = () => {
             </div>
           </Link>
           <nav className="flex items-center gap-1 sm:gap-2">
+            <a
+              href="https://www.joyautomart.com"
+              target="_blank"
+              rel="noreferrer"
+              className="hidden lg:inline-flex items-center px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
+              data-testid="header-retail-link"
+            >
+              Retail Store
+            </a>
             <Link
               to="/catalog"
               className="hidden sm:inline-flex items-center px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
@@ -66,19 +81,21 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Headline + copy — calmer, editorial layout below the image */}
+      {/* Headline + copy — sophisticated, L'Oréal-style positioning */}
       <section className="max-w-5xl mx-auto px-5 sm:px-6 pt-12 sm:pt-16 pb-10 sm:pb-12">
         <div className="text-[10px] sm:text-[11px] tracking-[0.2em] uppercase text-[#E11D48] font-semibold">
-          For Dealers · Workshops · Suppliers
+          Bangladesh's First AI-Powered Auto Parts Commerce &amp; Data Platform
         </div>
-        <h1 className="font-display text-3xl sm:text-5xl lg:text-[56px] leading-[1.05] tracking-tight mt-4 max-w-3xl">
-          B2B platform built for{" "}
-          <span className="text-slate-900">car dealers, workshops</span>{" "}
-          <span className="text-[#E11D48]">&amp; suppliers.</span>
+        <h1 className="font-display text-3xl sm:text-5xl lg:text-[56px] leading-[1.05] tracking-tight mt-4 max-w-4xl">
+          Smarter parts.{" "}
+          <span className="text-slate-900">Stronger journeys.</span>{" "}
+          <span className="text-[#E11D48]">One platform.</span>
         </h1>
         <p className="text-base sm:text-lg text-slate-600 mt-5 sm:mt-6 max-w-2xl leading-relaxed">
-          One technology platform for Bangladesh's automotive trade — wholesale distribution,
-          inventory financing, import operations, and digital procurement, all under one roof.
+          JOY Automart is rebuilding Bangladesh's automotive aftermarket end-to-end —
+          B2B parts supply for car dealers and workshops, B2C retail for car owners,
+          a flagship Experience Centre, and an AI-driven data layer that gives the
+          industry intelligence it has never had before.
         </p>
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -88,10 +105,14 @@ const Landing = () => {
             className="inline-flex items-center gap-2.5 bg-slate-900 hover:bg-slate-700 text-white px-5 sm:px-6 py-3 rounded-full text-sm font-semibold transition-colors"
           >
             <svg className="w-4 h-4" viewBox="0 0 48 48"><path fill="#fff" d="M24 9.5c3.4 0 6.4 1.2 8.8 3.4l6.6-6.6C35.4 2.6 30 .5 24 .5 14.7.5 6.7 5.8 2.9 13.6l7.7 6c1.8-5.5 6.9-9.6 13.4-9.6z"/><path fill="#fff" opacity=".8" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.4 5.5-5 7.2l7.7 6c4.5-4.2 7.1-10.4 7.1-17.7z"/><path fill="#fff" opacity=".6" d="M10.6 28.4c-.5-1.4-.8-2.9-.8-4.4s.3-3 .8-4.4l-7.7-6C1.3 17 0 20.4 0 24s1.3 7 2.9 10.4l7.7-6z"/><path fill="#fff" opacity=".9" d="M24 47.5c6 0 11.4-2 15.4-5.4l-7.7-6c-2.1 1.4-4.8 2.3-7.7 2.3-6.5 0-11.6-4.1-13.4-9.6l-7.7 6C6.7 42.2 14.7 47.5 24 47.5z"/></svg>
-            Continue with Google
+            Open the B2B portal
           </button>
-          <a href="/catalog" data-testid="hero-catalog-link"
+          <a href="https://www.joyautomart.com" target="_blank" rel="noreferrer" data-testid="hero-retail-link"
              className="inline-flex items-center gap-2 bg-white border border-slate-300 hover:border-slate-900 text-slate-900 px-5 sm:px-6 py-3 rounded-full text-sm font-semibold transition-colors">
+            Visit retail store →
+          </a>
+          <a href="/catalog" data-testid="hero-catalog-link"
+             className="inline-flex items-center gap-2 text-slate-700 hover:text-slate-900 px-3 py-2 text-sm font-semibold transition-colors">
             Browse catalog
           </a>
           <a href="https://wa.me/8801886799533" data-testid="hero-whatsapp-link"
@@ -99,10 +120,182 @@ const Landing = () => {
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 018.413 3.488 11.824 11.824 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 001.683 5.526l-.999 3.648 3.805-.873z"/></svg>
             01886-799533
           </a>
-          <a href="/inquire" data-testid="hero-inquire-link"
-             className="text-sm font-semibold text-slate-700 hover:text-[#E11D48] underline-offset-4 hover:underline">
-            Schedule a Kit Install →
-          </a>
+        </div>
+      </section>
+
+      {/* What we do — 4 pillars (sophisticated cards) */}
+      <section className="bg-slate-50 border-y border-slate-200">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-14 sm:py-16">
+          <div className="overline text-slate-500 mb-2">What we do</div>
+          <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl tracking-tight max-w-3xl mb-2">
+            Four businesses. One ecosystem.
+          </h2>
+          <p className="text-slate-600 max-w-2xl text-sm sm:text-base mb-10">
+            From the bay floor to the boardroom — we cover the entire automotive aftermarket value chain.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
+            <div className="bg-white border border-slate-200 p-6 rounded-sm">
+              <div className="overline text-[#E11D48] mb-3">01 · B2B Wholesale</div>
+              <div className="font-display text-lg mb-2">Workshops &amp; Dealers</div>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Verified parts, tier-based wholesale pricing, 30-day credit, and live order tracking
+                for car dealers and auto-repair workshops nationwide.
+              </p>
+            </div>
+            <div className="bg-white border border-slate-200 p-6 rounded-sm">
+              <div className="overline text-[#E11D48] mb-3">02 · B2C Retail</div>
+              <div className="font-display text-lg mb-2">Online &amp; Walk-in</div>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Direct-to-consumer auto parts e-commerce on{" "}
+                <a href="https://www.joyautomart.com" target="_blank" rel="noreferrer"
+                   className="text-slate-900 underline underline-offset-2 hover:text-[#E11D48]">www.joyautomart.com</a>{" "}
+                — paired with our flagship retail showroom.
+              </p>
+            </div>
+            <div className="bg-white border border-slate-200 p-6 rounded-sm">
+              <div className="overline text-[#E11D48] mb-3">03 · Experience Centre</div>
+              <div className="font-display text-lg mb-2">Bangladesh's first</div>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                A 1,560 sq ft premium showroom on Banani Link Road —
+                hero car zone, JOY Café, mezzanine viewing room. Launching in 2 months.
+              </p>
+            </div>
+            <div className="bg-white border border-slate-200 p-6 rounded-sm">
+              <div className="overline text-[#E11D48] mb-3">04 · Data &amp; AI</div>
+              <div className="font-display text-lg mb-2">Industry intelligence</div>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Every transaction, every part, every vehicle, every behaviour — captured and modelled.
+                Demand forecasting, smart pricing, predictive insights.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Experience Centre — Bangladesh's first */}
+      <section className="bg-slate-900 text-white">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-14 sm:py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+            <div className="lg:col-span-5">
+              <div className="inline-flex items-center gap-2 bg-[#E11D48] text-white text-[10px] sm:text-[11px] tracking-[0.2em] uppercase font-bold px-3 py-1.5 rounded-full mb-5">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-70"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                </span>
+                Launching in 2 months
+              </div>
+              <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl tracking-tight leading-[1.05]">
+                The first automotive Experience Centre Bangladesh has ever seen.
+              </h2>
+              <p className="text-slate-300 mt-5 sm:mt-6 leading-relaxed text-sm sm:text-base">
+                A 1,560 sq ft flagship space on Banani Link Road — sitting beside OTTOFIX,
+                BYD and the European Luxury Car Showroom. Hero car zone. JOY Café.
+                Mezzanine viewing room. Premium consultation suite. Built for the way
+                car dealers, fleet owners, and enthusiasts actually want to experience
+                their parts and modifications.
+              </p>
+              <ul className="mt-6 space-y-2.5 text-sm text-slate-300">
+                <li className="flex items-start gap-2.5">
+                  <span className="text-[#E11D48] mt-1">▍</span>
+                  <span><strong className="text-white">Hero Car Zone</strong> — display the build, then drive it home.</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <span className="text-[#E11D48] mt-1">▍</span>
+                  <span><strong className="text-white">JOY Café</strong> — bar-style lounge with espresso while consultations run.</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <span className="text-[#E11D48] mt-1">▍</span>
+                  <span><strong className="text-white">Premium Consultation Suite</strong> — private office for fleet &amp; dealer accounts.</span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <span className="text-[#E11D48] mt-1">▍</span>
+                  <span><strong className="text-white">Mezzanine Viewing Room</strong> — 75–85" panel for events, training, brand experiences.</span>
+                </li>
+              </ul>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <a href="/inquire" data-testid="exp-inquire-link"
+                   className="inline-flex items-center gap-2 bg-white text-slate-900 hover:bg-slate-100 px-5 py-2.5 rounded-full text-sm font-semibold transition-colors">
+                  Reserve a private viewing →
+                </a>
+                <a href="https://www.joyautomart.com" target="_blank" rel="noreferrer" data-testid="exp-retail-link"
+                   className="inline-flex items-center gap-2 border border-white/30 hover:border-white text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors">
+                  Visit retail website
+                </a>
+              </div>
+            </div>
+            <div className="lg:col-span-7 grid grid-cols-2 gap-3">
+              <div className="col-span-2 relative overflow-hidden rounded-sm">
+                <img src={EXP_FACADE_1} alt="JOY Automart Experience Centre — front elevation, night view" className="w-full h-[280px] sm:h-[360px] object-cover" />
+                <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur text-white text-[10px] tracking-[0.2em] uppercase px-3 py-1.5 rounded-sm">Front Elevation · 24 ft wide</div>
+              </div>
+              <div className="relative overflow-hidden rounded-sm">
+                <img src={EXP_CAFE} alt="JOY Café and main showroom floor" className="w-full h-[140px] sm:h-[200px] object-cover" />
+                <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur text-white text-[9px] tracking-[0.18em] uppercase px-2 py-1 rounded-sm">JOY Café</div>
+              </div>
+              <div className="relative overflow-hidden rounded-sm">
+                <img src={EXP_MEZZANINE} alt="Mezzanine viewing room above the showroom" className="w-full h-[140px] sm:h-[200px] object-cover" />
+                <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur text-white text-[9px] tracking-[0.18em] uppercase px-2 py-1 rounded-sm">Mezzanine</div>
+              </div>
+              <div className="relative overflow-hidden rounded-sm">
+                <img src={EXP_FACADE_2} alt="Experience Centre — side angle" className="w-full h-[140px] sm:h-[200px] object-cover" />
+                <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur text-white text-[9px] tracking-[0.18em] uppercase px-2 py-1 rounded-sm">Side Elevation</div>
+              </div>
+              <div className="relative overflow-hidden rounded-sm">
+                <img src={EXP_CONFERENCE} alt="Premium consultation suite & conference room" className="w-full h-[140px] sm:h-[200px] object-cover" />
+                <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur text-white text-[9px] tracking-[0.18em] uppercase px-2 py-1 rounded-sm">Consultation Suite</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* JOY BEAST — In-house modification & body kit brand */}
+      <section className="bg-white">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-14 sm:py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+            <div className="lg:col-span-7 order-2 lg:order-1">
+              <img
+                src={HARRIER_HERO}
+                alt="JOY BEAST modification — black 2022 Toyota Harrier with full sport body kit, performance wheels and red brake calipers"
+                className="w-full h-[300px] sm:h-[420px] object-cover rounded-sm border border-slate-200"
+              />
+            </div>
+            <div className="lg:col-span-5 order-1 lg:order-2">
+              <div className="overline text-[#E11D48] mb-3">JOY BEAST · The atelier</div>
+              <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl tracking-tight leading-[1.05]">
+                Our in-house body-kit and modification house.
+              </h2>
+              <p className="text-slate-600 mt-5 leading-relaxed text-sm sm:text-base">
+                Inspired by the world's great bespoke ateliers — but engineered, manufactured,
+                and fitted in Bangladesh. JOY BEAST is our modification arm: aero kits,
+                wide-body conversions, forged wheels, performance brakes and interior craftsmanship —
+                all installed at the Experience Centre with workshop-grade fitment guarantees.
+              </p>
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                {[
+                  { t: "Shadow GT", d: "Entry sport kit" },
+                  { t: "Cyber Beast", d: "Flagship aero" },
+                  { t: "Beast Wide Body", d: "BYD Sealion 6" },
+                  { t: "Custom Atelier", d: "Bespoke builds" },
+                ].map((k) => (
+                  <div key={k.t} className="border border-slate-200 p-3 rounded-sm">
+                    <div className="font-display text-base">{k.t}</div>
+                    <div className="text-xs text-slate-500 mt-0.5">{k.d}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <a href="/inquire" data-testid="beast-inquire-link"
+                   className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-700 text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors">
+                  Schedule a kit consultation →
+                </a>
+                <Link to="/kits" data-testid="beast-kits-link"
+                      className="inline-flex items-center gap-2 border border-slate-300 hover:border-slate-900 text-slate-900 px-5 py-2.5 rounded-full text-sm font-semibold transition-colors">
+                  Browse all kits
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -251,17 +444,40 @@ const Landing = () => {
       </section>
 
       <footer className="border-t border-slate-200 bg-white">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-slate-500">
-          <div>
-            © {new Date().getFullYear()} JOY Automart · Dhaka, Bangladesh ·{" "}
-            <a href="mailto:sales@joyautomart.com" className="hover:text-[#E11D48]">sales@joyautomart.com</a>
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="sm:col-span-2">
+              <div className="flex items-center gap-3 mb-3">
+                <img src={LOGO} alt="JOY Automart" className="w-9 h-9 object-contain" />
+                <div className="font-display text-lg text-slate-900">JOY Automart</div>
+              </div>
+              <p className="text-sm text-slate-600 max-w-md leading-relaxed">
+                Bangladesh's first AI-powered auto parts commerce &amp; data platform.
+                B2B wholesale · B2C retail · Experience Centre · JOY BEAST atelier.
+              </p>
+            </div>
+            <div>
+              <div className="overline text-slate-500 mb-3">Platforms</div>
+              <ul className="space-y-2 text-sm text-slate-700">
+                <li><button onClick={handleLogin} className="hover:text-[#E11D48]" data-testid="footer-portal-link">B2B Portal · Sign in</button></li>
+                <li><a href="https://www.joyautomart.com" target="_blank" rel="noreferrer" className="hover:text-[#E11D48]" data-testid="footer-retail-link">Retail Store · joyautomart.com</a></li>
+                <li><Link to="/catalog" className="hover:text-[#E11D48]">Catalog</Link></li>
+                <li><Link to="/inquire" className="hover:text-[#E11D48]">JOY BEAST kits</Link></li>
+              </ul>
+            </div>
+            <div>
+              <div className="overline text-slate-500 mb-3">Company</div>
+              <ul className="space-y-2 text-sm text-slate-700">
+                <li><a href="https://wa.me/8801886799533" className="hover:text-[#E11D48]">WhatsApp · 01886-799533</a></li>
+                <li><a href="mailto:sales@joyautomart.com" className="hover:text-[#E11D48]">sales@joyautomart.com</a></li>
+                <li><Link to="/terms" className="hover:text-[#E11D48]" data-testid="footer-terms-link">Terms</Link></li>
+                <li><Link to="/privacy" className="hover:text-[#E11D48]" data-testid="footer-privacy-link">Privacy</Link></li>
+              </ul>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Link to="/terms" className="hover:text-[#E11D48]" data-testid="footer-terms-link">Terms</Link>
-            <span>·</span>
-            <Link to="/privacy" className="hover:text-[#E11D48]" data-testid="footer-privacy-link">Privacy</Link>
-            <span>·</span>
-            <a href="https://www.joyautomart.com" target="_blank" rel="noreferrer" className="hover:text-[#E11D48]">Retail website</a>
+          <div className="border-t border-slate-200 mt-8 pt-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-slate-500">
+            <div>© {new Date().getFullYear()} JOY Automart · Dhaka, Bangladesh</div>
+            <div>Smarter parts · Stronger journeys</div>
           </div>
         </div>
       </footer>
