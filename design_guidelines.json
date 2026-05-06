@@ -1,106 +1,116 @@
 {
-  "theme": {
-    "mode": "light",
-    "archetype": "Archetype 4 (Swiss & High-Contrast)",
-    "description": "Joy Automart B2B Portal. Industrial, authoritative, and practical. Takes inspiration from automotive dashboards and industrial control panels. Built for auto repair workshop owners in Bangladesh. Prioritizes legibility, high contrast, and dense data presentation."
-  },
-  "colors": {
-    "primary": "#E11D48",
-    "primary_hover": "#BE123C",
-    "secondary": "#475569",
-    "background": "#FFFFFF",
-    "surface_main": "#F8FAFC",
-    "surface_secondary": "#F1F5F9",
-    "border": "#E2E8F0",
-    "text_primary": "#0F172A",
-    "text_secondary": "#64748B",
-    "status": {
-      "success": "#16A34A",
-      "warning": "#EAB308",
-      "error": "#DC2626",
-      "info": "#2563EB"
+  "theme_archetype": "Archetype 4: Swiss & High-Contrast (Light Theme Primary with Deep Dark Tech accents)",
+  "vibe_description": "Futuristic but simple, premium tech brand (Apple Vision Pro, Rivian, Polestar). Readable, high-contrast, structural, tactile, and highly performant.",
+  "tokens": {
+    "colors": {
+      "primary": "#E11D48",
+      "background": "#FFFFFF",
+      "surface": "#FAFAFA",
+      "surface_dark": "#09090B",
+      "border": "rgba(39,39,42,0.12)",
+      "border_dark": "rgba(255,255,255,0.1)",
+      "text": "#09090B",
+      "text_muted": "#71717A"
     },
-    "metallic_accents": {
-      "light": "#CBD5E1",
-      "dark": "#94A3B8"
+    "typography": {
+      "display": "Cabinet Grotesk, sans-serif",
+      "body": "IBM Plex Sans, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "type_scale": {
+      "h1": "text-5xl sm:text-6xl tracking-tighter leading-[1.05]",
+      "h2": "text-3xl sm:text-4xl tracking-tighter leading-[1.05]",
+      "h3": "text-xl sm:text-2xl tracking-tight",
+      "overline": "font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.2em] text-zinc-500",
+      "mono_accent": "font-mono text-xs text-[#E11D48]",
+      "body": "text-sm sm:text-base leading-relaxed tracking-normal"
+    },
+    "spacing": "Generous paddings (py-24, py-32 for sections), tight gaps for data (gap-2).",
+    "radii": "sm (4px) or rounded-none for structural grids. full (9999px) for primary action pills.",
+    "borders": "Hairline (1px) everywhere. Replace standard full borders with CSS grid border-collapse techniques where possible to mimic technical blueprints."
+  },
+  "atmospheric_effects": {
+    "grain_overlay": "Add a fixed pointer-events-none full-screen div with a subtle SVG noise filter (opacity-[0.03] in light mode, opacity-[0.05] in dark mode) and z-index 50 (below interactive modals but above content).",
+    "data_grid_bg": "Use a subtle repeating linear-gradient background on specific sections (Tech Stack) to look like engineering graph paper: bg-[linear-gradient(to_right,#e5e5e5_1px,transparent_1px),linear-gradient(to_bottom,#e5e5e5_1px,transparent_1px)] bg-[size:32px_32px]. Use mask-image to fade edges.",
+    "live_activity_ribbon": "A 28px tall, font-mono text-[10px] ticker at the very top of the viewport (above header). bg-zinc-950 text-zinc-400. Content: 'SYSTEM ONLINE • 312 DEALERS CONNECTED • LATEST ORDER: 2 MINS AGO'.",
+    "glassmorphism": "Use backdrop-blur-xl bg-white/70 for sticky elements (Header). Add a hairline inner shadow or bottom border (border-b border-zinc-200/50) to simulate milled crystal.",
+    "color_temperature_shift": "Apply subtle background tinting based on scroll depth: warm hero (bg-stone-50) -> cool tech section (bg-zinc-50) -> neutral footer (bg-white)."
+  },
+  "section_specs": {
+    "header": {
+      "classes": "sticky top-0 z-40 backdrop-blur-xl bg-white/70 border-b border-zinc-200/50",
+      "adjustments": "Do NOT redesign the navigation structure. Update colors from slate to zinc. Add a magnetic micro-interaction to the 'Sign in' button."
+    },
+    "hero": {
+      "classes": "relative w-full h-[280px] sm:h-[400px] md:h-[500px] lg:h-[560px]",
+      "adjustments": "Keep existing image. Add a subtle gradient mesh overlay at the very bottom (bg-gradient-to-t from-white via-white/50 to-transparent h-32 absolute bottom-0 w-full) to blend the image seamlessly. Add an expanding custom cursor ('VIEW') when hovering."
+    },
+    "headline_section": {
+      "classes": "max-w-5xl mx-auto px-5 sm:px-6 pt-12 sm:pt-16 pb-10 sm:pb-12",
+      "adjustments": "Implement stagger fade-up (Framer Motion). Button cluster CTAs should feature magnetic hover. Make the subhead text-zinc-500."
+    },
+    "five_pillars": {
+      "classes": "border-y border-zinc-200 bg-zinc-50/50 relative",
+      "adjustments": "Replace boxed cards with a Bento/Swiss grid using visible hairline borders (border-collapse style). Numbering (01, 02) must be monospaced and prominent."
+    },
+    "joy_beast_atelier": {
+      "classes": "bg-white py-14 sm:py-20",
+      "adjustments": "Apply custom cursor on the BYD Sealion image. Service pillars should use 1px sleek SVG paths instead of solid icons. The kit tier strip should use pure monospaced labels."
+    },
+    "experience_centre": {
+      "classes": "bg-[#09090B] text-zinc-300 py-14 sm:py-20 relative overflow-hidden",
+      "adjustments": "Dark mode section. Add a very subtle aurora/gradient mesh blob in the background (deep navy/red, highly blurred). Architectural renders should be in a tight bento grid (gap-2) with no border-radius. Labels should be glassmorphic floating pills (backdrop-blur-md bg-black/40)."
+    },
+    "tech_stack": {
+      "classes": "bg-white py-14 sm:py-20 border-y border-zinc-200 relative",
+      "adjustments": "Apply the data_grid_bg class here. The 3 cards should have solid white backgrounds with sharp 1px borders. Add 'number-counter' animations for metrics."
+    },
+    "personas_and_capabilities": {
+      "classes": "max-w-7xl mx-auto px-5 sm:px-6 pb-14",
+      "adjustments": "Convert to a technical spec sheet layout. Remove full card borders and use horizontal hairline rules (border-y only) to separate items for a Dieter Rams, open aesthetic."
+    },
+    "how_it_works": {
+      "classes": "max-w-7xl mx-auto px-5 sm:px-6 pb-14",
+      "adjustments": "Make the numbered steps look like a technical timeline. font-mono numbers with hairline connecting lines."
+    },
+    "live_order_showcase": {
+      "classes": "max-w-7xl mx-auto px-5 sm:px-6 pb-14",
+      "adjustments": "Redesign the progress bar to be an ultra-thin (h-[2px]) crisp line. The WhatsApp fallback should look like a dark terminal window (bg-zinc-950, green mono text)."
+    },
+    "footer": {
+      "classes": "bg-white border-t border-zinc-200 py-10",
+      "adjustments": "Minimalist grid. Keep the copyright and tagline aligned on a single bottom hairline row."
     }
   },
-  "typography": {
-    "heading_font": "Cabinet Grotesk, sans-serif",
-    "body_font": "IBM Plex Sans, sans-serif",
-    "rules": [
-      "Headings must use tight letter spacing (tracking-tight).",
-      "Overlines and small labels must be uppercase with wide spacing (tracking-[0.2em]).",
-      "Max heading size for H1 is text-5xl.",
-      "Never use generic fonts like Inter for headings. Keep it industrial."
-    ]
+  "micro_interactions": {
+    "buttons": "Use Framer Motion or CSS for magnetic feel: active:scale-[0.97] transition-transform duration-200 ease-out.",
+    "links": "hover:text-zinc-900 transition-colors duration-200. No heavy underlines.",
+    "scroll_fade": "Wrap major section headers and grids in Framer Motion `<motion.div>` with `initial={{ opacity: 0, y: 20 }}` `whileInView={{ opacity: 1, y: 0 }}` `viewport={{ once: true, margin: '-50px' }}` `transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}`.",
+    "number_counters": "Use Framer Motion's `animate` function on a React `useEffect` to tick numbers up from 0 when the component is in view (e.g., the 38+ parts capability).",
+    "custom_cursor": "A framer-motion div that follows the mouse when hovering over the Hero and BYD images. 80px circle, backdrop-blur-md, bg-white/20, text-white text-[10px] tracking-widest center aligned."
   },
-  "spacing_and_layout": {
-    "system": "Tailwind standard scale with a preference for generous padding inside components.",
-    "dashboard_grid": "Control Room layout: Dense, grid-cols-1 md:grid-cols-3 lg:grid-cols-4. gap-4 or gap-6. Every pixel utilized.",
-    "ecommerce_grid": "Strict product grid. Clean, aligned left, no jagged bottoms.",
-    "borders": "Expose the skeleton. Use 1px borders (border-border) for cards and sections. Cardless look preferred with subtle dividers.",
-    "radius": "Minimal. Use rounded-sm (2px) or rounded-md (6px) maximum. No soft pills."
+  "mobile_considerations": {
+    "typography": "Scale down h1 to text-4xl sm:text-5xl on mobile to prevent wrapping issues with long words.",
+    "layout": "Grid borders on the 'Five Pillars' should stack cleanly with a bottom border for each item, removing right/left borders to prevent double-thickness.",
+    "images": "Keep mobile images capped at max-h-[60vh] so they don't dominate the entire screen.",
+    "interactions": "Disable custom cursors and heavy magnetic effects on mobile (use `(hover: hover)` media queries). Ensure touch targets for glassmorphic pills are at least 44x44px."
   },
-  "surfaces_and_components": {
-    "cards": "Flat solid background. 1px border. NO soft shadows. Hover state: slight -translate-y-[1px] and shadow-sm.",
-    "header": "Solid background with a hard bottom border. If using sticky, z-50 and pure white background.",
-    "buttons": "Square or very slightly rounded. High contrast text. Hover must change background and explicitly set text color.",
-    "inputs": "Shadcn defaults customized to have 1px borders, square corners, and solid focus rings (ring-2 ring-primary).",
-    "modals": "Solid white background, sharp edges, dark backdrop overlay (bg-slate-900/80)."
-  },
-  "motion": {
-    "philosophy": "Minimalist and snappy. No parallax or heavy 3D for the dashboard. Use micro-interactions for feedback.",
-    "transitions": "transition-colors duration-200 for hovers. transition-transform duration-200 for lifts.",
-    "loading": "Fast, mechanical feeling loaders (like a progress bar or simple spinner). No bouncy soft animations."
-  },
-  "media": {
-    "logo": {
-      "url": "https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg",
-      "description": "Joy Automart Company Logo. Red and silver brake disc rotor visual."
+  "component_updates": [
+    {
+      "file": "/app/frontend/public/index.html",
+      "instruction": "Update the prerender shell to include the top live activity ribbon and the subtle grain overlay div to ensure the fallback matches the new vibe perfectly while React loads."
     },
-    "login_background": {
-      "url": "https://images.pexels.com/photos/11687360/pexels-photo-11687360.jpeg",
-      "description": "Silver metallic tread plate background for the login/auth page to give a strong automotive/industrial feel."
+    {
+      "file": "/app/frontend/src/pages/Landing.jsx",
+      "instruction": "Replace slate-* with zinc-* everywhere. Implement Framer Motion stagger fade-ups. Add custom cursor state. Re-structure grid classes to use hairline borders. Add the top activity ticker. Preserve all data-testid attributes."
     },
-    "dashboard_hero": {
-      "url": "https://images.pexels.com/photos/8986132/pexels-photo-8986132.jpeg",
-      "description": "Mechanic on a lift, for dashboard welcome banner or empty states."
+    {
+      "file": "/app/frontend/src/index.css",
+      "instruction": "Add CSS variables for the grain effect, custom cursor hiding on mobile, and standard global text selection matching the primary color."
     },
-    "products": [
-      {
-        "url": "https://images.unsplash.com/photo-1760317890314-e964ffd7e6a6",
-        "description": "Brake Rotor close-up"
-      },
-      {
-        "url": "https://images.unsplash.com/photo-1769218401073-71a5b1020c9b",
-        "description": "Suspension parts"
-      },
-      {
-        "url": "https://images.unsplash.com/photo-1760317890322-364a810cd4da",
-        "description": "Performance brake system"
-      }
-    ]
-  },
-  "icons": {
-    "library": "lucide-react",
-    "stroke_width": 2,
-    "size": "w-5 h-5 for standard, w-4 h-4 for small metrics."
-  },
-  "accessibility_and_testing": {
-    "contrast": "Ensure APCA/WCAG AA contrast. Text on primary red must be white.",
-    "testing": "All interactive elements MUST include data-testid attributes (e.g., data-testid='login-button', data-testid='product-card-add-to-cart')."
-  },
-  "instructions_to_main_agent": [
-    "CREATE COMPONENTS USING .js OR .jsx ONLY. DO NOT USE .tsx OR TYPESCRIPT.",
-    "Use BDT (৳) for all currency formatting. Example format: ৳ 15,000.",
-    "Implement the layout with pure HTML/Tailwind for structural containers and Shadcn components for complex interactive logic.",
-    "Theme is Industrial B2B. Do not use soft purples, teals, or overly rounded elements. Stick to red/silver/grayscale high-contrast elements.",
-    "Use the exact logo URL provided in media.logo.",
-    "Ensure 'Pay on Credit' and 'COD' are the explicit checkout payment options.",
-    "Incorporate KYC statuses (Pending, Approved, Rejected) prominently in the dashboard.",
-    "Do NOT use placeholder text or dummy image URLs. Use the provided media URLs.",
-    "Import Cabinet Grotesk from Fontshare (https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,500,700,800,900&display=swap) and IBM Plex Sans from Google Fonts in index.html.",
-    "Override Shadcn component styles to match the industrial theme (e.g., remove large border radii, replace soft shadows with solid borders)."
+    {
+      "file": "/app/frontend/tailwind.config.js",
+      "instruction": "Add JetBrains Mono to the font family theme configuration."
+    }
   ]
 }
