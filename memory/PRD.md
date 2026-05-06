@@ -341,3 +341,36 @@ Inspired by the strategic audit. Most audit items were already built (catalog, K
 **Test results: iter9 — 100% backend (10/10 pytest) + 100% frontend on 8 viewports + Theme toggle + Live ticker + 6 EC tiles + all CTAs.**
 
 **Joy ID counter**: verified unique sequential JOY-1001 through JOY-1009 in production DB, counter at seq=11, zero duplicates. Iter8 carry-over observation was stale — no fix needed.
+
+## 2026-02-10 — Iter10 · Multi-user team accounts + Fleet Command Center + portal dark polish
+
+**🟠 P1 — Portal dark/light mode polish (commercial-ready):**
+- Added subtle premium polish to `/app/frontend/src/index.css` portal-shell rules: table headers darken in dark mode, hover row tint, divide borders in dark mode, code/pre styling, glass effect on sticky headers (backdrop-filter), inset highlight on industrial-cards, and red-accent border + lift shadow on hover (light + dark).
+
+**🟠 P1 — Multi-user team accounts (Workspace sharing):**
+- Backend (`/app/backend/routes/team.py`):
+  - `users.workshop_id` + `users.workshop_role` denormalised onto user docs
+  - `workshops.owner_user_id` + `workshops.member_user_ids[]` schema (backfilled for existing workshops)
+  - Endpoints: `GET /api/team/members`, `GET /api/team/invitations`, `POST /api/team/invitations`, `DELETE /api/team/invitations/{id}` (revoke), `DELETE /api/team/members/{user_id}` (remove), `GET /api/team/invitations/lookup/{token}` (PUBLIC), `POST /api/team/invitations/accept`
+  - Roles: `owner | manager | parts_manager | mechanic | accountant`. Owner-only invite/revoke/remove
+  - 7-day invite TTL, secrets.token_urlsafe(24) for tokens, single pending invite per email auto-refreshes
+  - `notify_team_invite()` added to `notifications.py` (Resend email scaffold — no-ops without RESEND key)
+- Frontend:
+  - `/team` page (`/app/frontend/src/pages/Team.jsx`): invite form, members list with OWNER badge, pending invitations with Copy link / Revoke
+  - `/accept-invite?token=X` (`/app/frontend/src/pages/AcceptInvite.jsx`): public landing, shows workshop + role, sign-in CTA when unauthenticated, accept button when email matches
+  - Sidebar nav adds **Team** (Users icon) for workshops
+
+**🟠 P1 — Fleet Command Center:**
+- Backend (`/app/backend/routes/fleets.py`):
+  - `fleets` collection — `{fleet_id, workshop_id, name, description, vehicles[], created_by, created_at, updated_at}`
+  - Vehicle schema: `{brand, model, year, vin, plate, customer_name, notes}` (brand+model required)
+  - Endpoints: GET/POST `/api/fleets`, GET/PATCH/DELETE `/api/fleets/{fleet_id}`, GET `/api/fleets/{fleet_id}/reorder-suggestions`
+  - Reorder suggestions: aggregates orders for ALL workshop members (owner + member_user_ids), groups by SKU, returns top 20 with current tier price applied + suggested_qty (lifetime / vehicle_count)
+- Frontend:
+  - `/fleets` page (`/app/frontend/src/pages/Fleets.jsx`): create / edit / delete fleets, vehicle grid form, vehicle chips, "Show one-tap reorder list" loads suggestions, "Add all to cart" + per-row "Add" buttons (uses CartContext)
+  - Sidebar nav adds **Fleets** (Truck icon) for workshops
+
+**Test results: 22/22 iter10 backend tests + 10/10 iter9 regression + 100% frontend e2e + 0 horizontal overflow at 320/360/768/1440 viewports.**
+
+**Open polish (LOW priority):** React hydration warning from visual-editor instrumentation inside `<option>` element on Team.jsx — non-blocking dev warning, not visible to end users.
+
