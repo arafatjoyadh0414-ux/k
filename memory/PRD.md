@@ -388,3 +388,46 @@ Inspired by the strategic audit. Most audit items were already built (catalog, K
 - Strips duplicate trailing `- Source` from Google News titles for clean display
 
 **Status**: Verified working at 320 / 360 / 1440 px. Real headlines confirmed: "Dozens of House Republicans Weigh In on Auto Market Access for China · Alliance for American Manufacturing", "Korean manufacturer DUCK IL Industries announces $21M investment in Auburn", etc.
+
+## 2026-02-10 — Iter12 · Visual Parts Search + Voice Search + WMS Lite + Hydration Fix (4 P2 features)
+
+**🟢 P2 — Visual Parts Search**:
+- Backend `/app/backend/routes/visual_search.py` → POST `/api/visual-search` (multipart-form: image + optional hint)
+- Uses `emergentintegrations.llm.chat.LlmChat` + `ImageContent` with `claude-sonnet-4-5-20250929` via EMERGENT_LLM_KEY
+- Returns `{search_id, identification:{part_name,category,confidence,visible_identifiers,likely_brands,search_keywords,condition_assessment,replacement_advice}, matches:[12 max with tier-priced your_price_bdt + retail_price_bdt], tier}`
+- Validation: 6 MB max, image/jpeg|png|webp|heic|heif only
+- Logs to `db.visual_searches` for analytics
+- Frontend `/app/frontend/src/pages/VisualSearch.jsx` → /visual-search route
+- File-picker + camera capture (`capture="environment"` for mobile back camera)
+- Result panel shows: image preview, part name, category badge, confidence color-coded badge (green ≥70%, amber 40-69%, red <40%), brand chips, condition assessment, replacement advice, catalog matches grid with tier prices + Add to cart
+- Smoke-tested with wheel display photo: identified as "Alloy Wheel Rims - Display Showroom Set" with 95% confidence; matched to JA-WHL-001
+
+**🟢 P2 — Voice Search (English + Bengali)**:
+- Browser-native Web Speech API (no backend, no API keys, no cost)
+- New `/app/frontend/src/components/VoiceSearchButton.jsx` — accepts `lang` prop (`en` | `bn`), uses `bn-BD` locale for Bengali, `en-US` for English
+- Auto-pulls language from existing `LanguageContext` via `useLang()`
+- Wired into `/app/frontend/src/pages/Products.jsx` next to the search input. Listens, transcribes, fills `q` state, triggers existing search
+- Component returns `null` when SpeechRecognition unsupported (Safari iOS, etc.) — graceful degradation
+- Mic permission denied / aborted handled with friendly toasts
+
+**🟢 P2 — WMS Lite (Job Card → Parts Order)**:
+- Backend `/app/backend/routes/job_cards.py`:
+  - `db.job_cards` collection — `{job_id, workshop_id, customer_name, vehicle_*, complaint, mechanic_name, parts:[{sku,name,quantity,price_bdt,source}], labour_charge_bdt, status, notes}`
+  - `job_id` format: `JC-YYYYMMDD-XXXXXX`
+  - Endpoints: GET/POST `/api/job-cards`, GET/PATCH/DELETE `/api/job-cards/{id}`, POST `/api/job-cards/{id}/to-cart`
+  - Status: `open | in_progress | completed | cancelled`. Setting completed sets `completed_at`
+  - `/to-cart` looks up each SKU, applies workshop's tier pricing, returns cart-ready items + missing_skus list
+- Frontend `/app/frontend/src/pages/JobCards.jsx` → /job-cards route:
+  - List with status filter, color-coded badges (Open=blue, In Progress=amber, Completed=emerald, Cancelled=rose)
+  - Inline create form (customer, vehicle, complaint, mechanic, optional VIN/plate/year)
+  - Expandable parts editor: SKU lookup → adds to job, qty inline-editable, labour charge field
+  - "Push parts to cart" button → calls /to-cart, adds all to CartContext, navigates to /cart, warns if any SKUs missing
+- Sidebar nav adds **Job Cards** (Briefcase icon)
+
+**🟡 LOW — Team.jsx hydration warning fix**:
+- Removed long " — desc" suffix from inside `<option>` (visual-editor instrumentation was injecting extra nodes inside the option, causing a hydration mismatch)
+- Description now displays as a contextual hint paragraph below the dropdown, dynamically updates with the selected role
+- Console clean on /team page
+
+**Tests passed**: iter12 — 18/18 backend pytest (real Claude vision call ~12s, MIME rejection, auth, full CRUD, status transitions, to-cart tier pricing, regression on stats/news/products/orders) + 100% frontend selectors + sidebar nav + responsive (320/360/768/1440 px) + hydration warning gone.
+
