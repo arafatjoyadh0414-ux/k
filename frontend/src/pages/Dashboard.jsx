@@ -141,7 +141,7 @@ const Dashboard = () => {
           <div className="flex items-center gap-2">
             <Link to="/products" data-testid="dashboard-shop-button"
               className="inline-flex items-center gap-2 bg-[#E11D48] hover:bg-[#BE123C] text-white text-sm font-semibold px-4 py-2 rounded-sm transition-colors duration-200">
-              <Package className="w-4 h-4" /> Browse Catalog
+              <Package className="w-4 h-4" /> Browse Catalogue
             </Link>
             <Link to="/cart" data-testid="dashboard-cart-button"
               className="inline-flex items-center gap-2 bg-white border border-slate-200 hover:border-slate-900 text-sm font-semibold px-4 py-2 rounded-sm transition-colors duration-200">

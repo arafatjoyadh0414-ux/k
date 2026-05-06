@@ -1,0 +1,95 @@
+{
+  "summary": "Iter 17 — verified all pre-deploy polish fixes from user screenshots. All 10 review targets PASS. Frontend only (backend skipped per request). 100% pass rate.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "verification_details": {
+    "1_catalog_to_catalogue_everywhere": {
+      "header_link_text": "Catalogue",
+      "hero_cta_text": "Browse catalogue \u2192",
+      "footer_link_text": "Catalogue",
+      "tech_section_badge": "CATALOGUE MATCH (CSS-uppercased 'Catalogue match')",
+      "dashboard_button": "Browse Catalogue",
+      "all_Catalog_strings_on_landing": "3 occurrences, all are substrings of 'Catalogue' — no stray 'Catalog' left",
+      "status": "PASS"
+    },
+    "2_hero_ctas_unified_style": {
+      "hero-retail-link": {"bg":"rgb(255,255,255)","border":"1px rgb(212,212,216) zinc-300","radius":"9999px","padding":"12px 24px","rounded":"rounded-full"},
+      "hero-catalog-link": {"same_as_retail": true},
+      "hero-whatsapp-link": {"same_base": true, "only_hover_accent_differs": "#25D366 whatsapp green"},
+      "status": "PASS — all three CTAs share identical base classes/computed styles (bg-white border border-zinc-300 px-5 sm:px-6 py-3 rounded-full)"
+    },
+    "3_ticker_mask_and_live_badge_shadow": {
+      "ticker_mask_css_class_exists": true,
+      "computed_webkit_mask_image": "linear-gradient(90deg, transparent 0, #000 28px, #000 calc(100% - 24px), transparent 100%)",
+      "live_badge_has_shadow_class": "shadow-[2px_0_8px_rgba(0,0,0,0.45)] confirmed in source",
+      "status": "PASS"
+    },
+    "4_ec_page_hero_and_copy": {
+      "hero_img_alt": "JOY Automart Experience Centre — exterior architectural concept render on Madani Avenue",
+      "no_premium_interior_alt": true,
+      "badge_new": "MADANI AVENUE · 100 FT · OPENS Q2 2026",
+      "old_banani_badge_removed": true,
+      "subtitle_contains_100ft_corridor": true,
+      "subtitle_no_1560_sq_ft": true,
+      "subtitle_no_65ftx24ft": true,
+      "status": "PASS"
+    },
+    "5_ec_tile_mod_zone_caption": {
+      "caption": "SHOWROOM VOLUME · PHASE 1",
+      "no_65ft_x_24ft": true,
+      "status": "PASS"
+    },
+    "6_landing_pillar03_updated": {
+      "has_100ft_madani_corridor": true,
+      "has_1560_sq_ft": false,
+      "status": "PASS"
+    },
+    "7_landing_ec_teaser_badge": {
+      "badge_text": "MADANI AVENUE · 100 FT · OPENS Q2 2026",
+      "old_banani_present": false,
+      "status": "PASS"
+    },
+    "8_body_kits_shadow_gt_single_image": {
+      "shadow-gt-thumb-0_present": false,
+      "shadow-gt-thumb-1_present": false,
+      "shadow-gt-prev_present": false,
+      "shadow-gt-next_present": false,
+      "images_found_for_shadow": 1,
+      "other_tabs_switch_ok": {"cyber-beast": true, "wide-body": true, "atelier": true},
+      "status": "PASS"
+    },
+    "9_vin_lookup_wikipedia_removed": {
+      "test_vin": "SALWA2AY0KA835111 (2019 Land Rover Range Rover Sport)",
+      "auth": "Bearer test-token-workshop-1 via localStorage ja_session_token",
+      "vin-photo-gallery_rendered": true,
+      "Wikipedia_text_in_page": false,
+      "Year-specific_badge_in_page": false,
+      "model_generation_text": false,
+      "bottom_black_caption_overlay_present": false,
+      "status": "PASS"
+    },
+    "10_regression": {
+      "body_kits_tab_switches_smoothly": true,
+      "prev_iter_16_notif_prefs_ec_bugfix_landing_stats": "passed 100%",
+      "status": "PASS (regressions held from iter 16)"
+    }
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "BodyKitsShowcase.jsx retains dead UI branches for shadow-gt-prev/next/thumbs guarded by gallery.length > 1. Harmless (never rendered for Shadow GT since gallery=[SHADOW_GT_4]) but consider removing the dead code to reduce bundle size & confusion.",
+    "Landing.jsx is ~806 lines — approaching the 700 LOC split-threshold; consider extracting Ticker, HeroCTAs, Pillars, ECTeaser, Footer into separate files for maintainability."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "not tested (skipped)", "frontend": "100% (10/10 targets)"},
+  "test_credentials": "Bearer test-token-workshop-1 (localStorage key: ja_session_token) — workshop1@test.com / ws-test-1",
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All deploy-blocking polish fixes (Catalog→Catalogue, unified hero CTAs, ticker mask, EC page copy+hero, Madani 100ft badge, Shadow GT single-image, VIN Wikipedia removal) verified on preview URL. App is customer-deploy-ready per review request.",
+  "rca of the issue": "n/a — no bugs found during this verification run"
+}

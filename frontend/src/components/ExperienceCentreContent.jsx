@@ -42,15 +42,16 @@ const ExperienceCentreContent = ({ showCTAs = true }) => (
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FFB1C1] opacity-70"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FFB1C1]"></span>
             </span>
-            Banani · Madani Avenue · Opens Q2 2026
+            Madani Avenue · 100 ft · Opens Q2 2026
           </div>
           <h1 className="font-display text-[28px] xs:text-[32px] sm:text-4xl md:text-5xl lg:text-[56px] xl:text-6xl tracking-tighter leading-[1.02] text-white">
             The first automotive Experience Centre Bangladesh has ever seen.
           </h1>
           <p className="text-zinc-400 mt-4 sm:mt-5 leading-relaxed text-sm sm:text-base max-w-2xl">
-            A 1,560 sq ft flagship space on Madani Avenue, sitting beside OTTOFIX, BYD and the
-            European Luxury Car Showroom. 65 ft × 24 ft, G+1 — designed to make every customer
-            experience parts the way enthusiasts deserve.
+            A flagship destination on the 100 ft Madani Avenue corridor — engineered for the
+            automotive enthusiast, calibrated for the discerning collector. Where every part
+            is theatre, every consultation is a private affair, and every visit is a story
+            worth telling.
           </p>
         </div>
         {showCTAs && (
@@ -70,8 +71,8 @@ const ExperienceCentreContent = ({ showCTAs = true }) => (
       {/* HERO panoramic */}
       <figure className="relative overflow-hidden rounded-md sm:rounded-lg border border-white/10 group bg-zinc-900">
         <img
-          src={EC_INTERIOR_LUXE}
-          alt="JOY Automart Experience Centre — premium interior concept renders"
+          src={EC_DAY_NIGHT}
+          alt="JOY Automart Experience Centre — exterior architectural concept render on Madani Avenue"
           className="w-full h-[220px] xs:h-[260px] sm:h-[360px] md:h-[460px] lg:h-[560px] object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.02]"
           loading="lazy"
         />
@@ -80,7 +81,7 @@ const ExperienceCentreContent = ({ showCTAs = true }) => (
           <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.18em] text-zinc-100">Concept renders · Phase 1</span>
         </figcaption>
         <figcaption className="absolute top-3 sm:top-4 right-3 sm:right-4 hidden sm:flex items-center gap-2 backdrop-blur-md bg-[#E11D48]/85 px-3 py-1.5 rounded-full">
-          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-white font-bold">Showroom · 65 ft × 24 ft</span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-white font-bold">Madani Avenue · 100 ft</span>
         </figcaption>
       </figure>
 
@@ -117,7 +118,7 @@ const ExperienceCentreContent = ({ showCTAs = true }) => (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             <ExpTile src={EC_HERO} caption="Architecture · Interior Perspective" ratio="aspect-[4/3]" testid="ec-tile-interior-luxe" />
             <ExpTile src={EC_CAFE_WHEELS} caption="JOY Café · Wheel Wall" ratio="aspect-[4/3]" testid="ec-tile-cafe-wheels" />
-            <ExpTile src={EC_FACADE_VARIATIONS} caption="Showroom Volume · 65 ft × 24 ft" ratio="aspect-[4/3]" testid="ec-tile-mod-zone" />
+            <ExpTile src={EC_FACADE_VARIATIONS} caption="Showroom Volume · Phase 1" ratio="aspect-[4/3]" testid="ec-tile-mod-zone" />
           </div>
         </div>
 

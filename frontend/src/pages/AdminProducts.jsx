@@ -59,7 +59,7 @@ const AdminProducts = () => {
       <div className="space-y-6">
         <div className="flex items-end justify-between flex-wrap gap-3">
           <div>
-            <div className="overline">Catalog</div>
+            <div className="overline">Catalogue</div>
             <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl leading-tight mt-1">Products</h1>
           </div>
           <div className="flex items-center gap-2">

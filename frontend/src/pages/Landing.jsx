@@ -245,14 +245,14 @@ const Landing = () => {
 
       {/* Top live activity ribbon — Worldwide automotive news (1h refresh) with platform stats fallback */}
       <div className="bg-zinc-950 dark:bg-black text-zinc-400 dark:text-[#FFB1C1] text-[10px] tracking-[0.18em] uppercase overflow-hidden h-7 flex items-center border-b border-transparent dark:border-[#E11D48]/30 relative" aria-label={news.length ? "Worldwide automotive news ticker" : "Live platform activity ticker"}>
-        <div className="hidden sm:flex items-center gap-1.5 bg-[#E11D48] text-white font-mono text-[9px] tracking-[0.22em] uppercase font-bold px-2.5 h-full pl-3 pr-2 flex-shrink-0">
+        <div className="hidden sm:flex items-center gap-1.5 bg-[#E11D48] text-white font-mono text-[9px] tracking-[0.22em] uppercase font-bold px-2.5 h-full pl-3 pr-3 flex-shrink-0 relative z-[2] shadow-[2px_0_8px_rgba(0,0,0,0.45)]">
           <span className="relative flex h-1.5 w-1.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
             <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
           </span>
           {news.length ? "Live · World Auto News" : "Live"}
         </div>
-        <div className="ticker-track px-4 flex-1 min-w-0">
+        <div className="ticker-track px-5 sm:pl-7 sm:pr-4 flex-1 min-w-0 ticker-mask">
           {[...TICKER, ...TICKER].map((t, i) => (
             <span key={i} className="font-mono inline-flex items-center gap-2">
               <span>{t}</span>
@@ -287,7 +287,7 @@ const Landing = () => {
               className="hidden sm:inline-flex items-center px-3 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
               data-testid="header-catalog-link"
             >
-              Catalog
+              Catalogue
             </Link>
             <Link
               to="/experience-centre"
@@ -364,11 +364,11 @@ const Landing = () => {
             Visit retail store →
           </a>
           <a href="/catalog" data-testid="hero-catalog-link"
-             className="inline-flex items-center gap-2 text-zinc-700 hover:text-zinc-900 px-3 py-2 text-sm font-semibold transition-colors">
-            Browse catalog
+             className="inline-flex items-center gap-2 bg-white border border-zinc-300 hover:border-zinc-900 text-zinc-900 px-5 sm:px-6 py-3 rounded-full text-sm font-semibold transition-colors">
+            Browse catalogue →
           </a>
           <a href="https://wa.me/8801886799533" data-testid="hero-whatsapp-link"
-             className="inline-flex items-center gap-2 text-zinc-700 hover:text-[#25D366] px-3 py-2 text-sm font-semibold transition-colors">
+             className="inline-flex items-center gap-2 bg-white border border-zinc-300 hover:border-[#25D366] hover:text-[#25D366] text-zinc-900 px-5 sm:px-6 py-3 rounded-full text-sm font-semibold transition-colors">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 018.413 3.488 11.824 11.824 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 001.683 5.526l-.999 3.648 3.805-.873z"/></svg>
             01886-799533
           </a>
@@ -393,7 +393,7 @@ const Landing = () => {
               { n: "02", k: "B2C Retail", t: "Online & Walk-in",
                 d: <>Direct-to-consumer auto parts e-commerce on <a href="https://www.joyautomart.com" target="_blank" rel="noreferrer" className="text-zinc-900 underline underline-offset-2 hover:text-[#E11D48]">www.joyautomart.com</a> — paired with our flagship retail showroom.</> },
               { n: "03", k: "Experience Centre", t: "Bangladesh's first",
-                d: "A 1,560 sq ft premium showroom on Banani Link Road — hero car zone, JOY Café, mezzanine viewing room. Launching in 2 months." },
+                d: "A flagship retail showroom on the 100 ft Madani Avenue corridor — hero car zone, JOY Café, mezzanine viewing room. Launching in 2 months." },
               { n: "04", k: "Data & AI", t: "Industry intelligence",
                 d: "Every transaction, every part, every vehicle, every behaviour — captured and modelled. Demand forecasting, smart pricing, predictive insights." },
               { n: "05", k: "JOY BEAST", t: "The atelier", featured: true,
@@ -512,13 +512,13 @@ const Landing = () => {
             <div className="lg:col-span-7">
               <div className="inline-flex items-center gap-2 backdrop-blur-md bg-[#E11D48]/15 border border-[#E11D48]/40 text-[#FFB1C1] font-mono text-[10px] sm:text-[11px] tracking-[0.2em] uppercase font-bold px-3 py-1.5 rounded-full mb-4">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#FFB1C1] animate-pulse" />
-                Banani · Madani Avenue · Opens Q2 2026
+                Madani Avenue · 100 ft · Opens Q2 2026
               </div>
               <h2 className="font-display text-2xl sm:text-3xl lg:text-5xl tracking-tighter leading-[1.05] text-white">
                 Bangladesh's first automotive Experience Centre.
               </h2>
               <p className="text-zinc-400 mt-3 sm:mt-4 leading-relaxed text-sm sm:text-base max-w-xl">
-                1,560 sq ft on Madani Avenue · hero car zone · JOY Café · mezzanine showroom.
+                A flagship destination on the 100 ft Madani Avenue corridor — calibrated for the discerning collector and engineered for the automotive enthusiast.
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <Link
@@ -571,7 +571,7 @@ const Landing = () => {
               </p>
               <div className="mt-4 flex flex-wrap gap-2 text-[11px] uppercase tracking-wider text-zinc-500">
                 <span className="border border-zinc-200 px-2 py-1 rounded-sm">NHTSA + WMI</span>
-                <span className="border border-zinc-200 px-2 py-1 rounded-sm">Catalog match</span>
+                <span className="border border-zinc-200 px-2 py-1 rounded-sm">Catalogue match</span>
                 <span className="border border-zinc-200 px-2 py-1 rounded-sm">VIN history</span>
               </div>
             </div>
@@ -671,7 +671,7 @@ const Landing = () => {
             {[
               { n: "01", t: "Sign up", d: "Google + trade license." },
               { n: "02", t: "Get approved", d: "Tier + credit, same day." },
-              { n: "03", t: "Order", d: "Catalog, SKU paste, or AI." },
+              { n: "03", t: "Order", d: "Catalogue, SKU paste, or AI." },
               { n: "04", t: "Track + settle", d: "Live tracking, COD or credit." },
             ].map(({ n, t, d }) => (
               <li key={n} className="border-l-[3px] border-[#E11D48] pl-3 sm:pl-4">
@@ -778,7 +778,7 @@ const Landing = () => {
               <ul className="space-y-2 text-sm text-zinc-700">
                 <li><button onClick={handleLogin} className="hover:text-[#E11D48]" data-testid="footer-portal-link">B2B Portal · Sign in</button></li>
                 <li><a href="https://www.joyautomart.com" target="_blank" rel="noreferrer" className="hover:text-[#E11D48]" data-testid="footer-retail-link">Retail Store · joyautomart.com</a></li>
-                <li><Link to="/catalog" className="hover:text-[#E11D48]">Catalog</Link></li>
+                <li><Link to="/catalog" className="hover:text-[#E11D48]">Catalogue</Link></li>
                 <li><Link to="/inquire" className="hover:text-[#E11D48]">JOY BEAST kits</Link></li>
               </ul>
             </div>

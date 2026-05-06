@@ -50,7 +50,7 @@ const PublicCatalog = () => {
             <img src={LOGO} alt="JOY Automart" className="w-10 h-10 object-contain" />
             <div>
               <div className="font-display text-lg leading-none">JOY Automart</div>
-              <div className="text-[10px] uppercase tracking-[0.16em] text-slate-300 mt-0.5">Public Catalog</div>
+              <div className="text-[10px] uppercase tracking-[0.16em] text-slate-300 mt-0.5">Public Catalogue</div>
             </div>
           </Link>
           <Link

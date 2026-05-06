@@ -761,24 +761,14 @@ const VinLookup = () => {
                 <VehicleCard v={result.vehicle} />
                 {photos.length > 0 ? (
                   <div className="mt-3" data-testid="vin-photo-gallery">
-                    <div className="overline mb-2 flex items-center justify-between">
+                    <div className="overline mb-2">
                       <span>Reference photo</span>
-                      <span className={`text-[10px] normal-case px-2 py-0.5 rounded-sm ${
-                        photos[0].source === "google"
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                          : "bg-blue-50 text-blue-700 border border-blue-200"
-                      }`}>
-                        {photos[0].source === "google" ? "✓ Year-specific" : "Wikipedia · model generation"}
-                      </span>
                     </div>
                     <a href={photos[0].page_url} target="_blank" rel="noopener noreferrer"
                       data-testid="vin-photo-0"
                       className="block aspect-[16/9] overflow-hidden rounded-sm border border-slate-200 bg-slate-50 relative group">
                       <img src={photos[0].url} alt={photos[0].title} loading="lazy"
                         className="w-full h-full object-cover transition-transform group-hover:scale-105" />
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 text-xs text-white">
-                        {photos[0].title}
-                      </div>
                     </a>
                   </div>
                 ) : null}

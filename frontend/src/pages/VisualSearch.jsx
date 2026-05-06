@@ -172,7 +172,7 @@ const ResultPanel = ({ result, preview, addItem, reset }) => {
 
       {result.matches?.length > 0 ? (
         <div className="industrial-card border border-zinc-200 dark:border-white/10 rounded-sm p-5 sm:p-6">
-          <h3 className="font-display text-lg text-zinc-900 dark:text-white mb-3">Catalog matches ({result.matches.length})</h3>
+          <h3 className="font-display text-lg text-zinc-900 dark:text-white mb-3">Catalogue matches ({result.matches.length})</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {result.matches.map((p) => (
               <div key={p.product_id} data-testid={`vs-match-${p.sku}`} className="border border-zinc-200 dark:border-white/10 rounded-sm bg-white dark:bg-zinc-900 p-3 flex flex-col">

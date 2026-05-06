@@ -1,7 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import SHADOW_GT_1 from "../assets/body-kits/shadow-gt-1.png";
-import SHADOW_GT_2 from "../assets/body-kits/shadow-gt-2.png";
-import SHADOW_GT_3 from "../assets/body-kits/shadow-gt-3.png";
 import SHADOW_GT_4 from "../assets/body-kits/shadow-gt-4.png";
 import CYBER_BEAST from "../assets/byd-cyberbeast.jpg";
 import WIDE_BODY_KIT from "../assets/body-kits/wide-body-bydkit.png";
@@ -21,8 +18,8 @@ const KITS = [
     tier: "Entry sport",
     headline: "Stealth aero. Daily-driver poise.",
     blurb:
-      "Carbon-composite splitters, side skirts, ducktail spoiler — the Shadow GT signature body kit, photographed at our Atelier.",
-    gallery: [SHADOW_GT_1, SHADOW_GT_2, SHADOW_GT_3, SHADOW_GT_4],
+      "Carbon-composite splitters, side skirts and ducktail spoiler — the Shadow GT signature kit, photographed at our Atelier.",
+    gallery: [SHADOW_GT_4],
   },
   {
     id: "cyber-beast",
@@ -40,7 +37,7 @@ const KITS = [
     tier: "Wide-body",
     headline: "Track-bred stance. Street legal.",
     blurb:
-      "Aggressive wide-body conversion with motorsport-grade aero balance, forged 22\" multi-spokes, ground-up paint match.",
+      "Aggressive wide-body conversion with motorsport-grade aero balance, forged 22\" multi-spokes and ground-up paint match.",
     gallery: [WIDE_BODY_KIT],
   },
   {
