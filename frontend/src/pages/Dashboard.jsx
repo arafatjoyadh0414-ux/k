@@ -224,22 +224,22 @@ const Dashboard = () => {
           <StatBlock label="In Progress" value={orders.filter(o => !["delivered","cancelled"].includes(o.status)).length} sub="active orders" />
         </div>
 
-        {/* Account ID — every workshop & dealer gets a stable platform UID */}
-        {user?.user_id && (
+        {/* Joy ID — every workshop & dealer gets a stable 4-digit platform ID */}
+        {(user?.joy_id || user?.user_id) && (
           <div className="industrial-card p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4" data-testid="account-id-card">
             <div className="min-w-0">
-              <div className="overline">Your platform account ID</div>
-              <div className="font-mono text-sm sm:text-base text-slate-900 mt-2 break-all" data-testid="account-id-value">
-                {user.user_id}
+              <div className="overline">Your Joy ID</div>
+              <div className="font-mono text-2xl sm:text-3xl text-slate-900 dark:text-white mt-2 tracking-tight" data-testid="account-id-value">
+                {user.joy_id || user.user_id}
               </div>
               <div className="text-xs text-slate-500 mt-1.5">
-                Quote this ID when contacting support — every order, KYC document, credit history, saved VIN and Health Passport on the platform is tied to it.
+                Your unique platform identity. Quote it when contacting support — every order, KYC document, credit history, saved VIN and Health Passport on JOY Automart is tied to it.
               </div>
             </div>
             <button
               data-testid="account-id-copy"
-              onClick={() => { navigator.clipboard?.writeText(user.user_id); toast.success("Account ID copied"); }}
-              className="self-start sm:self-auto shrink-0 inline-flex items-center gap-2 border border-slate-300 hover:border-slate-900 text-slate-900 text-xs font-semibold px-4 py-2 rounded-sm"
+              onClick={() => { navigator.clipboard?.writeText(user.joy_id || user.user_id); toast.success("Joy ID copied"); }}
+              className="self-start sm:self-auto shrink-0 inline-flex items-center gap-2 border border-slate-300 hover:border-slate-900 text-slate-900 dark:text-white dark:border-white/20 dark:hover:border-white text-xs font-semibold px-4 py-2 rounded-sm"
             >
               Copy ID
             </button>

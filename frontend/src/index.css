@@ -273,3 +273,59 @@ html.dark .fut .bg-zinc-950 { background-color: #050507 !important; }
 
 /* Footer & feature cards — make borders visible on dark bg */
 html.dark .fut .industrial-card { background-color: #18181B; border-color: rgba(255,255,255,0.08); }
+
+/* ─────────────────────────────────────────────────────────────────────
+   Dark-mode for the AUTH'D PORTAL (sidebar + every page wrapped in Layout)
+   Scoped to .portal-shell so the landing page is unaffected.
+   Re-uses zinc tokens — same two-color discipline (near-black + red).
+   ───────────────────────────────────────────────────────────────────── */
+html.dark .portal-shell { background-color: #09090B; color: #E4E4E7; }
+html.dark .portal-shell .bg-white { background-color: #18181B !important; }
+html.dark .portal-shell .bg-slate-50,
+html.dark .portal-shell .bg-zinc-50 { background-color: #0F0F11 !important; }
+html.dark .portal-shell .bg-slate-100,
+html.dark .portal-shell .bg-zinc-100 { background-color: rgba(255,255,255,0.04) !important; }
+html.dark .portal-shell .text-slate-900,
+html.dark .portal-shell .text-zinc-900 { color: #FAFAFA !important; }
+html.dark .portal-shell .text-slate-700,
+html.dark .portal-shell .text-zinc-700 { color: #D4D4D8 !important; }
+html.dark .portal-shell .text-slate-600,
+html.dark .portal-shell .text-zinc-600 { color: #A1A1AA !important; }
+html.dark .portal-shell .text-slate-500,
+html.dark .portal-shell .text-zinc-500 { color: #71717A !important; }
+html.dark .portal-shell .text-slate-400,
+html.dark .portal-shell .text-zinc-400 { color: #52525B !important; }
+html.dark .portal-shell .border-slate-200,
+html.dark .portal-shell .border-slate-300,
+html.dark .portal-shell .border-zinc-200,
+html.dark .portal-shell .border-zinc-300 { border-color: rgba(255,255,255,0.08) !important; }
+html.dark .portal-shell .industrial-card {
+    background-color: #18181B !important;
+    border-color: rgba(255,255,255,0.08) !important;
+}
+/* Inputs & form fields */
+html.dark .portal-shell input,
+html.dark .portal-shell textarea,
+html.dark .portal-shell select {
+    background-color: #18181B;
+    color: #E4E4E7;
+    border-color: rgba(255,255,255,0.1);
+}
+html.dark .portal-shell input::placeholder,
+html.dark .portal-shell textarea::placeholder { color: #52525B; }
+/* Status pills (amber/emerald/rose) — keep readable on dark */
+html.dark .portal-shell .bg-amber-100 { background-color: rgba(245, 158, 11, 0.15) !important; }
+html.dark .portal-shell .text-amber-800 { color: #FCD34D !important; }
+html.dark .portal-shell .bg-emerald-100 { background-color: rgba(16, 185, 129, 0.15) !important; }
+html.dark .portal-shell .text-emerald-800 { color: #6EE7B7 !important; }
+html.dark .portal-shell .bg-rose-100 { background-color: rgba(244, 63, 94, 0.15) !important; }
+html.dark .portal-shell .text-rose-800 { color: #FDA4AF !important; }
+/* Subtle hover surfaces */
+html.dark .portal-shell .hover\:bg-slate-50:hover,
+html.dark .portal-shell .hover\:bg-zinc-50:hover { background-color: rgba(255,255,255,0.04) !important; }
+/* Primary brand buttons stay red in dark mode */
+html.dark .portal-shell button.bg-slate-900,
+html.dark .portal-shell button.bg-zinc-900 {
+    background-color: #E11D48 !important;
+    color: white !important;
+}

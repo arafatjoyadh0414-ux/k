@@ -1,0 +1,47 @@
+{
+  "summary": "Iter 8 backend testing of Vehicle Health Passport (PDF + share), public stats + admin ticker (cache bust + auth gate), and Joy ID 4-digit alias. 19/20 pytest pass. ONE CRITICAL bug discovered: the joy_id atomic counter is broken — every backfilled or newly-signed-up user is assigned JOY-1001 until the underlying counters.seq exceeds 1001 (currently seq=5). MongoDB already shows 2 distinct users sharing joy_id='JOY-1001' (production admin user_e687d318156e + workshop test-workshop-1). Public stats /api/public/stats returns all required fields, admin ticker correctly enforces auth (401 no-auth, 403 workshop) and busts cache immediately on POST. VIN passport flow (generate / view JSON / view PDF) works end-to-end: idempotent same-VIN+user returns same token, PDF starts with %PDF magic and is application/pdf, public view returns sanitized payload (no user_id leak).",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "GET /api/auth/me  +  POST /api/auth/session",
+        "issue": "joy_id atomic counter is BROKEN — collision guaranteed for first ~1001 users. Code: `db.counters.find_one_and_update({_id:'joy_id_counter'}, {'$inc':{'seq':1}, '$setOnInsert':{'start':1001}}, upsert=True, return_document=True)` then `next_seq = max(1001, counter['seq'])`. The `$setOnInsert: {start: 1001}` writes an UNUSED field named `start`; the actual `seq` field starts at 0 and increments to 1, 2, 3… Combined with `max(1001, seq)`, every call returns 1001 until seq reaches 1002. Live DB confirms: counters doc = `{_id:'joy_id_counter', seq:5, start:1001}` and 2 real users currently share `joy_id='JOY-1001'`. Review-request acceptance criterion 'Verify the joy_id counter never collides' FAILS.",
+        "priority": "CRITICAL"
+      }
+    ],
+    "minor": [
+      {
+        "endpoint": "GET /api/public/stats",
+        "issue": "active_now metric reads user_sessions.last_seen_at, but no code path UPDATES last_seen_at on auth/middleware — the field is never set in the codebase, so the count is always 0 and the floor (8) is what's always shown. Either wire a middleware to bump last_seen_at on /api/auth/me, or remove the metric. (Not a blocker — floor masks it from end-users.)"
+      },
+      {
+        "endpoint": "POST /api/admin/ticker",
+        "issue": "No Pydantic model — accepts arbitrary dict. text is sliced to 160 chars and active is coerced, so safe in practice, but expires_at is stored verbatim with no ISO-format validation; a malformed expires_at would silently fail the public/stats expiry comparison (the try/except in public_stats.py L54 swallows it). Add a Pydantic model + isoformat validation."
+      }
+    ]
+  },
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iter8_passport_ticker_joyid.py",
+    "/app/test_reports/pytest/iter8_results.xml"
+  ],
+  "action_items": [
+    "P0 — Fix joy_id counter so every user gets a unique sequential id. Recommended: replace the upsert with `$setOnInsert:{seq:1000}` (drop the unused `start` key) and use `next_seq = int(counter['seq'])` (drop the `max(1001,...)` clamp). After the fix run a one-time migration: `db.users.find({joy_id:'JOY-1001'}).skip(1)` → for each, atomically pull a fresh seq via the same find_one_and_update and set joy_id; also bump counters.seq to at least 1000 before re-running so the FIRST migrated user gets JOY-1001 (or pick a new floor). Without the migration, the 2 colliding users (user_e687d318156e + test-workshop-1) will keep clashing on lookups by joy_id.",
+    "P2 — Wire user_sessions.last_seen_at update so /api/public/stats active_now is meaningful, OR drop the metric.",
+    "P3 — Add Pydantic model for POST /api/admin/ticker (text str ≤160, active bool, expires_at: Optional[datetime])."
+  ],
+  "critical_code_review_comments": [
+    "auth_workshop.py L62-70 and L130-141 contain the exact same buggy counter snippet — both code paths produce JOY-1001 collisions. Refactor into a single `await _next_joy_id(db)` helper used by both signup and /me backfill so future changes touch one place.",
+    "public_stats.py uses a process-local in-memory cache (`_cache`). With multi-worker uvicorn / multi-replica k8s deployment, ticker bust is per-process — sibling workers will keep serving stale featured_message for up to TTL (300s). Acceptable for single-pod preview but call this out for production scaling.",
+    "vin.py /vin/passport/generate L873-882: collision guard is correct, idempotency by (vin, user_id) is correct. PDF endpoint correctly omits Content-Disposition `attachment` and serves inline. Good.",
+    "vin.py view_passport intentionally projects out user_id — good privacy posture. snapshot still contains workshop signature, which is acceptable per the spec.",
+    "passport generate doesn't enforce kyc_status='approved' — any logged-in workshop (even pending KYC) can mint a passport. If that's intentional, ignore; otherwise add a require_user + kyc check."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter8_passport_ticker_joyid.py"],
+  "success_rate": {"backend": "95% (19/20 pytest)", "frontend": "skipped per request"},
+  "test_credentials": "Bearer admin-test-token-rosie-broadcast (admin), Bearer test-token-workshop-1 (KYC-approved gold workshop). Both seeded and persistent.",
+  "seed_data_creation": "Per-test ephemeral users TEST_jid_*, TEST_jidU_* and ticker_messages with 'TEST_TICKER_*' marker — all cleaned up in teardown/finally. One vin_passports row created during test_generate_returns_token_and_urls is cleaned in TestVinPassport.teardown_class. No residual TEST_ data after run.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Run `pytest backend/tests/test_iter8_passport_ticker_joyid.py -v`. After main agent fixes the joy_id counter, the failing test `TestAuthMeJoyId::test_joy_id_unique_across_users` MUST pass with `n1 == n0 + 1` and both ids being distinct. Also re-run `test_backfill_idempotent_and_counter_atomic` — it should still pass post-fix (it only checks +1 increment + idempotency, no value assertion). To inspect collisions: `mongosh --eval \"use('test_database'); db.users.aggregate([{\\$group:{_id:'\\$joy_id', n:{\\$sum:1}}},{\\$match:{n:{\\$gt:1}}}])\"` — should return empty after the migration.",
+  "rca of the issue": "joy_id collision RCA — Repro: hit /api/auth/me as two different freshly-seeded users with no joy_id set. Both receive JOY-1001. Cause: `find_one_and_update({_id:'joy_id_counter'}, {'$inc':{'seq':1}, '$setOnInsert':{'start':1001}}, upsert=True, return_document=True)` initializes the counter doc as `{_id:'joy_id_counter', seq:1, start:1001}` on first call (because $inc on missing field starts from 0 → 1), and the `start` field is decoration only — never read. The subsequent `next_seq = max(1001, int(counter.get('seq', 1001)))` then clamps every value < 1001 up to 1001. So users 1..1000 all get JOY-1001. Live DB confirms: counters.seq=5, two distinct user_ids both have joy_id=JOY-1001. Mitigation (single-line fix): change `'$setOnInsert': {'start': 1001}` to `'$setOnInsert': {'seq': 1000}` and drop the `max(1001, ...)` clamp — so the first $inc lands at 1001 cleanly. Apply this fix in TWO places (auth_workshop.py L64-70 signup AND L130-141 /me backfill) — recommend extracting to a `_next_joy_id(db)` helper. Plus a one-time migration to re-assign joy_id for the two existing JOY-1001 users."
+}

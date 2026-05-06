@@ -3,9 +3,10 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { useLang } from "../context/LanguageContext";
+import { useTheme } from "../context/ThemeContext";
 import {
   LayoutDashboard, Package, ShoppingCart, ClipboardList, UserCircle2,
-  Shield, LogOut, Wrench, Sparkles, Inbox, FileQuestion, Truck, BarChart3, Boxes, Bike, RotateCcw, Globe, Zap, TrendingUp, ScanSearch, Repeat, Menu, X
+  Shield, LogOut, Wrench, Sparkles, Inbox, FileQuestion, Truck, BarChart3, Boxes, Bike, RotateCcw, Globe, Zap, TrendingUp, ScanSearch, Repeat, Menu, X, Sun, Moon
 } from "lucide-react";
 
 const LOGO = "https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg";
@@ -17,8 +18,8 @@ const NavItem = ({ to, icon: Icon, label, testid }) => (
     className={({ isActive }) =>
       `flex items-center gap-3 px-4 py-2.5 text-sm border-l-2 transition-colors duration-200 ${
         isActive
-          ? "border-l-[#E11D48] bg-slate-50 text-slate-900 font-semibold"
-          : "border-l-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+          ? "border-l-[#E11D48] bg-zinc-50 dark:bg-white/5 text-zinc-900 dark:text-white font-semibold"
+          : "border-l-transparent text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-white/5 hover:text-zinc-900 dark:hover:text-white"
       }`
     }
   >
@@ -31,6 +32,7 @@ const Layout = ({ children }) => {
   const { user, logout } = useAuth();
   const { count } = useCart();
   const { lang, t, toggle } = useLang();
+  const { theme, toggle: toggleTheme } = useTheme();
   const navigate = useNavigate();
   const isAdmin = user?.role === "admin";
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -40,7 +42,7 @@ const Layout = ({ children }) => {
   React.useEffect(() => { setDrawerOpen(false); }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex bg-white">
+    <div className="min-h-screen flex bg-white dark:bg-zinc-950 portal-shell">
       {/* Mobile drawer backdrop */}
       {drawerOpen && (
         <div
@@ -56,21 +58,21 @@ const Layout = ({ children }) => {
         className={`
           fixed lg:sticky lg:top-0 inset-y-0 left-0 z-40
           w-[260px] max-w-[80vw]
-          border-r border-slate-200 bg-white flex flex-col h-screen
+          border-r border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-950 flex flex-col h-screen
           transition-transform duration-200 ease-out
           ${drawerOpen ? "translate-x-0" : "-translate-x-full"}
           lg:translate-x-0
         `}
       >
-        <div className="p-5 border-b border-slate-200 flex items-center gap-3">
+        <div className="p-5 border-b border-zinc-200 dark:border-white/10 flex items-center gap-3">
           <img src={LOGO} alt="Joy Automart" className="w-10 h-10 object-contain" data-testid="brand-logo" />
           <div className="min-w-0">
-            <div className="font-display text-lg leading-none truncate">Joy Automart</div>
-            <div className="overline mt-1">B2B Portal</div>
+            <div className="font-display text-lg leading-none truncate text-zinc-900 dark:text-white">Joy Automart</div>
+            <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400 mt-1.5">B2B Portal</div>
           </div>
           <button
             onClick={() => setDrawerOpen(false)}
-            className="lg:hidden ml-auto p-1.5 text-slate-500 hover:text-slate-900"
+            className="lg:hidden ml-auto p-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
             aria-label="Close menu"
             data-testid="sidebar-close"
           >
@@ -113,24 +115,24 @@ const Layout = ({ children }) => {
           )}
         </nav>
 
-        <div className="border-t border-slate-200 p-4">
+        <div className="border-t border-zinc-200 dark:border-white/10 p-4">
           <div className="flex items-center gap-3 mb-3">
             {user?.picture ? (
-              <img src={user.picture} alt="" className="w-9 h-9 rounded-sm object-cover border border-slate-200" />
+              <img src={user.picture} alt="" className="w-9 h-9 rounded-sm object-cover border border-zinc-200 dark:border-white/10" />
             ) : (
-              <div className="w-9 h-9 rounded-sm bg-slate-200 grid place-items-center text-slate-600 text-sm font-semibold">
+              <div className="w-9 h-9 rounded-sm bg-zinc-200 dark:bg-white/10 grid place-items-center text-zinc-600 dark:text-zinc-300 text-sm font-semibold">
                 {user?.name?.[0]?.toUpperCase()}
               </div>
             )}
             <div className="min-w-0">
-              <div className="text-sm font-semibold truncate">{user?.name}</div>
-              <div className="text-xs text-slate-500 truncate">{user?.email}</div>
+              <div className="text-sm font-semibold truncate text-zinc-900 dark:text-white">{user?.name}</div>
+              <div className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{user?.joy_id || user?.email}</div>
             </div>
           </div>
           <button
             data-testid="logout-button"
             onClick={logout}
-            className="w-full flex items-center justify-center gap-2 text-sm py-2 border border-slate-200 hover:border-[#E11D48] hover:text-[#E11D48] transition-colors duration-200 rounded-sm"
+            className="w-full flex items-center justify-center gap-2 text-sm py-2 border border-zinc-200 dark:border-white/10 hover:border-[#E11D48] hover:text-[#E11D48] transition-colors duration-200 rounded-sm text-zinc-700 dark:text-zinc-300"
           >
             <LogOut className="w-4 h-4" /> {t("nav.signout")}
           </button>
@@ -139,33 +141,42 @@ const Layout = ({ children }) => {
 
       {/* Main */}
       <main className="flex-1 min-w-0">
-        <header className="h-14 border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between bg-white sticky top-0 z-20 gap-3">
+        <header className="h-14 border-b border-zinc-200 dark:border-white/10 px-4 sm:px-6 flex items-center justify-between bg-white/80 dark:bg-zinc-950/80 backdrop-blur sticky top-0 z-20 gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => setDrawerOpen(true)}
-              className="lg:hidden p-1.5 -ml-1.5 text-slate-700 hover:text-[#E11D48]"
+              className="lg:hidden p-1.5 -ml-1.5 text-zinc-700 dark:text-zinc-300 hover:text-[#E11D48]"
               aria-label="Open menu"
               data-testid="sidebar-open"
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div className="overline truncate">{isAdmin ? t("header.admin") : t("header.workshop")}</div>
+            <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400 truncate">{isAdmin ? t("header.admin") : t("header.workshop")}</div>
           </div>
-          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            <button
+              onClick={toggleTheme}
+              data-testid="layout-theme-toggle"
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              className="inline-flex items-center justify-center w-8 h-8 text-zinc-600 dark:text-zinc-300 hover:text-[#E11D48] border border-zinc-200 dark:border-white/10 hover:border-[#E11D48] rounded-sm transition-colors duration-200"
+              title="Toggle theme"
+            >
+              {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
             <button
               onClick={toggle}
               data-testid="lang-toggle"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-[#E11D48] border border-slate-200 hover:border-[#E11D48] px-2.5 py-1 rounded-sm transition-colors duration-200"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:text-[#E11D48] border border-zinc-200 dark:border-white/10 hover:border-[#E11D48] px-2.5 py-1 rounded-sm transition-colors duration-200"
               title="Toggle language"
             >
               <Globe className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">{lang === "en" ? t("lang.toggle_to_bn") : t("lang.toggle_to_en")}</span>
               <span className="sm:hidden">{lang === "en" ? "বাং" : "EN"}</span>
             </button>
-            <div className="hidden md:block text-xs text-slate-500">www.joyautomart.com</div>
+            <div className="hidden md:block text-xs text-zinc-500 dark:text-zinc-400">www.joyautomart.com</div>
           </div>
         </header>
-        <div className="p-4 sm:p-6 lg:p-8">{children}</div>
+        <div className="p-4 sm:p-6 lg:p-8 text-zinc-900 dark:text-zinc-100">{children}</div>
       </main>
     </div>
   );

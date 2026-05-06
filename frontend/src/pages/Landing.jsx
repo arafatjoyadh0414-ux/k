@@ -181,10 +181,13 @@ const Landing = () => {
 
       {/* Headline + copy — sophisticated, L'Oréal-style positioning */}
       <section className="max-w-5xl mx-auto px-5 sm:px-6 pt-12 sm:pt-16 pb-10 sm:pb-12 reveal">
-        <div className="font-mono text-[10px] sm:text-[11px] tracking-[0.2em] uppercase text-[#E11D48] font-semibold">
-          [ 01 ] Bangladesh's First AI-Powered Auto Parts Commerce &amp; Data Platform
+        <div className="inline-flex items-center gap-3 mb-4">
+          <span className="block w-8 h-px bg-[#E11D48]" aria-hidden="true" />
+          <span className="font-mono text-[10px] sm:text-[11px] tracking-[0.24em] uppercase text-[#E11D48] font-semibold">
+            Bangladesh's first AI-powered auto parts commerce
+          </span>
         </div>
-        <h1 className="font-display text-4xl sm:text-5xl lg:text-[64px] leading-[1.02] tracking-tighter mt-4 max-w-4xl">
+        <h1 className="font-display text-4xl sm:text-5xl lg:text-[64px] leading-[1.02] tracking-tighter max-w-4xl">
           Smarter parts.{" "}
           <span className="text-zinc-900">Stronger journeys.</span>{" "}
           <span className="text-[#E11D48]">One platform.</span>
@@ -224,7 +227,7 @@ const Landing = () => {
       {/* What we do — 5 pillars in Swiss hairline bento grid */}
       <section className="border-y hairline bg-zinc-50/40 relative">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 py-14 sm:py-20 reveal">
-          <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-500 mb-2">[ 02 ] What we do</div>
+          <div className="font-mono text-[11px] uppercase tracking-[0.24em] text-zinc-500 mb-2">What we do</div>
           <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl tracking-tighter leading-[1.05] max-w-3xl mb-2">
             Five businesses. <span className="text-zinc-500">One ecosystem.</span>
           </h2>
@@ -261,7 +264,7 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-5 sm:px-6 py-14 sm:py-20 reveal">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
             <div className="lg:col-span-5 order-1">
-              <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#E11D48] mb-3">[ 03 ] JOY BEAST · The Atelier</div>
+              <div className="font-mono text-[11px] uppercase tracking-[0.24em] text-[#E11D48] mb-3">JOY BEAST · The Atelier</div>
               <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl tracking-tight leading-[1.05]">
                 A premium modification house. Built in Bangladesh.
               </h2>
@@ -441,7 +444,7 @@ const Landing = () => {
       <section className="bg-white border-b hairline relative overflow-hidden">
         <div className="absolute inset-0 grid-bg" aria-hidden="true" />
         <div className="max-w-7xl mx-auto px-5 sm:px-6 py-14 sm:py-20 relative z-10 reveal">
-          <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-500 mb-2">[ 04 ] The technology stack</div>
+          <div className="font-mono text-[11px] uppercase tracking-[0.24em] text-zinc-500 mb-2">The technology stack</div>
           <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl tracking-tighter leading-[1.05] max-w-3xl mb-2">
             The smartest auto-parts experience in Bangladesh.
           </h2>
