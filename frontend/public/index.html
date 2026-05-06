@@ -35,9 +35,11 @@
         <script>window.addEventListener("error",function(e){if(e.error instanceof DOMException&&e.error.name==="DataCloneError"&&e.message&&e.message.includes("PerformanceServerTiming")){e.stopImmediatePropagation();e.preventDefault()}},true);</script>
     </head>
     <body>
-        <!-- Pre-rendered marketing copy so the page is never blank — visible until React hydrates,
-             or permanently if the visitor has JS disabled. This is the P0 SEO + slow-network fix. -->
-        <div id="prerender-shell" style="margin:0;padding:0;font-family:'IBM Plex Sans',Helvetica,Arial,sans-serif;color:#0f172a;line-height:1.55;background:#ffffff;">
+        <!-- Pre-rendered marketing copy. Hidden by default so JS-enabled visitors never see a flash.
+             Revealed by inline JS only if React hasn't mounted within 2.5s (slow network / broken JS),
+             or by <noscript> CSS if JS is disabled. SEO bots that execute JS see the React app directly;
+             bots that don't execute JS still see this content via noscript. -->
+        <div id="prerender-shell" style="display:none;margin:0;padding:0;font-family:'IBM Plex Sans',Helvetica,Arial,sans-serif;color:#0f172a;line-height:1.55;background:#ffffff;">
           <header style="border-bottom:1px solid #e2e8f0;background:#0f172a;color:#ffffff;">
             <div style="max-width:1100px;margin:0 auto;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
               <div style="display:flex;align-items:center;gap:12px;">
@@ -119,25 +121,32 @@
           </footer>
         </div>
         <noscript>
-          <style>#root{display:none}</style>
+          <style>#root{display:none}#prerender-shell{display:block!important}</style>
         </noscript>
         <div id="root"></div>
         <script>
-          // Hide the pre-render shell once React has mounted real content.
+          // Show the pre-render shell only as a fallback if React hasn't mounted within 2.5s
+          // (slow network or broken JS). Once React mounts, we just leave the shell hidden.
           (function(){
-            var tries=0;
+            var mounted = false;
             function check(){
-              var root=document.getElementById('root');
-              var shell=document.getElementById('prerender-shell');
-              if(root && root.children && root.children.length>0){
-                if(shell) shell.style.display='none';
-                return;
-              }
-              if(tries++ < 60){ setTimeout(check, 200); }
+              var root = document.getElementById('root');
+              if (root && root.children && root.children.length > 0) { mounted = true; }
             }
-            if(document.readyState==='loading'){
-              document.addEventListener('DOMContentLoaded', check);
-            } else { check(); }
+            // Check frequently; if mounted, we're done.
+            var iv = setInterval(function(){
+              check();
+              if (mounted) { clearInterval(iv); }
+            }, 100);
+            // After 2.5s, if React still hasn't mounted, reveal the static shell as a fallback.
+            setTimeout(function(){
+              check();
+              if (!mounted) {
+                var shell = document.getElementById('prerender-shell');
+                if (shell) { shell.style.display = 'block'; }
+              }
+              clearInterval(iv);
+            }, 2500);
           })();
         </script>
     </body>
