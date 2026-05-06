@@ -1,0 +1,31 @@
+{
+  "summary": "Retest of MobileScrollSpyChips chip-click scroll fix from iteration_12. PRIMARY bug (chip clicks did not scroll the document) is FIXED — clicking chips now scrolls window.scrollY to the target section (chip-tech-stack→4606, chip-cta→7352, chip-joy-beast→2393, chip-experience-centre→4025). Optimistic setActive(id) inside onChip also works (chip gets data-active='true' immediately after click). However a SECONDARY tuning issue remains: after the smooth scroll settles (~2-3s), the IntersectionObserver reconciles data-active to a neighboring section for chip-tech-stack and chip-joy-beast, so the strict acceptance criterion 'scrolls AND chip-tech-stack receives data-active=true' fails. chip-cta and chip-experience-centre fully pass. All Body Kits, dws-summary and theme-toggle regressions pass. Desktop 1440 hides mobile-scroll-spy as expected.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Mobile scroll-spy chip → IntersectionObserver reconciliation",
+        "issue": "After smooth scroll completes, IntersectionObserver picks the WRONG section for some chips. Observed on 390x844: clicking chip-tech-stack lands at scrollY=4606 (correct, tech-stack section top=84) and the chip is data-active=true IMMEDIATELY (optimistic OK), but ~3s later data-active migrates to chip-experience-centre instead of staying on chip-tech-stack. Same for chip-joy-beast (lands correctly at section top=84 but data-active settles to chip-hero). chip-cta and chip-experience-centre reconcile correctly. Likely cause: rootMargin '-25% 0px -55% 0px' produces a very narrow 169px detection band, and the comparator in MobileScrollSpyChips picks the highest cached intersectionRatio in the visibility map — a previously-visited section may still hold a stale ratio higher than the freshly-entered one. Suggest (a) clearing/resetting the visibility map when active is changed via onChip, (b) using top-of-section detection (e.g., section whose getBoundingClientRect().top is closest to header offset) instead of intersectionRatio, or (c) loosening rootMargin to '-72px 0px -60% 0px' so the freshly-targeted section's top-edge dominates.",
+        "affected_selectors": ["[data-testid='chip-tech-stack']", "[data-testid='chip-joy-beast']"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Tune MobileScrollSpyChips IntersectionObserver so the freshly clicked chip stays data-active='true' after the smooth-scroll settles. Currently chip-tech-stack settles to chip-experience-centre and chip-joy-beast settles to chip-hero. Consider clearing the visibility Map inside onChip after setActive(id), or switch the active-section heuristic from 'highest intersectionRatio' to 'section whose top is closest to (header offset)'."
+  ],
+  "critical_code_review_comments": [
+    "/app/frontend/src/components/MobileScrollSpyChips.jsx (lines 36-55): the `visibility` Map is module-scoped to the effect closure but never reset, so stale ratios from previously visible sections compete with the newly visible one and can win when the new section is smaller/shorter. Recommend resetting the map in onChip (e.g., `visibility.clear()` if hoisted via ref) or, simpler, switching the active heuristic to 'section nearest to header offset' so the user's intent is always honored.",
+    "/app/frontend/src/components/MobileScrollSpyChips.jsx (line 67-68): rail.scrollTo for the chip rail is correct now and isolated from document scroll — the original bug is resolved. ✓"
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "skipped", "frontend": "85%"},
+  "test_credentials": "n/a — landing page tested unauthenticated",
+  "seed_data_creation": "none",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iteration_12 primary bug (chip click does not scroll document) is FIXED in iteration_13 retest. window.scrollY now correctly advances to target sections on click (chip-tech-stack→4606, chip-cta→7352, chip-joy-beast→{section top=84}, chip-experience-centre→{section top=84}). Optimistic setActive(id) in onChip works — clicked chip is data-active=true within 50ms. The remaining defect is SECONDARY: after the smooth scroll settles ~3s later, IntersectionObserver reconciles data-active to a neighboring section for chip-tech-stack (settles to experience-centre) and chip-joy-beast (settles to hero). Manual scrolling does update the active chip via IO. Body Kits showcase fully regresses: kit-tab-shadow-gt aria-selected='true' by default, shadow-gt-thumb-1 click changes counter from '01 / 04' to '02 / 04', auto-rotate after 4.5s advances to '03 / 04', switching to kit-tab-cyber-beast hides shadow-gt-thumb-* and shadow-gt-prev/next. dws-summary present, theme toggle works (html.dark applied), Desktop 1440 mobile-scroll-spy display:none.",
+  "rca of the issue": "PRIMARY bug from iteration_12: FIXED. Replacing element.scrollIntoView with rail.scrollTo({left}) in the [active] effect prevents the rail-only horizontal scroll from hijacking the document scroll, so window.scrollTo from onChip now succeeds. Optimistic setActive(id) before window.scrollTo also gives instant chip highlight. SECONDARY tuning bug: the IntersectionObserver callback chooses the section with the highest cached intersectionRatio across all observed targets (visibility Map). With a narrow 169px detection band and tall sections, a previously-visited section can retain a higher ratio than the freshly-entered one if the new section's top edge sits above the band. This causes data-active to drift away from the user's clicked chip post-scroll. Mitigation suggestions provided in action_items."
+}

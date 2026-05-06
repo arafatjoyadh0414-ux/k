@@ -57,16 +57,22 @@ export default function MobileScrollSpyChips() {
     return () => obs.disconnect();
   }, []);
 
-  // Scroll the active chip into view inside the rail
+  // Scroll the active chip into view inside the rail (rail-only horizontal —
+  // never touch the document scroll, otherwise it fights with onChip's
+  // window.scrollTo for the section)
   useEffect(() => {
     const el = chipRefs.current[active];
-    if (!el || !railRef.current) return;
-    el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    const rail = railRef.current;
+    if (!el || !rail) return;
+    const target = el.offsetLeft - rail.clientWidth / 2 + el.clientWidth / 2;
+    rail.scrollTo({ left: target, behavior: "smooth" });
   }, [active]);
 
   const onChip = (id) => {
     const target = document.getElementById(id);
     if (!target) return;
+    // Optimistic highlight — IntersectionObserver will reconcile after scroll
+    setActive(id);
     const headerOffset = 72; // sticky header height
     const top = target.getBoundingClientRect().top + window.scrollY - headerOffset - 12;
     window.scrollTo({ top, behavior: "smooth" });
