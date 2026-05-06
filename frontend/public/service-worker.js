@@ -5,7 +5,7 @@
      - Cart endpoint: cache last successful GET so offline users still see their cart.
 */
 
-const CACHE_VERSION = "joy-v3";
+const CACHE_VERSION = "joy-v4";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
 const CART_CACHE = `${CACHE_VERSION}-cart`;
@@ -83,4 +83,44 @@ self.addEventListener("fetch", (event) => {
       fetch(req).catch(() => caches.match("/").then((c) => c || new Response("Offline", { status: 503 })))
     );
   }
+});
+
+/* ---------- Web Push ---------- */
+
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (_) {
+    data = { title: "JOY Automart", body: event.data?.text() || "" };
+  }
+  const title = data.title || "JOY Automart";
+  const options = {
+    body: data.body || "",
+    icon: data.icon || "https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg",
+    badge: data.icon || "https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg",
+    tag: data.tag || "joy-default",
+    data: { url: data.url || "/dashboard" },
+    requireInteraction: false,
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || "/dashboard";
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((wins) => {
+      // Reuse an open window if any
+      for (const w of wins) {
+        try {
+          const u = new URL(w.url);
+          if (u.origin === self.location.origin) {
+            return w.focus().then(() => w.navigate ? w.navigate(targetUrl) : null);
+          }
+        } catch (_) { /* ignore */ }
+      }
+      return clients.openWindow(targetUrl);
+    })
+  );
 });

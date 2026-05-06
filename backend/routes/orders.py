@@ -190,6 +190,26 @@ async def admin_update_order_status(order_id: str, payload: OrderStatusUpdate, r
             notify_order_status(fresh, owner["email"], payload.status)
     except Exception as e:
         logger.warning(f"Status notify failed: {e}")
+    # Fire web push to all teammates of the workshop on key transitions
+    try:
+        from routes.push import send_push_to_user
+        ws = await db.workshops.find_one({"workshop_id": fresh["workshop_id"]}, {"_id": 0})
+        owner_ids = list({fresh.get("user_id"), ws.get("user_id"), *(ws.get("member_user_ids") or [])}) if ws else [fresh.get("user_id")]
+        owner_ids = [u for u in owner_ids if u]
+        push_titles = {
+            "shipped": ("📦 Order shipped", f"{fresh['order_id']} is on its way"),
+            "out_for_delivery": ("🚚 Out for delivery", f"{fresh['order_id']} arriving soon"),
+            "delivered": ("✅ Order delivered", f"{fresh['order_id']} marked delivered"),
+            "packed": ("📋 Order packed", f"{fresh['order_id']} ready to ship"),
+            "cancelled": ("❌ Order cancelled", f"{fresh['order_id']} was cancelled"),
+        }
+        title_body = push_titles.get(payload.status)
+        if title_body:
+            for uid in owner_ids:
+                await send_push_to_user(uid, title=title_body[0], body=title_body[1],
+                                        url=f"/orders", tag=f"order-{fresh['order_id']}")
+    except Exception as e:
+        logger.warning(f"Push notify failed: {e}")
     return fresh
 
 

@@ -524,3 +524,51 @@ Inspired by the strategic audit. Most audit items were already built (catalog, K
 - All testids preserved: `header-experience-centre-link`, `exp-centre-tab`, `ec-back-link`, `ec-tile-*`, `bd-news-hero`, `bd-news-list`
 - 6 EC tiles render correctly on the dedicated page
 
+
+## 2026-02-10 — Iter16 · Smart PWA push notifications
+
+**🟢 Web Push notifications (no third-party APIs)**
+- VAPID keys generated locally (private PEM stored b64-encoded in `backend/.env` as `VAPID_PRIVATE_PEM_B64`, public exposed via `/api/push/public-key`)
+- Backend `/app/backend/routes/push.py`:
+  - `GET /api/push/public-key` (public — returns VAPID public key)
+  - `POST /api/push/subscribe` (auth — upserts subscription by endpoint)
+  - `POST /api/push/unsubscribe` (auth)
+  - `POST /api/push/test` (auth — sends a test push to all caller's devices)
+  - `send_push_to_user(user_id, *, title, body, url, tag)` helper — best-effort multi-device push, prunes 404/410 endpoints automatically
+- Schema: `db.push_subscriptions: { sub_id, user_id, endpoint, keys, user_agent, created_at, last_used_at, failure_count }`
+- pywebpush==2.3.0, py-vapid==1.9.4, http_ece==1.2.1 added to requirements.txt
+
+**🟢 Order-status push triggers**
+- `/app/backend/routes/orders.py` PATCH `/orders/{id}/status` now fires `send_push_to_user` on transitions: `shipped` (📦 Order shipped), `out_for_delivery` (🚚 Out for delivery), `delivered` (✅ Order delivered), `packed` (📋 Order packed), `cancelled` (❌ Order cancelled)
+- Sends to ALL workshop members (owner + member_user_ids), so parts manager AND mechanic both see it
+- Click navigates to `/orders` with order tag deduplication
+
+**🟢 Low-stock alert worker**
+- New `/app/backend/low_stock_scan.py` — async background worker
+- Scans every 30 minutes; threshold = stock between 1 and 5
+- Finds workshops who ordered the SKU in the last 90 days, pushes ⚠️ Low stock alert to all of them
+- Dedup via `db.low_stock_alerts` collection (24h cooldown per SKU)
+- Click navigates to `/products?search={sku}`
+- Started in `server.py` startup_event alongside recurring worker
+
+**🟢 Service Worker — push + click handlers**
+- `/app/frontend/public/service-worker.js` extended with `push` event (parses JSON payload, shows notification with JOY logo icon, requireInteraction=false) and `notificationclick` event (closes notif, focuses existing window or opens new tab to the notification URL)
+- Cache version bumped `joy-v3 → joy-v4` to force activation
+
+**🟢 Frontend opt-in toggle**
+- `/app/frontend/src/components/PushNotificationToggle.jsx`:
+  - Detects support (serviceWorker + PushManager + Notification)
+  - Asks `Notification.requestPermission()`, subscribes via `pushManager.subscribe({ userVisibleOnly: true, applicationServerKey })`
+  - Stores subscription via `/api/push/subscribe`
+  - "Send test" button (calls `/api/push/test`)
+  - "Disable" button (unsubscribes both client and server)
+  - Friendly "Blocked in browser" state when permission denied with instructions
+  - Hidden entirely on unsupported browsers
+- Wired onto `/app/frontend/src/pages/Profile.jsx` at the top, just below the page title
+- Verified rendering on both desktop (1440px) and mobile (360px); responsive
+
+**Tests**:
+- Backend: `/api/push/public-key` returns key, subscribe upserts, test endpoint executes (returns sent count), VAPID config OK
+- Lint clean: routes/push.py, low_stock_scan.py, PushNotificationToggle.jsx, Profile.jsx
+- Backend started clean with new worker scheduled, i18n cache already warm (216 strings)
+

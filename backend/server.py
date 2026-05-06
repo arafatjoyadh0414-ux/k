@@ -54,6 +54,7 @@ from routes import visual_search as _visual_search_routes  # noqa: F401
 from routes import job_cards as _job_cards_routes  # noqa: F401
 from routes import i18n as _i18n_routes  # noqa: F401
 from routes import audit as _audit_routes  # noqa: F401
+from routes import push as _push_routes  # noqa: F401
 from routes.recurring import start_recurring_worker
 
 # Pydantic models (kept here for back-compat). Authoritative copies live in server_models.py.
@@ -412,6 +413,13 @@ async def startup():
         start_recurring_worker()
     except Exception as e:
         logger.warning(f"Recurring worker start failed: {e}")
+
+    # Start the low-stock push notification worker
+    try:
+        from low_stock_scan import start_low_stock_worker
+        start_low_stock_worker()
+    except Exception as e:
+        logger.warning(f"Low-stock worker start failed: {e}")
 
     # Pre-warm Bengali i18n cache for top UI strings (background, non-blocking)
     try:
