@@ -124,19 +124,11 @@ export default function BodyKitsShowcase() {
             <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-zinc-200 to-zinc-100 dark:from-zinc-800 dark:to-zinc-900" />
           )}
 
-          {/* Top-left badge */}
+          {/* Top-left badge — kit name + tier (the body-kit images themselves
+              already carry built-in spec text, so we deliberately skip a
+              bottom caption to avoid overlap and keep the stage clean) */}
           <div className="absolute top-3 left-3 bg-black/80 backdrop-blur text-white text-[10px] tracking-[0.2em] uppercase px-3 py-1.5 rounded-sm font-semibold">
             {active.name} · {active.tier}
-          </div>
-
-          {/* Bottom caption — premium gradient overlay */}
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent px-4 sm:px-6 py-3 sm:py-4">
-            <div className="text-white font-display text-base sm:text-lg leading-tight">
-              {active.headline}
-            </div>
-            <div className="text-zinc-300 text-xs sm:text-[13px] mt-1 max-w-2xl">
-              {active.blurb}
-            </div>
           </div>
 
           {/* Carousel arrows + counter — only Shadow GT */}

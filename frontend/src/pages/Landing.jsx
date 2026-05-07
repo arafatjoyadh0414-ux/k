@@ -480,10 +480,6 @@ const Landing = () => {
                    className="inline-flex items-center gap-2 bg-zinc-900 hover:bg-zinc-700 text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors">
                   Schedule a kit consultation →
                 </a>
-                <Link to="/kits" data-testid="beast-kits-link"
-                      className="inline-flex items-center gap-2 border border-zinc-300 hover:border-zinc-900 text-zinc-900 px-5 py-2.5 rounded-full text-sm font-semibold transition-colors">
-                  Browse all kits
-                </Link>
               </div>
             </div>
 
@@ -658,7 +654,7 @@ const Landing = () => {
           {/* What you get + How it works combined */}
           <div className="lg:col-span-5 grid grid-cols-2 gap-3">
             <Stat n="1000+" l="Verified parts" />
-            <Stat n="6" l="Body-kit lines" />
+            <Stat n="4" l="Body-kit lines" />
             <Stat n="10–35%" l="Tier off retail price" />
             <Stat n="30d" l="Credit terms" />
           </div>
