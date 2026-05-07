@@ -16,7 +16,7 @@ import EC_ARCHITECTURE from "../assets/experience-centre/ec-architecture-overvie
 import InstallPwaButton from "../components/InstallPwaButton";
 import BodyKitsShowcase from "../components/BodyKitsShowcase";
 import MobileScrollSpyChips from "../components/MobileScrollSpyChips";
-import PublicSearchBar from "../components/PublicSearchBar";
+import HeaderSearchTrigger from "../components/HeaderSearchTrigger";
 
 const LOGO = "https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg";
 const HERO = HARRIER_HERO;
@@ -274,15 +274,6 @@ const Landing = () => {
             </div>
           </Link>
           <nav className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-            <a
-              href="https://www.joyautomart.com"
-              target="_blank"
-              rel="noreferrer"
-              className="hidden lg:inline-flex items-center px-3 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
-              data-testid="header-retail-link"
-            >
-              Retail Store
-            </a>
             <Link
               to="/catalog"
               className="hidden sm:inline-flex items-center px-3 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
@@ -290,20 +281,7 @@ const Landing = () => {
             >
               Catalogue
             </Link>
-            <Link
-              to="/experience-centre"
-              className="hidden md:inline-flex items-center px-3 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-[#E11D48] dark:hover:text-[#FFB1C1] transition-colors"
-              data-testid="header-experience-centre-link"
-            >
-              Experience Centre
-            </Link>
-            <a
-              href="https://wa.me/8801886799533"
-              className="hidden md:inline-flex items-center px-3 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
-              data-testid="header-whatsapp-link"
-            >
-              WhatsApp
-            </a>
+            <HeaderSearchTrigger />
             <ThemeToggle />
             <InstallPwaButton testid="landing-install-pwa" className="hidden sm:inline-flex" />
             <button
@@ -350,14 +328,6 @@ const Landing = () => {
           a flagship Experience Centre, and an AI-driven data layer that gives the
           industry intelligence it has never had before.
         </p>
-
-        {/* Public parts search — dealers can verify stock without signing up */}
-        <div className="mt-7 sm:mt-8" data-testid="hero-public-search-wrap">
-          <PublicSearchBar variant="hero" />
-          <div className="mt-2 text-[11px] text-zinc-500 dark:text-zinc-400 font-mono uppercase tracking-[0.16em]">
-            ✓ No sign-in required &nbsp;·&nbsp; Live stock from our warehouse
-          </div>
-        </div>
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <button

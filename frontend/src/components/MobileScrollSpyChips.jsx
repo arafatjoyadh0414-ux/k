@@ -16,8 +16,6 @@ const SECTIONS = [
   { id: "joy-beast", label: "JOY BEAST" },
   { id: "experience-centre", label: "Experience" },
   { id: "tech-stack", label: "Tech" },
-  { id: "value-prop", label: "Why Joy" },
-  { id: "cta", label: "Get started" },
   { id: "bd-news", label: "BD News" },
 ];
 
@@ -93,11 +91,11 @@ export default function MobileScrollSpyChips() {
   return (
     <div
       data-testid="mobile-scroll-spy"
-      className="lg:hidden sticky top-16 sm:top-[72px] z-20 backdrop-blur-xl bg-white/85 dark:bg-zinc-950/85 border-b hairline dark:border-white/10"
+      className="lg:hidden sticky top-16 sm:top-[72px] z-20 backdrop-blur-xl bg-white/90 dark:bg-zinc-950/90 border-b hairline dark:border-white/10"
     >
       <div
         ref={railRef}
-        className="max-w-7xl mx-auto px-3 sm:px-4 py-2 flex items-center gap-2 overflow-x-auto no-scrollbar"
+        className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 flex items-center justify-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar"
       >
         {SECTIONS.map((s) => {
           const isActive = s.id === active;
@@ -110,13 +108,21 @@ export default function MobileScrollSpyChips() {
               data-active={isActive ? "true" : "false"}
               onClick={() => onChip(s.id)}
               aria-current={isActive ? "true" : undefined}
-              className={`shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-mono uppercase tracking-[0.16em] border transition-all ${
+              className={`shrink-0 px-3 sm:px-3.5 py-1.5 text-[10px] sm:text-[11px] font-display tracking-[0.04em] transition-all duration-300 relative ${
                 isActive
-                  ? "bg-zinc-900 dark:bg-[#E11D48] text-white border-zinc-900 dark:border-[#E11D48] shadow-sm"
-                  : "bg-white/70 dark:bg-zinc-900/70 text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-white/10 hover:border-zinc-900 dark:hover:border-white/40"
+                  ? "text-zinc-900 dark:text-white font-semibold"
+                  : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
               }`}
             >
-              {s.label}
+              <span className="relative z-[1]">{s.label}</span>
+              {/* underline indicator — refined and minimal */}
+              <span
+                className={`absolute left-1/2 -translate-x-1/2 bottom-0.5 h-[2px] rounded-full transition-all duration-300 ${
+                  isActive
+                    ? "w-5 sm:w-6 bg-[#E11D48]"
+                    : "w-0 bg-transparent"
+                }`}
+              />
             </button>
           );
         })}

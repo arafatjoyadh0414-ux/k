@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { useLang } from "../context/LanguageContext";
@@ -156,7 +156,13 @@ const Layout = ({ children }) => {
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400 truncate">{isAdmin ? t("header.admin") : t("header.workshop")}</div>
+            <Link
+              to={isAdmin ? "/admin" : "/dashboard"}
+              data-testid="header-portal-link"
+              className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400 truncate hover:text-[#E11D48] dark:hover:text-[#FFB1C1] transition-colors"
+            >
+              {isAdmin ? t("header.admin") : t("header.workshop")} →
+            </Link>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             <button

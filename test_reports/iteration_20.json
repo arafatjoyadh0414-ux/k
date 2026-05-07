@@ -1,0 +1,43 @@
+{
+  "summary": "Frontend-only verification of iteration 20: hero search removal, header search trigger overlay, header link cleanup, mobile chip nav reduction (7→5) with underline-indicator restyle, and authenticated TRADE PORTAL/ADMIN CONSOLE clickable header link. ALL 9 requested test cases PASSED on the PREVIEW URL.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "HeaderSearchTrigger.jsx (~104 LOC) is clean — uses ESC handler, body-scroll lock, auto-focus via setTimeout(80ms). Backdrop is a <button> with aria-label so it is accessible. Good z-[60] layering above the sticky header z-30.",
+    "MobileScrollSpyChips.jsx underline-indicator restyle is well-implemented (absolute-positioned 2px red bar with width transition from 0→w-5). 5 sections only (hero, joy-beast, experience-centre, tech-stack, bd-news) — chip-value-prop and chip-cta correctly removed.",
+    "Layout.jsx header-portal-link uses i18n (t('header.workshop') → 'TRADE PORTAL', t('header.admin') → 'ADMIN CONSOLE'). Renders as Link to /dashboard for workshop and /admin for admin user — matches PRD exactly. Hover transitions to red brand colour.",
+    "Landing.jsx header is now lean: only Catalogue link + HeaderSearchTrigger + ThemeToggle + InstallPwaButton + Sign in. Retail Store / Experience Centre / WhatsApp links removed from header (still present in hero CTA buttons and footer — correct)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "skipped", "frontend": "100%"},
+  "test_credentials": "test-token-workshop-1 (workshop), test-token-admin-1 (admin) — set via localStorage key ja_session_token",
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iteration 20 fully verified on PREVIEW. Key test results: (1) [data-testid='hero-public-search-wrap'] is GONE from Landing — confirmed null. (2) Trust line text 'No sign-in required'/'Live stock from our warehouse' is GONE from page body. (3) [data-testid='header-search-trigger'] visible in header with Search icon. (4) Clicking trigger opens [data-testid='header-search-overlay'] with auto-focused [data-testid='public-search-input']. (5) ESC + backdrop click + X button all close overlay (each verified separately). (6) Typing 'brake' shows [data-testid='public-search-results'] and clicking [data-testid='public-search-result-0'] navigates to /inquire/JA-BRK-001 and overlay closes. (7) Header text 'Retail Store', 'Experience Centre', 'WhatsApp' all removed (confirmed via header inner_html scan); only 'Catalogue' link remains. (8) Mobile chip nav shows exactly 5 chips (hero, joy-beast, experience-centre, tech-stack, bd-news); chip-value-prop and chip-cta both null. Clicking chip-tech-stack scrolls #tech-stack into view AND data-active='true' after settle. (9) Authenticated /dashboard with workshop token renders [data-testid='header-portal-link'] href='/dashboard' text='TRADE PORTAL →'; /admin with admin token renders href='/admin' text='ADMIN CONSOLE →'.",
+  "passed_tests": [
+    "Hero PublicSearchBar wrapper removed (hero-public-search-wrap absent)",
+    "Trust line 'No sign-in required · Live stock from our warehouse' removed",
+    "header-search-trigger button visible in header",
+    "Click trigger → header-search-overlay opens",
+    "public-search-input is auto-focused on overlay open",
+    "header-search-close button + header-search-close-backdrop both present",
+    "ESC key closes overlay",
+    "Backdrop click closes overlay",
+    "X button click closes overlay",
+    "Typing 'brake' → public-search-results visible with public-search-result-0",
+    "Clicking result navigates to /inquire/JA-BRK-001",
+    "Header has only Catalogue link (Retail Store / Experience Centre / WhatsApp removed from header)",
+    "Mobile chip nav: exactly 5 chips (hero, joy-beast, experience-centre, tech-stack, bd-news)",
+    "chip-value-prop absent, chip-cta absent",
+    "Click chip-tech-stack → data-active='true' AND #tech-stack scrolled into view",
+    "Workshop /dashboard: header-portal-link href=/dashboard, text='TRADE PORTAL →'",
+    "Admin /admin: header-portal-link href=/admin, text='ADMIN CONSOLE →'"
+  ]
+}
