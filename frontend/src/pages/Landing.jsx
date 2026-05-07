@@ -600,13 +600,9 @@ const Landing = () => {
           </div>
 
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link to="/vin-lookup" data-testid="tech-vin-link"
-                  className="inline-flex items-center gap-2 bg-zinc-900 hover:bg-zinc-700 text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors">
-              Try the VIN parts finder →
-            </Link>
             <a href="https://www.joyautomart.com" target="_blank" rel="noreferrer" data-testid="tech-retail-vin-link"
-               className="inline-flex items-center gap-2 border border-zinc-300 hover:border-zinc-900 text-zinc-900 px-5 py-2.5 rounded-full text-sm font-semibold transition-colors">
-              Use it on retail store
+               className="inline-flex items-center gap-2 bg-zinc-900 hover:bg-zinc-700 text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors">
+              Use it on retail store →
             </a>
           </div>
         </div>

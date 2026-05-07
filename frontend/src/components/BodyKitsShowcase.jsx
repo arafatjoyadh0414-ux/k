@@ -13,15 +13,6 @@ import CYBER_RIMS from "../assets/body-kits/cyber-beast-rims.png";
 
 const KITS = [
   {
-    id: "shadow-gt",
-    name: "Shadow GT",
-    tier: "Entry sport",
-    headline: "Stealth aero. Daily-driver poise.",
-    blurb:
-      "Carbon-composite splitters, side skirts and ducktail spoiler — the Shadow GT signature kit, photographed at our Atelier.",
-    gallery: [SHADOW_GT_4],
-  },
-  {
     id: "cyber-beast",
     name: "Cyber Beast",
     tier: "Flagship aero",
@@ -30,6 +21,15 @@ const KITS = [
     blurb:
       "Our flagship aero programme. Wide fender flares, vented bonnet, performance brake pack and red anodised calipers.",
     gallery: [CYBER_BEAST],
+  },
+  {
+    id: "shadow-gt",
+    name: "Shadow GT",
+    tier: "Entry sport",
+    headline: "Stealth aero. Daily-driver poise.",
+    blurb:
+      "Carbon-composite splitters, side skirts and ducktail spoiler — the Shadow GT signature kit, photographed at our Atelier.",
+    gallery: [SHADOW_GT_4],
   },
   {
     id: "wide-body",
@@ -54,7 +54,7 @@ const KITS = [
 const SHADOW_ROTATE_MS = 3800;
 
 export default function BodyKitsShowcase() {
-  const [activeId, setActiveId] = useState("shadow-gt");
+  const [activeId, setActiveId] = useState("cyber-beast");
   const [galleryIdx, setGalleryIdx] = useState(0);
   const [imgLoaded, setImgLoaded] = useState(false);
   const touchStartX = useRef(null);
@@ -124,12 +124,9 @@ export default function BodyKitsShowcase() {
             <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-zinc-200 to-zinc-100 dark:from-zinc-800 dark:to-zinc-900" />
           )}
 
-          {/* Top-left badge — kit name + tier (the body-kit images themselves
-              already carry built-in spec text, so we deliberately skip a
-              bottom caption to avoid overlap and keep the stage clean) */}
-          <div className="absolute top-3 left-3 bg-black/80 backdrop-blur text-white text-[10px] tracking-[0.2em] uppercase px-3 py-1.5 rounded-sm font-semibold">
-            {active.name} · {active.tier}
-          </div>
+          {/* No overlay badge on hero stage — the body-kit images themselves
+              carry their own labels and spec strips, and the active tab below
+              already shows the kit name + tier. Keeping the stage clean. */}
 
           {/* Carousel arrows + counter — only Shadow GT */}
           {isShadow && gallery.length > 1 && (
