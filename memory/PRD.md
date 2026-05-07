@@ -24,7 +24,36 @@
 - Mark payment received (admin), credit auto-released on payment
 
 
-## 2026-05-07 — P2: Search-intent capture (COMPLETE)
+## 2026-05-07 — P2: Sourcing Leads · Genius Analytics · Trusted-by OEM strip (COMPLETE)
+**Three features shipped + tested in one batch — full AI/Data Co. observability stack.**
+
+### 1. Sourcing Leads (closes data → action loop)
+- Auto-promotes any zero-result query that crosses **5+ unique searches in 7 days** into `sourcing_leads` MongoDB collection
+- Workflow statuses: `open → sourcing → added | rejected` with notes field
+- Admin endpoints: `GET /api/admin/sourcing-leads[?status=...]`, `POST /api/admin/sourcing-leads/{lead_id}/status`
+- Surfaced as a new section inside `AdminSearchIntelligence.jsx` with filter tabs (open/sourcing/added/rejected/all), advance + reject buttons, status chips
+- Indexes: `lead_id` unique, `query_norm` unique, `(status, last_seen_at)`
+
+### 2. Genius Analytics admin dashboard
+- New `/admin/genius-analytics` page (route + sidebar nav added)
+- Backend route `/app/backend/routes/genius_analytics.py`:
+  - `POST /api/chat/action-click` (auth) — logs action-chip taps into `genius_action_clicks`
+  - `GET /api/admin/genius-analytics?days=N` — aggregates: total messages, sessions, unique users, actions surfaced (parsed from chat_messages JSON), action clicks, click-rate, top user questions (normalized), daily volume, actions-by-type breakdown
+- `GuardianBot.jsx` `handleAction` now fires fire-and-forget POST to log clicks
+- Dashboard: 4 KPIs · daily-volume bar chart · top user questions list · actions-by-type with bar progress · 7/30/90d window switcher · CSV export
+
+### 3. Trusted-by OEM strip
+- New `landing/TrustedByStrip.jsx` — 8 wordmarks (Toyota · Honda · Nissan · Mitsubishi · BYD · BMW · Mercedes · Lexus) with varied display-font weights/tracking for visual rhythm
+- Slotted between `EcosystemSection` and `WhatWeDoBento` in `Landing.jsx`
+- Hover state lifts each wordmark from zinc-400 → zinc-900
+
+### Polish
+- Atelier kit image: top mask increased to 28-30% to hide source-image annotations ("WIDE SIDE SKIRTS | BLACK ON BLACK | CARBON FIBER ACCENTS")
+- Header logo earlier enlarged to 108px (lg) — verified across sections
+
+**Tested via testing_agent_v3_fork (iter-33)**: Backend 16/16 pass, Frontend 100% pass. End-to-end action-click logging verified; lead auto-promotion fired correctly. 0 issues, retest not needed.
+
+## 2026-05-07 — P2: Search-intent capture (foundation, COMPLETE)
 **New "Search Intelligence" admin module — first piece of the AI-Driven Data Co. layer.**
 
 **Backend** (`/app/backend/routes/search_analytics.py`):
