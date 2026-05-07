@@ -399,17 +399,14 @@ const Landing = () => {
               The JOY Ecosystem
             </span>
             <div className="flex-1 h-px bg-gradient-to-r from-zinc-300 to-transparent dark:from-white/15" />
-            <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.24em] text-zinc-400 dark:text-zinc-500 font-medium hidden sm:inline">
-              Five businesses · One platform
-            </span>
           </div>
           <ul className="divide-y divide-zinc-200 dark:divide-white/10 border-y border-zinc-200 dark:border-white/10" data-testid="hero-ecosystem-list">
             {[
-              { n: "01", v: "Procure", d: "Wholesale parts on credit — for workshops & dealers." },
-              { n: "02", v: "Retail", d: "Direct-to-consumer e-commerce, nationwide." },
+              { n: "01", v: "Procure", d: "Wholesale, on credit — for workshops & dealers." },
+              { n: "02", v: "Retail", d: "Direct-to-consumer parts commerce, nationwide." },
               { n: "03", v: "Experience", d: "Bangladesh's flagship automotive showroom." },
-              { n: "04", v: "Compute", d: "The data & intelligence layer of an industry." },
-              { n: "05", v: "Craft", d: "Bespoke atelier — body kits, forged rims, tuning." },
+              { n: "04", v: "Compute", d: "Industry intelligence, powered by data." },
+              { n: "05", v: "Craft", d: "Bespoke atelier — kits · rims · tuning." },
             ].map((p) => (
               <li
                 key={p.n}
