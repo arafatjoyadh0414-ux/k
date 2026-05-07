@@ -923,3 +923,34 @@ Inspired by the strategic audit. Most audit items were already built (catalog, K
 **Files touched**
 - EDITED `/app/frontend/src/pages/Landing.jsx`
 
+
+## What's Been Implemented (2026-02-10) — Production-Readiness Pass (iter 28 + 29)
+
+User reported on Galaxy Z Fold 5 front screen that the search-icon button overlapped the "JOY Automart" wordmark, plus the mobile chip nav was clipping first/last labels ('Home' → 'me', 'BD News' → 'BD No').
+
+**Header narrow-viewport polish** (`/app/frontend/src/pages/Landing.jsx`)
+- Reduced container padding (`px-3 sm:px-5 lg:px-6`), tighter gap (`gap-2 sm:gap-4`).
+- Logo size tiered: `w-10 h-10` mobile → `w-14 h-14` sm → `w-16 h-16` lg.
+- Wordmark text tiered: `text-[15px]` mobile → `text-xl` sm → `text-2xl` lg, with `truncate` and `overflow-hidden` on the link wrapper.
+- Wordmark group hidden at <360px (`hidden xs:block`); 'Bangladesh' subtitle hidden at <640px.
+- Sign-in button shrunk on mobile (`px-3 py-1.5`).
+- Header search trigger: padding shrunk to `px-2.5 sm:px-3.5`.
+- Tailwind `xs` breakpoint corrected from 400px → 360px in `tailwind.config.js` so the wordmark shows on standard 375/390 mobile viewports.
+
+**Mobile chip nav** (`/app/frontend/src/components/MobileScrollSpyChips.jsx`)
+- Removed `justify-center` (which was clipping first/last chips at narrow widths). Now a proper scrollable rail with `gap-2 sm:gap-3` and per-chip `px-2.5 sm:px-3`.
+- Added pointer-events-none gradient fade masks on left & right edges (`from-white dark:from-zinc-950 to-transparent`) so chips fade into the container edges instead of clipping abruptly.
+- All 6 chips render full text on every viewport.
+
+**Mr Genius bubble shrunk on mobile** (`/app/frontend/src/components/GuardianBot.jsx`)
+- Position: `bottom-4 left-3` mobile → `bottom-5 left-5` sm. Inner icon: `w-6 h-6` → `w-7 h-7` sm. Label text: `text-[9px]` → `text-[11px]` sm. Total bubble width reduced ~30% on mobile.
+
+**Global mobile safe-bottom-padding** (`/app/frontend/src/index.css`)
+- `@media (max-width: 640px) { footer { padding-bottom: 80px } }` so the floating Genius bubble never visually obscures footer links/copyright.
+
+**Tests** (iter 28 → iter 29 retest, both frontend 100%)
+- Verified across 320 / 375 / 390 / 768 / 1440 viewports — header overlap fixed, chip clipping eliminated, Mr Genius bubble small but tappable, footer no longer obscured.
+
+**Files touched**
+- EDITED `/app/frontend/src/pages/Landing.jsx`, `/app/frontend/src/components/HeaderSearchTrigger.jsx`, `/app/frontend/src/components/MobileScrollSpyChips.jsx`, `/app/frontend/src/components/GuardianBot.jsx`, `/app/frontend/src/index.css`, `/app/frontend/tailwind.config.js`
+
