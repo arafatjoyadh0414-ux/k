@@ -699,3 +699,27 @@ Inspired by the strategic audit. Most audit items were already built (catalog, K
 - NEW `/app/frontend/src/components/PublicSearchBar.jsx`
 - EDITED `/app/frontend/src/pages/Landing.jsx` (import + mount in hero)
 
+
+## What's Been Implemented (2026-02-10) — Header Search Trigger + Nav Polish (iter 20)
+
+**Search relocated from hero → header icon** (`/app/frontend/src/components/HeaderSearchTrigger.jsx` NEW)
+- Removed the inline hero search bar (`hero-public-search-wrap` no longer exists) AND the "✓ No sign-in required · Live stock from our warehouse" trust line.
+- New `HeaderSearchTrigger` button mounted in the Landing header next to Sign in. Click opens a centred overlay (`header-search-overlay`) with the `PublicSearchBar` auto-focused. ESC, backdrop click, or X button (`header-search-close`) closes it. Body scroll locks while open. Dark/light theme aware.
+
+**TRADE PORTAL wordmark → clickable Link** (`/app/frontend/src/components/Layout.jsx`)
+- The mono "TRADE PORTAL" / "ADMIN CONSOLE" text in the authenticated header is now a `<Link>` (`data-testid="header-portal-link"`) → `/dashboard` (or `/admin` for admin users) with arrow `→` suffix and hover-to-red transition.
+
+**Mobile chip nav reduced 7 → 5 + restyled** (`/app/frontend/src/components/MobileScrollSpyChips.jsx`)
+- SECTIONS trimmed: removed `value-prop` and `cta`. Final list: Home, JOY BEAST, Experience, Tech, BD News.
+- New visual style — replaced heavy bordered pills with a sophisticated **underline-indicator**: text-only chips (font-display tracking-tight) with a 2px red bar that slides under the active chip. Smaller font (`text-[10px] sm:text-[11px]`), centred rail, increased backdrop-blur opacity for depth.
+
+**Landing header desktop nav cleaned**
+- Removed `Retail Store`, `Experience Centre`, `WhatsApp` header links to reduce clutter (still accessible via JOY BEAST CTAs, Experience tab in chip-nav, and the WhatsApp CTA in the hero).
+- Final desktop header lineup: `Catalogue · Search parts · ☾ · Install PWA · Sign in`.
+
+**Tests** (iter 20 — frontend 100%, 9/9 passed). No retest needed.
+
+**Files touched**
+- NEW `/app/frontend/src/components/HeaderSearchTrigger.jsx`
+- EDITED `/app/frontend/src/components/MobileScrollSpyChips.jsx`, `/app/frontend/src/components/Layout.jsx`, `/app/frontend/src/pages/Landing.jsx`
+
