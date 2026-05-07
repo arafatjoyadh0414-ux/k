@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import HeaderSearchTrigger from "./HeaderSearchTrigger";
 
 /*
  * MobileScrollSpyChips — horizontal-scroll chip nav that highlights the
@@ -142,10 +141,6 @@ export default function MobileScrollSpyChips() {
               </button>
             );
           })}
-          {/* Inline search — fills remaining space beside BD News on mobile */}
-          <div className="flex-1 min-w-[140px] flex items-center pl-2 sm:pl-3">
-            <HeaderSearchTrigger inline />
-          </div>
         </div>
       </div>
     </div>

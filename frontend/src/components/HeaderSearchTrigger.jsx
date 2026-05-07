@@ -42,7 +42,7 @@ const HeaderSearchTrigger = ({ inline = false }) => {
 
   return (
     <>
-      {/* Trigger button — pill (header) or wide input-style (chip rail / mobile) */}
+      {/* Trigger button — icon-only on mobile, pill (with label) on desktop, OR wide input on chip rail */}
       <button
         type="button"
         data-testid={inline ? "mobile-search-trigger" : "header-search-trigger"}
@@ -51,7 +51,7 @@ const HeaderSearchTrigger = ({ inline = false }) => {
         className={
           inline
             ? "flex-1 min-w-0 inline-flex items-center gap-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white border border-zinc-200 dark:border-white/15 hover:border-[#E11D48]/50 px-3 h-9 rounded-full text-xs font-medium transition-all bg-white dark:bg-white/[0.04]"
-            : "inline-flex items-center gap-2 text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white border border-zinc-200 dark:border-white/15 hover:border-zinc-300 hover:shadow-md dark:hover:border-white/40 px-3 sm:px-4 h-10 rounded-full text-xs sm:text-sm font-medium transition-all bg-white/90 dark:bg-white/[0.04]"
+            : "inline-flex items-center justify-center gap-2 text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white border border-zinc-200 dark:border-white/15 hover:border-zinc-300 hover:shadow-md dark:hover:border-white/40 w-9 h-9 sm:w-auto sm:h-10 sm:px-4 rounded-full text-xs sm:text-sm font-medium transition-all bg-white/90 dark:bg-white/[0.04]"
         }
       >
         <Search className={inline ? "w-3.5 h-3.5 shrink-0" : "w-4 h-4"} />

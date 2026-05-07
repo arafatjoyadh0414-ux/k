@@ -24,6 +24,22 @@
 - Mark payment received (admin), credit auto-released on payment
 
 
+## 2026-05-07 — Universal device responsiveness fix
+**Fixed iPhone 15 Pro Max + iPhone SE + Pixel 7 header truncation issues for global device consistency.**
+
+**Problems on phones <=430px:**
+- Tagline "The Automotive Intelligence Company" truncated mid-word ("THE AUTOMOTIVE INTELLIGENC")
+- Inline search bar in chip rail invisible (got pushed off-screen by chip overflow)
+- Live ticker label truncating awkwardly
+
+**Fixes:**
+- StickyHeader: tagline now wraps to 2-3 lines on phones with `flex items-start gap-1.5` + `leading-[1.25] sm:whitespace-nowrap break-words`. Header switches from fixed-height to `min-h` on phones with `py-2` padding for breathing room.
+- Logo sizing recalibrated: 58/64/78/96px (xs/sm/lg) — slightly smaller on phones for proportional fit.
+- HeaderSearchTrigger: shows as a 36px square icon button on mobile (`w-9 h-9`) and a labeled pill on desktop (`sm:w-auto sm:px-4`). Now visible on ALL screens, not hidden on mobile.
+- Removed inline search from MobileScrollSpyChips (search is universal in header now).
+
+**Verified on:** iPhone SE 375px, Pixel 7 412px, iPhone 15 Pro Max 430px, iPad 820px, Desktop 1440px — all show full branding + search + theme + Sign in.
+
 ## 2026-05-07 — P2: Sourcing Leads · Genius Analytics · Trusted-by OEM strip (COMPLETE)
 **Three features shipped + tested in one batch — full AI/Data Co. observability stack.**
 
