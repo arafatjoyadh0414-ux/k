@@ -871,3 +871,35 @@ Inspired by the strategic audit. Most audit items were already built (catalog, K
 **Files touched**
 - EDITED `/app/frontend/src/pages/Landing.jsx`
 
+
+## What's Been Implemented (2026-02-10) — Mr Genius Commerce Actions (iter 26)
+
+**🛒 One-tap commerce on Mr Genius replies** — turns the assistant from an answer engine into a commerce surface for signed-in dealers.
+
+**Backend** (`/app/backend/routes/guardian.py`)
+- Auth-mode system prompt augmented with an `[ACTIONS]...[/ACTIONS]` instruction. Genius can emit up to 3 structured actions at the end of any reply: `add_to_cart` (sku + qty) or `view_order` (order_id). Public visitors never get action instructions.
+- New `_extract_actions(reply, products, orders)` parser: regex-extracts the JSON block, validates each SKU against the user's catalogue snapshot and each order_id against their actual orders, drops malformed/unknown entries silently, caps at 3, enriches each `add_to_cart` action with full product metadata (`product_id`, `name`, `image_url`, `price_bdt` = tier price, `category`, `stock`), and strips the block from the visible reply.
+- Response payload now includes `actions: [...]`. Persisted alongside the assistant message in `db.guardian_messages` and rehydrated by `/guardian/history`.
+
+**Frontend** (`/app/frontend/src/components/GuardianBot.jsx`)
+- New `renderActions(msgIdx, actions)` block under each assistant message:
+  - **Add to cart chip** — red pill: `Add {qty} × {name} · BDT {price}`. Click → `useCart().add(...)`, toast "Added 1 × Brake Pad Set (Ceramic)", chip flips to emerald **"Added"** with `data-consumed="true"`.
+  - **View order chip** — dark pill: `View order` icon + label. Click → closes panel, navigates to `/orders/{order_id}`.
+- Captures actions both from `/guardian/message` POST response and from `/guardian/history` GET (so action chips survive page reload).
+- data-testids: `guardian-actions-{i}`, `guardian-action-{i}-{j}`, `data-action-type` (`add_to_cart` | `view_order`), `data-consumed` flag.
+
+**End-to-end smoke** (manual + agent)
+- Auth query "What are 2 popular brake pads I should add to my cart?" → 2 enriched actions:
+  - `JA-BRK-002` Brake Pad Set (Ceramic) BDT 1,980 stock 500
+  - `JA-PRF-002` Performance Brake Caliper (4-Pot) BDT 78,300 stock 15
+- Reply text contains zero `[ACTIONS]` artefacts. `[ACTIONS]` correctly stripped.
+- Public users get `actions: []` — verified.
+
+**Tests** (iter 26 — 100% on tested cases; view_order skip due to LLM non-determinism is covered by parallel frontend test which DID emit & navigate)
+- Backend pytest: 4 passed + 1 skipped (Genius LLM non-determinism on view_order — frontend covered this).
+- Frontend Playwright: 3/3 scenarios — public no-chips, auth add_to_cart click → cart + toast + emerald state, auth view_order navigation, history rehydration of chips.
+
+**Files touched**
+- EDITED `/app/backend/routes/guardian.py` (action emit prompt, _ACTIONS_RE, _extract_actions, response + history with actions)
+- EDITED `/app/frontend/src/components/GuardianBot.jsx` (useCart, useNavigate, handleAction, renderActions chips)
+
