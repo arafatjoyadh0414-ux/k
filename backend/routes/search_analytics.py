@@ -5,11 +5,17 @@ demand-discovery insights. Anonymous-friendly: stores a hashed IP for
 deduplication only — never the raw IP. Powers the admin "Search
 Intelligence" dashboard (top queries, zero-result queries, daily volume).
 
+Auto-promotes zero-result queries into actionable sourcing leads when
+they cross the threshold (>=5 unique-visitor searches in last 7 days).
+This closes the loop from search demand → procurement action.
+
 Public:
     POST /api/public/search-log     — fire-and-forget log endpoint
 
 Admin:
     GET  /api/admin/search-analytics — top queries, zero-results, time-series
+    GET  /api/admin/sourcing-leads   — promoted demand-signal leads
+    POST /api/admin/sourcing-leads/{lead_id}/status — update lead status
 """
 
 import hashlib
@@ -65,10 +71,65 @@ async def log_public_search(payload: SearchLogIn, request: Request):
     }
     try:
         await db.public_search_logs.insert_one(doc)
+        # Async lead promotion — never blocks the user response
+        if doc["zero_result"]:
+            await _maybe_promote_to_sourcing_lead(doc["query_norm"], doc["query"])
     except Exception:
         # Never fail the user request because of analytics
         return {"ok": False}
     return {"ok": True, "log_id": doc["log_id"]}
+
+
+# ============= Lead promotion logic =============
+SOURCING_LEAD_THRESHOLD = 5  # unique searches in window
+SOURCING_LEAD_WINDOW_DAYS = 7
+
+
+async def _maybe_promote_to_sourcing_lead(query_norm: str, sample_query: str) -> None:
+    """Auto-create / update a sourcing lead when a zero-result query
+    crosses the demand threshold within the rolling window."""
+    if not query_norm:
+        return
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=SOURCING_LEAD_WINDOW_DAYS)).isoformat()
+    base_match = {"query_norm": query_norm, "zero_result": True, "created_at": {"$gte": cutoff}}
+
+    total = await db.public_search_logs.count_documents(base_match)
+    unique_visitors = len(await db.public_search_logs.distinct("ip_hash", base_match))
+    if total < SOURCING_LEAD_THRESHOLD and unique_visitors < SOURCING_LEAD_THRESHOLD:
+        return
+
+    existing = await db.sourcing_leads.find_one({"query_norm": query_norm})
+    now = datetime.now(timezone.utc).isoformat()
+    if existing:
+        # Bump counters; preserve manual status
+        await db.sourcing_leads.update_one(
+            {"query_norm": query_norm},
+            {
+                "$set": {
+                    "last_seen_at": now,
+                    "search_count_window": total,
+                    "unique_visitors_window": unique_visitors,
+                    "sample_query": sample_query,
+                }
+            },
+        )
+        return
+
+    # Brand-new lead
+    lead = {
+        "lead_id": str(uuid.uuid4()),
+        "query_norm": query_norm,
+        "sample_query": sample_query,
+        "search_count_window": total,
+        "unique_visitors_window": unique_visitors,
+        "status": "open",  # open | sourcing | added | rejected
+        "priority": "high" if total >= SOURCING_LEAD_THRESHOLD * 2 else "medium",
+        "notes": "",
+        "first_seen_at": now,
+        "last_seen_at": now,
+        "created_at": now,
+    }
+    await db.sourcing_leads.insert_one(lead)
 
 
 # ============= Admin: analytics dashboard =============
@@ -195,3 +256,50 @@ async def admin_search_analytics(request: Request, days: int = 30):
         "daily_volume": daily_volume,
         "by_source": by_source,
     }
+
+
+
+# ============= Admin: Sourcing Leads =============
+class SourcingLeadStatusIn(BaseModel):
+    status: str = Field(..., max_length=20)  # open | sourcing | added | rejected
+    notes: str | None = None
+
+
+@api_router.get("/admin/sourcing-leads")
+async def admin_list_sourcing_leads(request: Request, status: str | None = None):
+    """List demand-promoted leads. Optionally filter by status."""
+    await require_admin(request)
+    q: dict = {}
+    if status:
+        q["status"] = status
+    leads = await db.sourcing_leads.find(q, {"_id": 0}).sort("last_seen_at", -1).to_list(200)
+    # Counts by status (always full breakdown for the page header)
+    pipeline = [{"$group": {"_id": "$status", "count": {"$sum": 1}}}]
+    by_status_raw = await db.sourcing_leads.aggregate(pipeline).to_list(20)
+    by_status = {row["_id"]: row["count"] for row in by_status_raw}
+    return {
+        "leads": leads,
+        "by_status": by_status,
+        "threshold": SOURCING_LEAD_THRESHOLD,
+        "window_days": SOURCING_LEAD_WINDOW_DAYS,
+    }
+
+
+@api_router.post("/admin/sourcing-leads/{lead_id}/status")
+async def admin_update_sourcing_lead(lead_id: str, payload: SourcingLeadStatusIn, request: Request):
+    """Update a lead's workflow status (open → sourcing → added | rejected)."""
+    await require_admin(request)
+    valid = {"open", "sourcing", "added", "rejected"}
+    if payload.status not in valid:
+        raise HTTPException(status_code=400, detail=f"status must be one of {sorted(valid)}")
+    update = {
+        "status": payload.status,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    if payload.notes is not None:
+        update["notes"] = payload.notes[:500]
+    res = await db.sourcing_leads.update_one({"lead_id": lead_id}, {"$set": update})
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="lead not found")
+    lead = await db.sourcing_leads.find_one({"lead_id": lead_id}, {"_id": 0})
+    return {"ok": True, "lead": lead}

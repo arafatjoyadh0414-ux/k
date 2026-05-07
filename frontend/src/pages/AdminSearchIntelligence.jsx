@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Layout from "../components/Layout";
 import api from "../lib/api";
-import { Search, TrendingUp, Users, AlertCircle, Download, Sparkles } from "lucide-react";
+import { Search, TrendingUp, Users, AlertCircle, Download, Sparkles, Target } from "lucide-react";
 
 const KPI = ({ icon: Icon, label, value, sub, tone = "slate" }) => (
   <div className="industrial-card p-5" data-testid={`search-kpi-${label.toLowerCase().replace(/\s+/g, "-")}`}>
@@ -61,10 +61,22 @@ const VolumeChart = ({ data }) => {
   );
 };
 
+const STATUS_CHIP = {
+  open: { label: "OPEN", cls: "bg-amber-50 text-amber-800 border-amber-200" },
+  sourcing: { label: "SOURCING", cls: "bg-blue-50 text-blue-800 border-blue-200" },
+  added: { label: "ADDED", cls: "bg-emerald-50 text-emerald-800 border-emerald-200" },
+  rejected: { label: "REJECTED", cls: "bg-zinc-100 text-zinc-600 border-zinc-200" },
+};
+
+const NEXT_STATUS = { open: "sourcing", sourcing: "added" };
+
 const AdminSearchIntelligence = () => {
   const [days, setDays] = useState(30);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [leadsData, setLeadsData] = useState(null);
+  const [leadsFilter, setLeadsFilter] = useState("open");
+  const [updatingLead, setUpdatingLead] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -84,6 +96,42 @@ const AdminSearchIntelligence = () => {
       mounted = false;
     };
   }, [days]);
+
+  const refreshLeads = (filter) => {
+    const f = filter || leadsFilter;
+    const q = f === "all" ? "" : `?status=${f}`;
+    api
+      .get(`/admin/sourcing-leads${q}`)
+      .then((r) => setLeadsData(r.data))
+      .catch(() => setLeadsData(null));
+  };
+
+  useEffect(() => {
+    refreshLeads();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leadsFilter]);
+
+  const advanceLead = async (lead) => {
+    const next = NEXT_STATUS[lead.status];
+    if (!next) return;
+    setUpdatingLead(lead.lead_id);
+    try {
+      await api.post(`/admin/sourcing-leads/${lead.lead_id}/status`, { status: next });
+      refreshLeads();
+    } finally {
+      setUpdatingLead(null);
+    }
+  };
+
+  const rejectLead = async (lead) => {
+    setUpdatingLead(lead.lead_id);
+    try {
+      await api.post(`/admin/sourcing-leads/${lead.lead_id}/status`, { status: "rejected" });
+      refreshLeads();
+    } finally {
+      setUpdatingLead(null);
+    }
+  };
 
   const zeroResultPct = useMemo(
     () => (data ? Math.round((data.zero_result_rate || 0) * 100) : 0),
@@ -245,6 +293,108 @@ const AdminSearchIntelligence = () => {
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Sourcing Leads — auto-promoted from zero-result demand */}
+            <div className="industrial-card p-5 border-2 border-zinc-900" data-testid="sourcing-leads-section">
+              <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
+                <div>
+                  <div className="overline flex items-center gap-2">
+                    <Target className="w-3.5 h-3.5 text-[#E11D48]" /> Auto-promoted · Demand → Action
+                  </div>
+                  <div className="font-display text-xl mt-1">Sourcing Leads</div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Zero-result queries that crossed{" "}
+                    <strong>{leadsData?.threshold ?? 5}+ searches in {leadsData?.window_days ?? 7} days</strong>{" "}
+                    are auto-promoted into actionable leads.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap" data-testid="leads-filter-tabs">
+                  {["open", "sourcing", "added", "rejected", "all"].map((f) => {
+                    const count =
+                      f === "all"
+                        ? Object.values(leadsData?.by_status || {}).reduce((a, b) => a + b, 0)
+                        : leadsData?.by_status?.[f] || 0;
+                    return (
+                      <button
+                        key={f}
+                        type="button"
+                        onClick={() => setLeadsFilter(f)}
+                        data-testid={`leads-filter-${f}`}
+                        className={`px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider rounded-full border transition-colors ${
+                          leadsFilter === f
+                            ? "bg-zinc-900 text-white border-zinc-900"
+                            : "bg-white text-zinc-700 border-zinc-200 hover:border-zinc-400"
+                        }`}
+                      >
+                        {f} {count > 0 && <span className="opacity-70">· {count}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {!leadsData ? (
+                <div className="text-sm text-slate-500">Loading leads…</div>
+              ) : leadsData.leads.length === 0 ? (
+                <div className="text-center py-8" data-testid="leads-empty">
+                  <Target className="w-7 h-7 text-zinc-300 mx-auto mb-2" />
+                  <div className="text-sm font-medium">No leads in this view</div>
+                  <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+                    Leads auto-create when ≥5 unique searches for the same missing part land within 7 days.
+                  </p>
+                </div>
+              ) : (
+                <ul className="divide-y divide-zinc-100" data-testid="leads-list">
+                  {leadsData.leads.map((lead, i) => {
+                    const chip = STATUS_CHIP[lead.status] || STATUS_CHIP.open;
+                    const next = NEXT_STATUS[lead.status];
+                    return (
+                      <li key={lead.lead_id} className="py-3 flex items-center gap-3" data-testid={`leads-row-${i}`}>
+                        <span className="font-mono text-xs text-zinc-400 w-6 shrink-0">
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm text-zinc-900 truncate">{lead.sample_query}</div>
+                          <div className="text-[11px] text-slate-500 mt-0.5 font-mono">
+                            {lead.search_count_window} searches · {lead.unique_visitors_window} visitors ·{" "}
+                            {lead.priority?.toUpperCase()} priority
+                          </div>
+                        </div>
+                        <span
+                          className={`text-[10px] font-mono uppercase tracking-wider border px-2 py-0.5 rounded ${chip.cls}`}
+                        >
+                          {chip.label}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          {next && lead.status !== "rejected" && (
+                            <button
+                              type="button"
+                              onClick={() => advanceLead(lead)}
+                              disabled={updatingLead === lead.lead_id}
+                              data-testid={`leads-advance-${i}`}
+                              className="text-[10px] font-mono uppercase tracking-wider px-2.5 py-1 rounded bg-zinc-900 text-white hover:bg-zinc-700 disabled:opacity-50 transition-colors"
+                            >
+                              → {NEXT_STATUS[lead.status]}
+                            </button>
+                          )}
+                          {lead.status !== "rejected" && lead.status !== "added" && (
+                            <button
+                              type="button"
+                              onClick={() => rejectLead(lead)}
+                              disabled={updatingLead === lead.lead_id}
+                              data-testid={`leads-reject-${i}`}
+                              className="text-[10px] font-mono uppercase tracking-wider px-2.5 py-1 rounded border border-zinc-300 text-zinc-600 hover:border-rose-300 hover:text-rose-700 disabled:opacity-50 transition-colors"
+                            >
+                              Reject
+                            </button>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
           </>
         )}

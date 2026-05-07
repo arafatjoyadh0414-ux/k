@@ -10,6 +10,7 @@ import LiveTickerStrip from "../components/landing/LiveTickerStrip";
 import StickyHeader from "../components/landing/StickyHeader";
 import HeroSection from "../components/landing/HeroSection";
 import EcosystemSection from "../components/landing/EcosystemSection";
+import TrustedByStrip from "../components/landing/TrustedByStrip";
 import WhatWeDoBento from "../components/landing/WhatWeDoBento";
 import JoyBeastSection from "../components/landing/JoyBeastSection";
 import ExperienceCentreTeaser from "../components/landing/ExperienceCentreTeaser";
@@ -76,6 +77,7 @@ const Landing = () => {
 
       <HeroSection onLogin={handleLogin} />
       <EcosystemSection />
+      <TrustedByStrip />
       <WhatWeDoBento />
       <JoyBeastSection />
       <ExperienceCentreTeaser />

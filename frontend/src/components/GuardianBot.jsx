@@ -135,6 +135,16 @@ const GuardianBot = () => {
   // One-tap actions emitted by Genius (auth-only). Each action carries enriched
   // product data so we can hand it straight to the cart context.
   const handleAction = (msgIdx, actionIdx, action) => {
+    // Fire-and-forget click logging — powers Genius Analytics dashboard
+    api
+      .post("/chat/action-click", {
+        session_id: sessionRef.current || "",
+        action_type: action.type,
+        action_label: action.label || action.name || "",
+        product_id: action.product_id || null,
+      })
+      .catch(() => {});
+
     if (action.type === "add_to_cart") {
       addToCart(
         {

@@ -37,6 +37,7 @@ import AdminReturns from "@/pages/AdminReturns";
 import AdminTierUpgrades from "@/pages/AdminTierUpgrades";
 import AdminReports from "@/pages/AdminReports";
 import AdminSearchIntelligence from "@/pages/AdminSearchIntelligence";
+import AdminGeniusAnalytics from "@/pages/AdminGeniusAnalytics";
 import AdminWorkshops from "@/pages/AdminWorkshops";
 import AdminWorkshopDetail from "@/pages/AdminWorkshopDetail";
 import AdminOrders from "@/pages/AdminOrders";
@@ -114,6 +115,7 @@ const AppRouter = () => {
       <Route path="/admin/tier-upgrades" element={<ProtectedRoute adminOnly><AdminTierUpgrades /></ProtectedRoute>} />
       <Route path="/admin/reports" element={<ProtectedRoute adminOnly><AdminReports /></ProtectedRoute>} />
       <Route path="/admin/search-intelligence" element={<ProtectedRoute adminOnly><AdminSearchIntelligence /></ProtectedRoute>} />
+      <Route path="/admin/genius-analytics" element={<ProtectedRoute adminOnly><AdminGeniusAnalytics /></ProtectedRoute>} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>

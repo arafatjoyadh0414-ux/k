@@ -126,17 +126,19 @@ export default function BodyKitsShowcase() {
             />
           ))}
 
-          {/* Top mask — fully covers the upper portion of the source image (where embedded brand text/buildings sit), fades into the car cleanly */}
-          {active.id !== "atelier" && (
-            <div
-              aria-hidden="true"
-              className="absolute inset-x-0 top-0 h-[34%] sm:h-[36%] pointer-events-none z-[1]"
-              style={{
-                background:
-                  "linear-gradient(to bottom, rgb(244 244 245) 0%, rgb(244 244 245) 55%, rgba(244,244,245,0.6) 80%, rgba(244,244,245,0) 100%)",
-              }}
-            />
-          )}
+          {/* Top mask — covers upper portion (embedded brand text / buildings) and fades into the car */}
+          <div
+            aria-hidden="true"
+            className={`absolute inset-x-0 top-0 pointer-events-none z-[1] ${
+              active.id === "atelier" ? "h-[28%] sm:h-[30%]" : "h-[34%] sm:h-[36%]"
+            }`}
+            style={{
+              background:
+                active.id === "atelier"
+                  ? "linear-gradient(to bottom, rgb(244 244 245) 0%, rgb(244 244 245) 60%, rgba(244,244,245,0.55) 85%, rgba(244,244,245,0) 100%)"
+                  : "linear-gradient(to bottom, rgb(244 244 245) 0%, rgb(244 244 245) 55%, rgba(244,244,245,0.6) 80%, rgba(244,244,245,0) 100%)",
+            }}
+          />
 
           {/* Subtle JOY brand mark — bottom-right, near the water reflection */}
           <div

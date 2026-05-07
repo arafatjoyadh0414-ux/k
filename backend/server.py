@@ -57,6 +57,7 @@ from routes import audit as _audit_routes  # noqa: F401
 from routes import push as _push_routes  # noqa: F401
 from routes import guardian as _guardian_routes  # noqa: F401
 from routes import search_analytics as _search_analytics_routes  # noqa: F401
+from routes import genius_analytics as _genius_analytics_routes  # noqa: F401
 from routes.recurring import start_recurring_worker
 
 # Pydantic models (kept here for back-compat). Authoritative copies live in server_models.py.
@@ -411,6 +412,12 @@ async def startup():
         await db.public_search_logs.create_index([("created_at", -1)])
         await db.public_search_logs.create_index([("query_norm", 1), ("created_at", -1)])
         await db.public_search_logs.create_index([("zero_result", 1), ("created_at", -1)])
+        await db.sourcing_leads.create_index("lead_id", unique=True)
+        await db.sourcing_leads.create_index("query_norm", unique=True)
+        await db.sourcing_leads.create_index([("status", 1), ("last_seen_at", -1)])
+        await db.genius_action_clicks.create_index("click_id", unique=True)
+        await db.genius_action_clicks.create_index([("created_at", -1)])
+        await db.genius_action_clicks.create_index([("user_id", 1), ("created_at", -1)])
         logger.info("Indexes ensured")
     except Exception as e:
         logger.warning(f"Index creation warning: {e}")

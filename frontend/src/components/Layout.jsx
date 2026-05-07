@@ -6,7 +6,7 @@ import { useLang } from "../context/LanguageContext";
 import { useTheme } from "../context/ThemeContext";
 import {
   LayoutDashboard, Package, ShoppingCart, ClipboardList, UserCircle2,
-  Shield, LogOut, Wrench, Sparkles, Inbox, FileQuestion, Truck, BarChart3, Boxes, Bike, RotateCcw, Globe, Zap, TrendingUp, ScanSearch, Repeat, Menu, X, Sun, Moon, Users, Camera, Briefcase, History, Search
+  Shield, LogOut, Wrench, Sparkles, Inbox, FileQuestion, Truck, BarChart3, Boxes, Bike, RotateCcw, Globe, Zap, TrendingUp, ScanSearch, Repeat, Menu, X, Sun, Moon, Users, Camera, Briefcase, History, Search, Bot
 } from "lucide-react";
 
 const LOGO = "https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg";
@@ -117,6 +117,7 @@ const Layout = ({ children }) => {
               <NavItem to="/admin/delivery-persons" icon={Bike} label="Delivery Team" testid="nav-admin-delivery" />
               <NavItem to="/admin/reports" icon={BarChart3} label="Reports" testid="nav-admin-reports" />
               <NavItem to="/admin/search-intelligence" icon={Search} label="Search Intel" testid="nav-admin-search-intel" />
+              <NavItem to="/admin/genius-analytics" icon={Bot} label="Genius Analytics" testid="nav-admin-genius-analytics" />
             </>
           )}
         </nav>
