@@ -1,0 +1,37 @@
+{
+  "summary": "Iter 22 polish fixes verified — all 4 user-requested changes + regression checks PASSED. Header sub-text now reads 'BANGLADESH' only (no 'B2B ·'). Logo sized at 48px mobile / 64px desktop (was 36px mobile). Hero CTAs trimmed: only login + retail remain; catalog & WhatsApp removed. Tech section retail-vin-link removed. Custom Atelier image clipped with inline style height:200% + object-position:center top, hiding duplicate BYD-logo bottom row of the 6-panel composite. Regression: kit tabs swap images correctly, mobile chip nav has 5 chips, page loads without errors.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Landing.jsx is 1000+ lines (historical) — consider extracting Hero, Tech, and Value-prop sections into their own components for future maintainability.",
+    "Header logo sub-text currently renders literal 'Bangladesh' (Title Case) while styled with uppercase+tracking CSS — visual output is 'BANGLADESH' which matches requirement; no action needed.",
+    "BodyKitsShowcase atelier inline style (height:200% + object-position:center top) is a display-layer crop workaround — acceptable polish fix but long-term a properly cropped asset would be cleaner."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (not tested per request)", "frontend": "100%"},
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iter 22 all polish fixes verified on public URL. Key selectors: [data-testid='header-logo-link'] img (48px mobile, 64px desktop), [data-testid='hero-google-login-button'], [data-testid='hero-retail-link'], [data-testid='kit-tab-atelier'] (note id is 'atelier' not 'custom-atelier'; tab id uses hyphens e.g. cyber-beast, shadow-gt, wide-body). Atelier image inline style: img.style.height==='200%' and img.style.objectPosition contains 'center top'. Mobile chips use data-testid='chip-{id}' (chip-hero, chip-joy-beast, chip-experience-centre, chip-tech-stack, chip-bd-news) — 5 chips confirmed.",
+  "test_results_detail": {
+    "header_subtext_bangladesh_only": "PASS — rendered text is 'Bangladesh' with uppercase CSS; no 'B2B' present",
+    "logo_size_mobile_48px": "PASS — 48px on 390px viewport",
+    "logo_size_desktop_64px": "PASS — 64px on 1440px viewport",
+    "hero_cta_login_present": "PASS",
+    "hero_cta_retail_present": "PASS",
+    "hero_cta_catalog_removed": "PASS",
+    "hero_cta_whatsapp_removed": "PASS",
+    "tech_retail_vin_link_removed": "PASS",
+    "atelier_inline_height_200pct": "PASS — img.style.height === '200%'",
+    "atelier_inline_object_position": "PASS — img.style.objectPosition === 'center top'",
+    "atelier_visual_crop": "PASS — screenshot confirms only top row (single front 3/4 + single rear 3/4) visible; bottom duplicate row clipped",
+    "kit_tabs_swap_images": "PASS — shadow-gt, wide-body, atelier all load images when clicked",
+    "mobile_chip_nav_5_chips": "PASS — exactly 5 chips (hero, joy-beast, experience-centre, tech-stack, bd-news)"
+  }
+}

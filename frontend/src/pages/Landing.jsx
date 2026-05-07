@@ -266,11 +266,11 @@ const Landing = () => {
       {/* Glassmorphic sticky header */}
       <header className="sticky top-0 z-30 backdrop-blur-xl bg-white/70 dark:bg-zinc-950/70 border-b hairline dark:border-white/10">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 h-16 sm:h-[72px] flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-2.5 sm:gap-3 group min-w-0 flex-shrink" data-testid="header-logo-link" aria-label="JOY Automart — Go to home">
-            <img src={LOGO} alt="JOY Automart" className="w-9 h-9 sm:w-11 sm:h-11 lg:w-12 lg:h-12 object-contain rounded-sm transition-transform group-hover:scale-105 flex-shrink-0" />
+          <Link to="/" className="flex items-center gap-3 sm:gap-4 group min-w-0 flex-shrink" data-testid="header-logo-link" aria-label="JOY Automart — Go to home">
+            <img src={LOGO} alt="JOY Automart" className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 object-contain rounded-sm transition-transform group-hover:scale-105 flex-shrink-0" />
             <div className="leading-tight min-w-0">
-              <div className="font-display text-base sm:text-lg lg:text-xl text-zinc-900 dark:text-white tracking-tight font-semibold whitespace-nowrap">JOY Automart</div>
-              <div className="hidden xs:block font-mono text-[9px] sm:text-[10px] lg:text-[11px] uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400 mt-0.5 whitespace-nowrap">B2B · Bangladesh</div>
+              <div className="font-display text-lg sm:text-xl lg:text-2xl text-zinc-900 dark:text-white tracking-tight font-semibold whitespace-nowrap">JOY Automart</div>
+              <div className="hidden xs:block font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.22em] text-zinc-500 dark:text-zinc-400 mt-0.5 whitespace-nowrap">Bangladesh</div>
             </div>
           </Link>
           <nav className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
@@ -341,15 +341,6 @@ const Landing = () => {
           <a href="https://www.joyautomart.com" target="_blank" rel="noreferrer" data-testid="hero-retail-link"
              className="inline-flex items-center gap-2 bg-white border border-zinc-300 hover:border-zinc-900 text-zinc-900 px-5 sm:px-6 py-3 rounded-full text-sm font-semibold transition-colors">
             Visit retail store →
-          </a>
-          <a href="/catalog" data-testid="hero-catalog-link"
-             className="inline-flex items-center gap-2 bg-white border border-zinc-300 hover:border-zinc-900 text-zinc-900 px-5 sm:px-6 py-3 rounded-full text-sm font-semibold transition-colors">
-            Browse catalogue →
-          </a>
-          <a href="https://wa.me/8801886799533" data-testid="hero-whatsapp-link"
-             className="inline-flex items-center gap-2 bg-white border border-zinc-300 hover:border-[#25D366] hover:text-[#25D366] text-zinc-900 px-5 sm:px-6 py-3 rounded-full text-sm font-semibold transition-colors">
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 018.413 3.488 11.824 11.824 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884a9.86 9.86 0 001.683 5.526l-.999 3.648 3.805-.873z"/></svg>
-            01886-799533
           </a>
         </div>
       </section>
@@ -518,7 +509,7 @@ const Landing = () => {
       {/* Technology — VIN parts finder, AI, blockchain roadmap */}
       <section id="tech-stack" className="bg-white border-b hairline relative overflow-hidden scroll-mt-28">
         <div className="absolute inset-0 grid-bg" aria-hidden="true" />
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 py-14 sm:py-20 relative z-10 reveal">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 pt-14 sm:pt-20 pb-8 sm:pb-12 relative z-10 reveal">
           <div className="font-mono text-[11px] uppercase tracking-[0.24em] text-zinc-500 mb-2">The technology stack</div>
           <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl tracking-tighter leading-[1.05] max-w-3xl mb-2">
             The smartest auto-parts experience in Bangladesh.
@@ -599,17 +590,13 @@ const Landing = () => {
             </div>
           </div>
 
-          <div className="mt-8 flex flex-wrap gap-3">
-            <a href="https://www.joyautomart.com" target="_blank" rel="noreferrer" data-testid="tech-retail-vin-link"
-               className="inline-flex items-center gap-2 bg-zinc-900 hover:bg-zinc-700 text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors">
-              Use it on retail store →
-            </a>
-          </div>
+          {/* CTAs intentionally removed — Tech is a feature-only narrative
+              and the Retail-store CTA already lives in the hero. */}
         </div>
       </section>
 
       {/* Condensed value proposition — replaces 3 verbose sections (personas + capabilities + how-it-works) */}
-      <section id="value-prop" className="max-w-7xl mx-auto px-5 sm:px-6 py-10 sm:py-14 reveal scroll-mt-28">
+      <section id="value-prop" className="max-w-7xl mx-auto px-5 sm:px-6 py-8 sm:py-10 reveal scroll-mt-28">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
           {/* Three audiences — single tight row */}
           <div className="lg:col-span-7">

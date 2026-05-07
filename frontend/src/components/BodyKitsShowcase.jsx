@@ -112,6 +112,15 @@ export default function BodyKitsShowcase() {
               alt={`${active.name} — ${active.headline}`}
               loading={i === 0 ? "eager" : "lazy"}
               onLoad={() => i === galleryIdx && setImgLoaded(true)}
+              style={
+                // Custom Atelier source is a 6-panel composite where the bottom row
+                // shows extra rear views with duplicate BYD logos. Render the image at
+                // 2x container height anchored to the top so only the top row
+                // (clean front 3/4 + rear 3/4) is visible — no distortion.
+                active.id === "atelier"
+                  ? { height: "200%", objectFit: "cover", objectPosition: "center top" }
+                  : undefined
+              }
               className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-out ${
                 i === galleryIdx ? "opacity-100" : "opacity-0"
               }`}
