@@ -723,3 +723,19 @@ Inspired by the strategic audit. Most audit items were already built (catalog, K
 - NEW `/app/frontend/src/components/HeaderSearchTrigger.jsx`
 - EDITED `/app/frontend/src/components/MobileScrollSpyChips.jsx`, `/app/frontend/src/components/Layout.jsx`, `/app/frontend/src/pages/Landing.jsx`
 
+
+## What's Been Implemented (2026-02-10) — Body Kits Reorder + Stage Cleanup + VIN CTA Trim (iter 21)
+
+**Body Kits**
+- Reordered KITS: `Cyber Beast → Shadow GT → Beast Wide Body → Custom Atelier`. Cyber Beast is now default-active on page load.
+- Removed the absolute top-left `KIT NAME · TIER` overlay badge — was clashing with the built-in spec strips on the multi-view body-kit images (e.g. "BEAST WIDE BODY · WIDE-BODY" was hiding "LUXE VIP" text). The active tab below the image already shows name + tier.
+
+**Tech section**
+- Removed `[data-testid="tech-vin-link"]` ("Try the VIN parts finder →") button. Only `[data-testid="tech-retail-vin-link"]` ("Use it on retail store →") remains, restyled as the primary dark CTA.
+
+**Tests** (iter 21 — 100% frontend, 5/5 passed). No retest needed.
+
+**Files touched**
+- EDITED `/app/frontend/src/components/BodyKitsShowcase.jsx` (kits reordered, default cyber-beast, badge overlay removed)
+- EDITED `/app/frontend/src/pages/Landing.jsx` (VIN button removed, retail link styled primary)
+
