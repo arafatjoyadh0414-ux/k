@@ -653,3 +653,26 @@ Inspired by the strategic audit. Most audit items were already built (catalog, K
 - EDITED `/app/frontend/src/pages/ExperienceCentre.jsx`, `/app/frontend/src/components/ExperienceCentreContent.jsx`, `/app/frontend/src/pages/Landing.jsx`, `/app/frontend/src/pages/Profile.jsx`
 - NEW `/app/frontend/src/components/NotificationPreferences.jsx`
 
+
+## What's Been Implemented (2026-02-10) — Final Deploy-Ready Polish (iter 17 + 18)
+
+**Iter 17 fixes** (per user screenshots):
+- Catalog → Catalogue spelling everywhere (header, hero CTA, footer, tech badge, Dashboard, Products, AdminProducts, PublicCatalog, VisualSearch).
+- Hero CTAs unified — Visit retail store, Browse catalogue, WhatsApp 01886-799533 all share the same white-bordered pill style at `px-5 sm:px-6 py-3 rounded-full`.
+- News ticker no longer visually merges with red Live badge — added `.ticker-mask` left/right gradient mask + right-side shadow on the badge.
+- EC page badge: `Banani · Madani Avenue` → `Madani Avenue · 100 ft`. Removed every `1,560 sq ft` / `65 ft × 24 ft` reference. New sophisticated description focusing on the 100 ft Madani Avenue corridor positioning.
+- EC hero panoramic swapped to `EC_DAY_NIGHT` (exterior) so the lead picture is exterior.
+- VIN Lookup reference photo: removed `Wikipedia · model generation` attribution badge AND the bottom black caption with photo title.
+
+**Iter 18 fixes** (per user screenshots):
+- Removed `Browse all kits` link from JOY BEAST section — only `Schedule a kit consultation →` remains.
+- Body-kit lines stat: `6` → `4` (matches the 4 actual kit tabs).
+- BodyKitsShowcase bottom overlay (gradient + headline + blurb) removed across all 4 tabs — was clashing with built-in spec strips already on the body-kit images. Only the clean top-left `KIT NAME · TIER` badge remains.
+
+**Tests** (iter 17 = 100% on 10 targets, iter 18 = 100% on 5 targets — no retest needed).
+
+**Files touched**
+- EDITED `/app/frontend/src/pages/Landing.jsx`, `/app/frontend/src/index.css`
+- EDITED `/app/frontend/src/components/ExperienceCentreContent.jsx`, `/app/frontend/src/components/BodyKitsShowcase.jsx`
+- EDITED `/app/frontend/src/pages/VinLookup.jsx`, `/app/frontend/src/pages/Dashboard.jsx`, `/app/frontend/src/pages/Products.jsx`, `/app/frontend/src/pages/AdminProducts.jsx`, `/app/frontend/src/pages/PublicCatalog.jsx`, `/app/frontend/src/pages/VisualSearch.jsx`
+
