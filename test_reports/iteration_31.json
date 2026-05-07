@@ -1,0 +1,33 @@
+{
+  "summary": "Iter-31 Landing.jsx refactor regression sweep — frontend-only. Landing.jsx is now a 92-line composer importing 14 modular components from /components/landing/. All 21 acceptance items verified PASS at desktop 1440 and mobile 390. Every required data-testid (26 total: landing-page, header-logo-link, top-login-button, hero-google-login-button, hero-retail-link, hero-tripillar, hero-tripillar-01..03, hero-ecosystem-section, hero-eco-01..05, exp-centre-tab, dws-summary, cta-whatsapp-link, bottom-cta-button, footer-portal-link, footer-retail-link, footer-terms-link, footer-privacy-link, guardian-bot-trigger, theme-toggle, hero-watermark) is present and visible. No regressions detected.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Sticky header at 390px viewport",
+        "issues": [
+          "The shortened tagline 'Automotive Intelligence Co.' (rendered correctly via md:hidden) gets visually clipped by overflow-hidden because nav buttons (search icon + theme toggle + Sign-in pill) consume ~190px of the 390px width. Visible text reads 'AUTOMOTIVE INTELLIGE...'. Pre-existing issue, not caused by refactor. Possible mitigation: drop tracking from 0.22em to 0.18em or use `flex-1 min-w-0` on text container with smaller font."
+        ]
+      }
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Refactor is clean: Landing.jsx is now 92 lines (well under 700 limit). State (stats, news) stays in Landing and ticker is built locally then passed to LiveTickerStrip — clean prop drilling.",
+    "onLogin handler is correctly lifted to Landing and passed to StickyHeader, HeroSection, BottomCTASection, LandingFooter — single source of truth preserved.",
+    "Console shows 401 from /api/public/* or /api/auth/me on initial load for unauthenticated users — expected behavior, not a bug. Consider silencing the axios catch with a console.debug to avoid red console noise.",
+    "watermark uses fixed positioning with z-[1] inside the landing-page wrapper (z above grain-overlay) — make sure interactive elements above remain reachable. Verified pointer-events: none in classes — OK.",
+    "Mr Genius chat panel: textarea has data-testid='guardian-input' but the submit/send button could not be located by a stable testid in the panel — recommend adding data-testid='guardian-send' for future reliable testing (input+Enter works, but button click path is untested)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "skipped (frontend-only review)", "frontend": "100% (21/21 acceptance items pass)"},
+  "test_credentials": "n/a — public landing page, no auth flows tested",
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Refactor is verified intact. Verified via Playwright at 1440x900 (light + dark) and 390x844 (mobile). Key verifications: (1) all 26 data-testids visible; (2) removed H1 'Bangladesh's automotive AI, data & commerce infrastructure' returns count=0 — correctly gone; (3) 'Built in Bangladesh' badge (exact match) returns count=0 — correctly removed; (4) footer tagline 'Built in Bangladesh · Engineered for the world' renders once — correctly preserved; (5) hero image has NO 'JOY Automart' text overlay overlay sibling — correctly removed; (6) Mr Genius chat opens, input fires response messages render in panel; (7) theme toggle adds 'dark' class to <html> and ecosystem section remains visible; (8) at 390px no horizontal scroll, scrollWidth==clientWidth==390; (9) tri-pillar cards 01,02,03 stack at left=20 vertically (1-col); (10) eco-01 and eco-02 stack at left=20 with width 350 (full-width on mobile); (11) hero-tripillar-* visible with eyebrow 'Bangladesh's First AI-Powered'; (12) JOY BEAST descriptor 'Body kits · forged & bespoke rims · tuning brand' present (5 occurrences across page); (13) Mr Genius FAB labelled 'MR GENIUS' (1 occurrence). Only minor pre-existing design nit: mobile tagline visually clips. No action required from main agent.",
+  "rca of the issue": "n/a — no regressions found. Refactor preserves 100% of behavior."
+}
