@@ -16,6 +16,7 @@ import EC_ARCHITECTURE from "../assets/experience-centre/ec-architecture-overvie
 import InstallPwaButton from "../components/InstallPwaButton";
 import BodyKitsShowcase from "../components/BodyKitsShowcase";
 import MobileScrollSpyChips from "../components/MobileScrollSpyChips";
+import PublicSearchBar from "../components/PublicSearchBar";
 
 const LOGO = "https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg";
 const HERO = HARRIER_HERO;
@@ -349,6 +350,14 @@ const Landing = () => {
           a flagship Experience Centre, and an AI-driven data layer that gives the
           industry intelligence it has never had before.
         </p>
+
+        {/* Public parts search — dealers can verify stock without signing up */}
+        <div className="mt-7 sm:mt-8" data-testid="hero-public-search-wrap">
+          <PublicSearchBar variant="hero" />
+          <div className="mt-2 text-[11px] text-zinc-500 dark:text-zinc-400 font-mono uppercase tracking-[0.16em]">
+            ✓ No sign-in required &nbsp;·&nbsp; Live stock from our warehouse
+          </div>
+        </div>
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <button

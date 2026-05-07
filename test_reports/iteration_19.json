@@ -1,0 +1,41 @@
+{
+  "summary": "Frontend-only verification of new PublicSearchBar on Landing hero + smoke routing for /catalog, /terms, /privacy, /dashboard on PREVIEW. ALL 13 requested test cases PASSED. New search component is fully functional: live filter, debounce, dropdown, keyboard nav, no-match fallback, mobile responsiveness, browse-all CTA, outside-click close — all verified.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "(Optional / pre-existing, NOT related to this iteration) Pages /inquire/* surface a React hydration warning: '<span> cannot be a child of <option>' inside Inquire.jsx <select data-testid=\"inq-kit\"> — caused by visual-editor span injection. Cosmetic dev-mode warning only; does not break the kit-selection flow but worth cleaning in Inquire.jsx if/when convenient."
+  ],
+  "critical_code_review_comments": [
+    "PublicSearchBar.jsx is clean (~242 LOC), well-scoped, debounced (220ms), uses module-level _catalogPromise cache so /api/public/catalog is fetched only once per page-load — good performance hygiene.",
+    "Keyboard nav: Enter uses window.location.href instead of react-router navigate(); functional but causes a full page reload for keyboard users vs SPA navigation for click users. Minor UX inconsistency — consider useNavigate() for parity.",
+    "matches() filters on car_fits but the public catalog endpoint does not return car_fits — filter is harmless no-op until backend adds fits. Keep as-is for forward compat.",
+    "All required data-testid attributes present: public-search-bar, public-search-input, public-search-clear, public-search-browse-all, public-search-dropdown, public-search-results, public-search-result-N, public-search-request-quote, public-search-view-all, hero-public-search-wrap. Excellent testability."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "skipped", "frontend": "100%"},
+  "test_credentials": "n/a — public flows only",
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "PREVIEW URL https://workshop-dashboard-1.preview.emergentagent.com is healthy. Routes /catalog, /terms, /privacy serve their dedicated pages (verified by inner_text — 'Terms of Service', 'Privacy Policy' content rendered). /dashboard correctly redirects to / for unauthenticated users (ProtectedRoute working). PublicSearchBar mounted in [data-testid='hero-public-search-wrap'] inside Landing hero — type 'brake' returns JA-BRK-001, type 'oil' returns 2 results incl. JA-FLD-001, type 'xyzqq123' shows request-quote linking to /inquire?q=xyzqq123. Mobile @ 390x844: input is full-width and browse-all pill correctly hidden via sm:inline-flex. Production deployment issue (homepage-on-subroutes) is a stale-build problem and will resolve after redeploy — confirmed not a code issue.",
+  "passed_tests": [
+    "GET /catalog → renders [data-testid='public-catalog-page']",
+    "GET /terms → renders 'Terms of Service' content",
+    "GET /privacy → renders 'Privacy Policy' content",
+    "GET /dashboard (no auth) → redirects to /",
+    "[data-testid='public-search-bar'] visible inside [data-testid='hero-public-search-wrap']",
+    "Type 'brake' → dropdown opens, results list has [data-testid='public-search-result-0'] → /inquire/JA-BRK-001",
+    "Type 'xyzqq123' → request-quote link → /inquire?q=xyzqq123",
+    "Clear button clears input value",
+    "Browse-all pill navigates to /catalog",
+    "Click outside closes dropdown",
+    "Keyboard: ArrowDown + Enter on 'oil' navigated to /inquire/JA-FLD-001",
+    "Mobile 390x844: input visible full-width, browse-all hidden, dropdown still works",
+    "Console: no PublicSearchBar-related errors"
+  ]
+}
