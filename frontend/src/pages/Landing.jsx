@@ -350,12 +350,12 @@ const Landing = () => {
 
         {/* Tri-pillar manifesto — Bangladesh's First AI-Powered: Commerce · Data · Experience */}
         <div className="max-w-5xl mx-auto px-5 sm:px-6 pt-8 sm:pt-12" data-testid="hero-tripillar">
-          <div className="flex items-center justify-center gap-3 mb-4 sm:mb-5">
-            <span aria-hidden="true" className="block w-6 sm:w-10 h-px bg-[#E11D48]" />
-            <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.32em] text-[#E11D48] font-bold whitespace-nowrap">
+          <div className="flex items-center justify-center gap-3 sm:gap-4 mb-5 sm:mb-7">
+            <span aria-hidden="true" className="block w-8 sm:w-12 h-px bg-[#E11D48]" />
+            <span className="font-mono text-[13px] sm:text-[15px] lg:text-[17px] uppercase tracking-[0.28em] text-[#E11D48] font-bold whitespace-nowrap">
               Bangladesh's First AI-Powered
             </span>
-            <span aria-hidden="true" className="block w-6 sm:w-10 h-px bg-[#E11D48]" />
+            <span aria-hidden="true" className="block w-8 sm:w-12 h-px bg-[#E11D48]" />
           </div>
           <ul className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4 text-center" data-testid="hero-tripillar-list">
             {[
@@ -380,64 +380,46 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Hero narrative — H1 · Ecosystem · Built-in-Bangladesh badge */}
-      <section className="max-w-7xl mx-auto px-5 sm:px-6 pt-12 sm:pt-16 pb-10 sm:pb-12 reveal" data-testid="hero-narrative">
-        {/* H1 — billion-dollar one-liner */}
-        <h1
-          data-testid="hero-h1"
-          className="font-display text-[30px] xs:text-[34px] sm:text-5xl lg:text-[60px] xl:text-[68px] leading-[1.04] tracking-[-0.028em] max-w-none"
-        >
-          <span className="text-zinc-950 dark:text-white">Bangladesh's automotive </span>
-          <span className="text-[#E11D48]">AI, data &amp; commerce</span>
-          <span className="text-zinc-950 dark:text-white"> infrastructure.</span>
-        </h1>
-
-        {/* JOY Ecosystem — verb-led, magazine-grade descriptor lines */}
-        <div className="mt-9 sm:mt-12" data-testid="hero-ecosystem">
-          <div className="flex items-center gap-3 mb-5 sm:mb-6">
-            <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.32em] text-zinc-500 dark:text-zinc-400 font-bold whitespace-nowrap">
-              The JOY Ecosystem
-            </span>
-            <div className="flex-1 h-px bg-gradient-to-r from-zinc-300 to-transparent dark:from-white/15" />
-          </div>
-          <ul className="divide-y divide-zinc-200 dark:divide-white/10 border-y border-zinc-200 dark:border-white/10" data-testid="hero-ecosystem-list">
-            {[
-              { n: "01", v: "Procure", d: "Wholesale, on credit — for workshops & dealers." },
-              { n: "02", v: "Retail", d: "Direct-to-consumer parts commerce, nationwide." },
-              { n: "03", v: "Experience", d: "Bangladesh's flagship automotive showroom." },
-              { n: "04", v: "Compute", d: "Industry intelligence, powered by data." },
-              { n: "05", v: "Craft", d: "Bespoke atelier — kits · rims · tuning." },
-            ].map((p) => (
-              <li
-                key={p.n}
-                data-testid={`hero-eco-${p.n}`}
-                className="grid grid-cols-[auto_1fr] sm:grid-cols-[auto_minmax(0,200px)_1fr] items-baseline gap-3 sm:gap-6 py-3 sm:py-4 group hover:bg-zinc-50/60 dark:hover:bg-white/[0.03] transition-colors px-1 sm:px-2"
-              >
-                <span className="font-mono text-[10px] sm:text-[11px] tracking-[0.22em] text-zinc-400 dark:text-zinc-500 font-bold pt-1">
-                  {p.n}
-                </span>
-                <span className="font-display text-[18px] sm:text-[22px] lg:text-[26px] tracking-[-0.02em] font-semibold text-zinc-950 dark:text-white col-span-2 sm:col-span-1">
-                  {p.v}.
-                </span>
-                <span className="hidden sm:block text-zinc-600 dark:text-zinc-400 text-[14px] lg:text-[15px] font-medium tracking-[-0.005em] leading-snug col-start-3">
-                  {p.d}
-                </span>
-                <span className="sm:hidden text-zinc-600 dark:text-zinc-400 text-[13px] font-medium leading-snug col-span-2 col-start-1 -mt-1">
-                  {p.d}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Built-in-Bangladesh badge — closing layer */}
-        <div className="mt-8 sm:mt-10 inline-flex items-center gap-3 px-4 py-2.5 rounded-full border border-zinc-300 dark:border-white/15 bg-white/60 dark:bg-white/5 backdrop-blur-sm shadow-sm" data-testid="hero-bd-badge">
-          <span className="text-base leading-none" aria-hidden="true">🇧🇩</span>
-          <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.24em] font-bold leading-tight">
-            <span className="text-zinc-950 dark:text-white">Built in Bangladesh.</span>
-            <span className="text-zinc-500 dark:text-zinc-400"> Engineered for the world.</span>
+      {/* The JOY Automart Ecosystem — sophisticated, original business names, summarised */}
+      <section className="max-w-7xl mx-auto px-5 sm:px-6 pt-12 sm:pt-20 pb-12 sm:pb-16 reveal" data-testid="hero-ecosystem-section">
+        {/* Section title */}
+        <div className="flex items-center gap-4 mb-7 sm:mb-10" data-testid="hero-ecosystem-title">
+          <span aria-hidden="true" className="block w-10 sm:w-14 h-px bg-[#E11D48]" />
+          <span className="font-mono text-[12px] sm:text-[14px] lg:text-[15px] uppercase tracking-[0.28em] text-zinc-950 dark:text-white font-bold whitespace-nowrap">
+            The JOY Automart Ecosystem
           </span>
+          <div className="flex-1 h-px bg-gradient-to-r from-zinc-300 to-transparent dark:from-white/15" />
         </div>
+
+        {/* Ecosystem rows — magazine-grade, original business names */}
+        <ul className="divide-y divide-zinc-200 dark:divide-white/10 border-y border-zinc-200 dark:border-white/10" data-testid="hero-ecosystem-list">
+          {[
+            { n: "01", t: "B2B Platform", d: "Workshops & car dealers" },
+            { n: "02", t: "B2C", d: "E-commerce auto parts retail" },
+            { n: "03", t: "Experience Centre", d: "Flagship store" },
+            { n: "04", t: "AI-Driven Data Co.", d: "Industry intelligence layer" },
+            { n: "05", t: "JOY Beast Atelier", d: "Body kits · forged rims · bespoke & tuning" },
+          ].map((p) => (
+            <li
+              key={p.n}
+              data-testid={`hero-eco-${p.n}`}
+              className="grid grid-cols-[auto_1fr] sm:grid-cols-[auto_minmax(0,300px)_1fr] items-baseline gap-3 sm:gap-8 py-5 sm:py-7 group hover:bg-zinc-50/60 dark:hover:bg-white/[0.03] transition-colors px-1 sm:px-3"
+            >
+              <span className="font-mono text-[11px] sm:text-[13px] tracking-[0.22em] text-[#E11D48] font-bold pt-1.5">
+                {p.n}
+              </span>
+              <span className="font-display text-[20px] sm:text-[26px] lg:text-[32px] tracking-[-0.02em] font-semibold text-zinc-950 dark:text-white col-span-2 sm:col-span-1 leading-[1.1]">
+                {p.t}
+              </span>
+              <span className="hidden sm:block text-zinc-600 dark:text-zinc-400 text-[14px] lg:text-[17px] font-medium tracking-[-0.005em] leading-snug col-start-3 self-center">
+                {p.d}
+              </span>
+              <span className="sm:hidden text-zinc-600 dark:text-zinc-400 text-[13px] font-medium leading-snug col-span-2 col-start-1 -mt-0.5">
+                {p.d}
+              </span>
+            </li>
+          ))}
+        </ul>
       </section>
 
       {/* What we do — 5 pillars in Swiss hairline bento grid */}

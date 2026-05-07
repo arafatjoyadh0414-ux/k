@@ -24,33 +24,31 @@
 - Mark payment received (admin), credit auto-released on payment
 
 
-## 2026-05-07 — Billion-Dollar Brand Narrative Hero (final)
-**Full Landing.jsx hero rewrite — investor-grade "Automotive Intelligence Company" positioning.**
+## 2026-05-07 — Hero Final v3 (current production composition)
+**Landing.jsx hero refined to investor-grade narrative, then simplified to single ecosystem story.**
 
 **Header lockup:**
-- Logo larger (w-14 → lg:w-[76px]) with subtle rose drop-shadow
-- New tagline replaces "BANGLADESH": red rule + "The Automotive Intelligence Company" (mono, tracked-wider)
-- Header height bumped (60→68 / 76→88) to accommodate two-line lockup
+- Logo enlarged with rose drop-shadow
+- Tagline: "The Automotive Intelligence Company" (red mono, tracked-wider, replaces "BANGLADESH")
+- Header height bumped (60→68 / 76→88)
 
-**Tri-pillar manifesto** (NEW, between CTAs and H1):
-- "Bangladesh's First AI-Powered" eyebrow flanked by red rules
+**Tri-pillar manifesto** (between CTAs and ecosystem):
+- "Bangladesh's First AI-Powered" eyebrow — now larger (13/15/17px) flanked by 8/12px red rules
 - 3-card grid: 01 Automotive Commerce · 02 Data Infrastructure · 03 Iconic Experience Platform
-- Soft glassy cards with hover red-border accent
 
-**H1**: "Bangladesh's automotive AI, data & commerce infrastructure." (red accent on pillar words)
+**The JOY Automart Ecosystem** (replaces previous H1+verb-table+BD-badge block):
+- Section title: "The JOY Automart Ecosystem" with red leading rule + trailing gradient
+- 5-row hairline-divider list, magazine-grade layout:
+  - 01 B2B Platform — Workshops & car dealers
+  - 02 B2C — E-commerce auto parts retail
+  - 03 Experience Centre — Flagship store
+  - 04 AI-Driven Data Co. — Industry intelligence layer
+  - 05 JOY Beast Atelier — Body kits · forged rims · bespoke & tuning
+- Red 01-05 numerals, display-font business names (20→32px), zinc-600 descriptors
+- Removed: H1 ("Bangladesh's automotive AI, data & commerce infrastructure"), verb-only ecosystem, "Built in Bangladesh" badge
+- Footer tagline: "Built in Bangladesh · Engineered for the world"
 
-**JOY Ecosystem** (upgraded from verb-only → magazine-grade table):
-- Hairline-divider list. Each row: 01 mono # · Verb (display) · Prose descriptor
-  - 01 Procure — Wholesale parts on credit — for workshops & dealers.
-  - 02 Retail — Direct-to-consumer e-commerce, nationwide.
-  - 03 Experience — Bangladesh's flagship automotive showroom.
-  - 04 Compute — The data & intelligence layer of an industry.
-  - 05 Craft — Bespoke atelier — body kits, forged rims, tuning.
-- Right-rail label: "Five businesses · One platform"
-
-**Closing badge**: 🇧🇩 Built in Bangladesh. Engineered for the world.
-- Footer tagline updated to match
-- All elements have `data-testid`: `header-logo-link`, `hero-tripillar`, `hero-tripillar-0X`, `hero-narrative`, `hero-h1`, `hero-ecosystem`, `hero-ecosystem-list`, `hero-eco-0X`, `hero-bd-badge`
+**Test IDs:** `header-logo-link`, `hero-tripillar`, `hero-tripillar-0X`, `hero-ecosystem-section`, `hero-ecosystem-title`, `hero-ecosystem-list`, `hero-eco-0X`
 
 ## What's Been Implemented (2026-02-09)
 **Backend (`/app/backend/server.py`)**
