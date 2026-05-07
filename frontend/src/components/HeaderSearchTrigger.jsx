@@ -14,7 +14,7 @@ import PublicSearchBar from "./PublicSearchBar";
  * Closes on ESC, backdrop click, or the explicit close button.
  */
 
-const HeaderSearchTrigger = () => {
+const HeaderSearchTrigger = ({ inline = false }) => {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -42,16 +42,24 @@ const HeaderSearchTrigger = () => {
 
   return (
     <>
-      {/* Trigger button — lives in the header */}
+      {/* Trigger button — pill (header) or wide input-style (chip rail / mobile) */}
       <button
         type="button"
-        data-testid="header-search-trigger"
+        data-testid={inline ? "mobile-search-trigger" : "header-search-trigger"}
         onClick={() => setOpen(true)}
         aria-label="Search parts"
-        className="inline-flex items-center gap-2 text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white border border-zinc-200 dark:border-white/15 hover:border-zinc-300 hover:shadow-md dark:hover:border-white/40 px-3 sm:px-4 h-10 rounded-full text-xs sm:text-sm font-medium transition-all bg-white/90 dark:bg-white/[0.04]"
+        className={
+          inline
+            ? "flex-1 min-w-0 inline-flex items-center gap-2 text-zinc-500 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white border border-zinc-200 dark:border-white/15 hover:border-[#E11D48]/50 px-3 h-9 rounded-full text-xs font-medium transition-all bg-white dark:bg-white/[0.04]"
+            : "inline-flex items-center gap-2 text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white border border-zinc-200 dark:border-white/15 hover:border-zinc-300 hover:shadow-md dark:hover:border-white/40 px-3 sm:px-4 h-10 rounded-full text-xs sm:text-sm font-medium transition-all bg-white/90 dark:bg-white/[0.04]"
+        }
       >
-        <Search className="w-4 h-4" />
-        <span className="hidden sm:inline">Search parts</span>
+        <Search className={inline ? "w-3.5 h-3.5 shrink-0" : "w-4 h-4"} />
+        {inline ? (
+          <span className="truncate font-mono tracking-[0.04em] text-[11px]">Search parts, SKU, OEM…</span>
+        ) : (
+          <span className="hidden sm:inline">Search parts</span>
+        )}
       </button>
 
       {/* Overlay */}

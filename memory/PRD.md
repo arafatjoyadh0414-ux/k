@@ -24,6 +24,18 @@
 - Mark payment received (admin), credit auto-released on payment
 
 
+## 2026-05-07 — Mobile header tweaks (post-refactor)
+**Three quick UX fixes after Landing.jsx refactor:**
+
+1. **Search relocated on mobile**: `HeaderSearchTrigger` now hidden at `<md` (768px) via `hidden md:inline-flex` wrapper in StickyHeader. New `inline` variant of HeaderSearchTrigger (data-testid `mobile-search-trigger`) embedded in `MobileScrollSpyChips` rail at the end with `flex-1` — fills remaining space beside "BD News" chip with a wide input-style placeholder ("Search parts, SKU, OEM…"). Click opens the same overlay.
+2. **Full tagline on mobile**: Removed the truncated "Automotive Intelligence Co." variant. All breakpoints now show the full "The Automotive Intelligence Company" with responsive font sizing (8/8.5/9.5/10.5px) and tracking adjustments to fit narrow phones.
+3. **Theme toggle position**: Verified — already sits next to Sign in on all breakpoints.
+
+**Files modified:**
+- `/app/frontend/src/components/HeaderSearchTrigger.jsx` (added `inline` prop variant)
+- `/app/frontend/src/components/MobileScrollSpyChips.jsx` (added inline search at end of chip rail)
+- `/app/frontend/src/components/landing/StickyHeader.jsx` (search hidden on mobile, unified tagline)
+
 ## 2026-05-07 — Hero Final v3 (current production composition)
 **Landing.jsx hero refined to investor-grade narrative, then simplified to single ecosystem story.**
 

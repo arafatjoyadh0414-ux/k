@@ -25,19 +25,18 @@ const StickyHeader = ({ onLogin }) => (
           <div className="font-display text-[18px] sm:text-[24px] lg:text-[28px] text-zinc-950 dark:text-white tracking-[-0.025em] font-bold whitespace-nowrap truncate">
             JOY Automart
           </div>
-          <div className="hidden md:flex items-center gap-1.5 mt-1">
-            <span aria-hidden="true" className="block w-3 h-px bg-[#E11D48]" />
-            <span className="font-mono text-[9px] lg:text-[10px] uppercase tracking-[0.26em] text-[#E11D48] font-bold whitespace-nowrap">
+          <div className="flex items-center gap-1.5 mt-1">
+            <span aria-hidden="true" className="block w-2.5 sm:w-3 h-px bg-[#E11D48] flex-shrink-0" />
+            <span className="font-mono text-[8px] xs:text-[8.5px] sm:text-[9.5px] lg:text-[10.5px] uppercase tracking-[0.18em] sm:tracking-[0.24em] lg:tracking-[0.26em] text-[#E11D48] font-bold whitespace-nowrap">
               The Automotive Intelligence Company
             </span>
-          </div>
-          <div className="md:hidden font-mono text-[8.5px] sm:text-[9px] uppercase tracking-[0.22em] text-[#E11D48] font-bold mt-0.5 whitespace-nowrap">
-            Automotive Intelligence Co.
           </div>
         </div>
       </Link>
       <nav className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-        <HeaderSearchTrigger />
+        <div className="hidden md:inline-flex">
+          <HeaderSearchTrigger />
+        </div>
         <ThemeToggle />
         <InstallPwaButton testid="landing-install-pwa" className="hidden sm:inline-flex" />
         <button
