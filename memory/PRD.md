@@ -804,3 +804,46 @@ Inspired by the strategic audit. Most audit items were already built (catalog, K
 - NEW `/app/frontend/src/components/DashboardSearchBar.jsx`
 - EDITED `/app/backend/server.py`, `/app/frontend/src/App.js`, `/app/frontend/src/pages/Landing.jsx`, `/app/frontend/src/pages/Dashboard.jsx`, `/app/frontend/src/components/MobileScrollSpyChips.jsx`
 
+
+## What's Been Implemented (2026-02-10) — 5-Pillar Hero + Unified Mr Genius / JOY Genius Assistant (iter 24)
+
+**Hero ecosystem strip enriched 4 → 5 pillars** (`/app/frontend/src/pages/Landing.jsx`)
+- New `hero-pillars` row reads exactly per spec: **B2B workshops & car dealers / B2C retail / Experience Centre / AI-Built Data platform / JOY BEAST atelier**.
+
+**🤖 UNIFIED "Mr Genius / JOY Genius Assistant"** — one Claude-powered bot for both public and authenticated users.
+- Backend (`/app/backend/routes/guardian.py`) **fully rewritten**:
+  - Single endpoint `POST /api/guardian/message` silently detects auth via `get_current_user(request)`.
+  - **Public mode** (no auth): generic automotive expert (BD + world context, diagnostics, fluids, parts compat, model-specific knowledge).
+  - **Portal mode** (signed-in): system prompt augmented with `_build_authenticated_prompt(workshop, tier, orders, products)` injecting:
+    - Workshop name + pricing tier
+    - Available credit / limit / used (exact BDT)
+    - Last 6 orders (number, status, total, date)
+    - Top-60 catalogue snapshot with the user's tier-priced `your_price_bdt`
+  - Returns `{session_id, reply, authenticated}` so the UI knows which mode rendered.
+  - Rate limit bumped 8/min → 12/min per session.
+  - History persisted in `db.guardian_messages` keyed by `session_id` + `user_id`.
+
+- Frontend (`/app/frontend/src/components/GuardianBot.jsx`) **fully rebranded**:
+  - Trigger label: **"Ask Mr Genius"** (bottom-left floating bubble, gradient red→zinc, ping pulse).
+  - Panel header: premium dark-gradient with bot icon, **"JOY Genius Assistant"** title, **"POWERED BY CLAUDE"** sub-line in mono caps.
+  - Intro card matches user copy: *"Hey — I'm Genius, your no-nonsense automotive assistant. Diagnostics, maintenance, fluids, parts compatibility, BD market context, world market context — anything and everything related to automobiles. I've got you. Try one of these:"*
+  - **Auth-aware starters** via `useAuth()`:
+    - Public: AC diagnostic, engine oil, battery, brake-pad pricing
+    - Portal: brake pads in stock, last order, credit balance, Toyota Aqua parts
+  - **NEW** button in header (`guardian-new-session`) clears thread + localStorage to start fresh conversation.
+  - Three-dot animated typing indicator. Message bubbles: rounded-2xl with corner-tail, dark/light theme aware.
+  - Footer mode indicator: "Signed in as {Name} · Portal context active · বাংলা supported" (auth) or "No sign-in required · English / বাংলা · Powered by Claude Sonnet 4.5" (public).
+  - localStorage key renamed `joy_guardian_sid` → `joy_genius_sid`.
+
+- **ChatWidget removed globally** from `/app/frontend/src/App.js`. Only ONE bot now exists (no more bottom-right dual-bot confusion).
+
+**Tests** (iter 24 — 100% on both surfaces, no retest)
+- Backend pytest: 5/5 — public mode reply, auth mode with real BDT figures + ORD-2026 reference (no hallucination), brake-pads tier-price recall, history persistence, rate limit 429.
+- Frontend Playwright: 13/13 — 5-pillar strip, ChatWidget absent everywhere, Mr Genius branding, auth-aware starters, real Claude reply on click, NEW button clears state, all regressions pass (chip nav, Body Kits, Dashboard search, EC page, notification preferences).
+
+**Files touched**
+- REWRITTEN `/app/backend/routes/guardian.py` (auth-aware unified Genius)
+- REWRITTEN `/app/frontend/src/components/GuardianBot.jsx` (Mr Genius branding)
+- EDITED `/app/frontend/src/App.js` (ChatWidget removed)
+- EDITED `/app/frontend/src/pages/Landing.jsx` (5-pillar hero)
+
