@@ -903,3 +903,23 @@ Inspired by the strategic audit. Most audit items were already built (catalog, K
 - EDITED `/app/backend/routes/guardian.py` (action emit prompt, _ACTIONS_RE, _extract_actions, response + history with actions)
 - EDITED `/app/frontend/src/components/GuardianBot.jsx` (useCart, useNavigate, handleAction, renderActions chips)
 
+
+## What's Been Implemented (2026-02-10) — JOY Ecosystem Micro-Strip (iter 27)
+
+**JOY Ecosystem reduced from 5-card grid to overline-matched micro-strip** (`/app/frontend/src/pages/Landing.jsx`)
+- Per user feedback ("change the way it's been shown in a very small and summarised and sophisticated manner just under data platform maybe with the same size font as above"), the previous big card-grid was replaced with a compact font-mono inline strip matching the red AI-powered overline directly above it.
+- Style: `font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.16em]`. Pillars wrap gracefully on mobile, sit on a single line on desktop.
+- Numbers: bold red on featured 01 & 05, bold zinc on 02–04. Pillar names: bold zinc-900. Descriptions: faint zinc-500 normal-case sans-serif. `/` dividers between pillars.
+
+**Updated copy:**
+- 01 B2B Platform — Workshops & car dealers
+- 02 B2C — E-commerce automobiles for retail
+- 03 Experience Centre — Flagship store
+- 04 AI-Driven Data Co. — Industry intelligence layer
+- 05 JOY BEAST Atelier — Body kits · forged rims · bespoke & tuning
+
+**Tests** (iter 27 — frontend 100%, 7/7 passed). No retest.
+
+**Files touched**
+- EDITED `/app/frontend/src/pages/Landing.jsx`
+
