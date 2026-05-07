@@ -739,3 +739,26 @@ Inspired by the strategic audit. Most audit items were already built (catalog, K
 - EDITED `/app/frontend/src/components/BodyKitsShowcase.jsx` (kits reordered, default cyber-beast, badge overlay removed)
 - EDITED `/app/frontend/src/pages/Landing.jsx` (VIN button removed, retail link styled primary)
 
+
+## What's Been Implemented (2026-02-10) — Header Polish + Hero/Tech Trim + Atelier Clip (iter 22)
+
+**Header**
+- Removed "B2B" from the sub-wordmark; now reads just `BANGLADESH`.
+- Logo bumped: 48px mobile / 64px desktop (from 36/48).
+
+**Hero CTAs**
+- Removed `Browse catalogue` button and the `01886-799533` WhatsApp button. Final hero row: `Open the B2B portal` + `Visit retail store →`.
+
+**Tech section**
+- Removed `Use it on retail store →` button (CTA row now empty by design — Tech is feature-narrative only).
+- Tightened section padding so Value-prop section comes up immediately: tech section `pt-14 sm:pt-20 pb-8 sm:pb-12`; value-prop `py-8 sm:py-10`.
+
+**Body Kits — Custom Atelier image clip**
+- The Atelier image is a 6-panel composite (top row: front 3/4 + rear 3/4; bottom row: 3 extra views with duplicate BYD logos). Per user request, only the top row is shown — applied inline `style={{height:'200%', objectFit:'cover', objectPosition:'center top'}}` for `active.id === 'atelier'`. Renders the image at 2x container height anchored to top, so the bottom row is naturally clipped by the parent's `overflow-hidden`. No distortion.
+
+**Tests** (iter 22 — 100% frontend, all 7 tests passed). No retest needed.
+
+**Files touched**
+- EDITED `/app/frontend/src/pages/Landing.jsx` (header logo, hero CTAs, tech CTAs, section spacing)
+- EDITED `/app/frontend/src/components/BodyKitsShowcase.jsx` (atelier inline-style clip)
+
