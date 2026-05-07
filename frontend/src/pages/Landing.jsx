@@ -342,7 +342,7 @@ const Landing = () => {
       </section>
 
       {/* Headline + concise positioning — tight, sophisticated, less wordy */}
-      <section className="max-w-6xl mx-auto px-5 sm:px-6 pt-10 sm:pt-14 pb-10 sm:pb-12 reveal">
+      <section className="max-w-7xl mx-auto px-5 sm:px-6 pt-10 sm:pt-14 pb-10 sm:pb-12 reveal">
         <div className="inline-flex items-center gap-3 mb-4">
           <span className="block w-8 h-px bg-[#E11D48]" aria-hidden="true" />
           <span className="font-mono text-[10px] sm:text-[11px] tracking-[0.24em] uppercase text-[#E11D48] font-bold">
