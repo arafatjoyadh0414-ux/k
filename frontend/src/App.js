@@ -8,7 +8,6 @@ import { LanguageProvider } from "@/context/LanguageContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AuthCallback from "@/components/AuthCallback";
-import ChatWidget from "@/components/ChatWidget";
 import GuardianBot from "@/components/GuardianBot";
 
 import Landing from "@/pages/Landing";
@@ -128,7 +127,6 @@ function App() {
             <LanguageProvider>
               <CartProvider>
                 <AppRouter />
-                <ChatWidget />
                 <GuardianBot />
                 <Toaster richColors position="top-right" />
               </CartProvider>

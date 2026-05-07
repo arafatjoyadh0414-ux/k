@@ -337,15 +337,17 @@ const Landing = () => {
           </a>
         </div>
 
-        {/* Sophisticated 4-pillar trust strip — hairline separators, monospaced overline */}
+        {/* Sophisticated 5-pillar JOY ecosystem strip */}
         <div className="mt-8 sm:mt-10 pt-5 sm:pt-6 border-t border-zinc-200" data-testid="hero-pillars">
           <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500 mb-3">The JOY ecosystem</div>
           <div className="flex flex-wrap items-center gap-x-5 sm:gap-x-7 gap-y-2 text-sm sm:text-[15px] text-zinc-700">
-            <span className="inline-flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-[#E11D48]" /> <span className="font-semibold text-zinc-900">B2B</span> wholesale</span>
+            <span className="inline-flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-[#E11D48]" /> <span className="font-semibold text-zinc-900">B2B</span> workshops &amp; car dealers</span>
             <span className="text-zinc-300 hidden sm:inline">/</span>
             <span className="inline-flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-zinc-900" /> <span className="font-semibold text-zinc-900">B2C</span> retail</span>
             <span className="text-zinc-300 hidden sm:inline">/</span>
             <span className="inline-flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-zinc-900" /> Experience Centre</span>
+            <span className="text-zinc-300 hidden sm:inline">/</span>
+            <span className="inline-flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-zinc-900" /> <span className="font-semibold text-zinc-900">AI-Built</span> Data platform</span>
             <span className="text-zinc-300 hidden sm:inline">/</span>
             <span className="inline-flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-[#E11D48]" /> <span className="font-semibold text-zinc-900">JOY BEAST</span> atelier</span>
           </div>
