@@ -310,7 +310,49 @@ const Landing = () => {
             Bangladesh's first AI-powered auto parts commerce &amp; data platform
           </span>
         </div>
-        <h1 className="font-display text-4xl sm:text-5xl lg:text-[64px] leading-[1.02] tracking-tighter max-w-4xl">
+
+        {/* THE JOY ECOSYSTEM — sophisticated 5-pillar showcase placed above
+            the headline. Premium horizontal-scroll strip with numbered chips,
+            hairline separators, dot accents and sliding red underline on hover. */}
+        <div className="mt-7 sm:mt-9" data-testid="hero-ecosystem">
+          <div className="flex items-center gap-3 mb-3 sm:mb-4">
+            <div className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.28em] text-zinc-500">
+              The JOY Ecosystem
+            </div>
+            <div className="flex-1 h-px bg-gradient-to-r from-zinc-300 via-zinc-200 to-transparent" />
+          </div>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-px bg-zinc-200 border border-zinc-200 rounded-md overflow-hidden">
+            {[
+              { n: "01", t: "B2B Platform", d: "Workshops & car dealers", featured: true },
+              { n: "02", t: "B2C Commerce", d: "E-commerce automobiles for retail" },
+              { n: "03", t: "Experience Centre", d: "Madani Avenue · 100 ft flagship" },
+              { n: "04", t: "AI-Driven Data Co.", d: "Industry intelligence layer" },
+              { n: "05", t: "JOY BEAST Atelier", d: "Body kits · forged · bespoke", featured: true },
+            ].map((p) => (
+              <li
+                key={p.n}
+                data-testid={`hero-eco-pillar-${p.n}`}
+                className="group relative bg-white px-4 sm:px-5 py-3.5 sm:py-4 cursor-default transition-colors hover:bg-zinc-50"
+              >
+                <div className="flex items-baseline gap-2.5">
+                  <span className={`font-mono text-[10px] tracking-[0.16em] ${p.featured ? "text-[#E11D48]" : "text-zinc-400"}`}>
+                    {p.n}
+                  </span>
+                  <span className={`font-display text-sm sm:text-[15px] tracking-tight font-semibold ${p.featured ? "text-zinc-900" : "text-zinc-900"}`}>
+                    {p.t}
+                  </span>
+                </div>
+                <div className="text-[11px] sm:text-xs text-zinc-500 leading-snug mt-1">
+                  {p.d}
+                </div>
+                {/* Sliding red accent on hover */}
+                <span className="absolute left-4 sm:left-5 right-4 sm:right-5 bottom-0 h-[2px] bg-[#E11D48] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <h1 className="font-display text-4xl sm:text-5xl lg:text-[64px] leading-[1.02] tracking-tighter max-w-4xl mt-7 sm:mt-9">
           Smarter parts.{" "}
           <span className="text-zinc-900">Stronger journeys.</span>{" "}
           <span className="text-[#E11D48]">One platform.</span>
@@ -335,22 +377,6 @@ const Landing = () => {
              className="inline-flex items-center gap-2 bg-white border border-zinc-300 hover:border-zinc-900 text-zinc-900 px-5 sm:px-6 py-3 rounded-full text-sm font-semibold transition-colors">
             Visit retail store →
           </a>
-        </div>
-
-        {/* Sophisticated 5-pillar JOY ecosystem strip */}
-        <div className="mt-8 sm:mt-10 pt-5 sm:pt-6 border-t border-zinc-200" data-testid="hero-pillars">
-          <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500 mb-3">The JOY ecosystem</div>
-          <div className="flex flex-wrap items-center gap-x-5 sm:gap-x-7 gap-y-2 text-sm sm:text-[15px] text-zinc-700">
-            <span className="inline-flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-[#E11D48]" /> <span className="font-semibold text-zinc-900">B2B</span> workshops &amp; car dealers</span>
-            <span className="text-zinc-300 hidden sm:inline">/</span>
-            <span className="inline-flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-zinc-900" /> <span className="font-semibold text-zinc-900">B2C</span> retail</span>
-            <span className="text-zinc-300 hidden sm:inline">/</span>
-            <span className="inline-flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-zinc-900" /> Experience Centre</span>
-            <span className="text-zinc-300 hidden sm:inline">/</span>
-            <span className="inline-flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-zinc-900" /> <span className="font-semibold text-zinc-900">AI-Built</span> Data platform</span>
-            <span className="text-zinc-300 hidden sm:inline">/</span>
-            <span className="inline-flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-[#E11D48]" /> <span className="font-semibold text-zinc-900">JOY BEAST</span> atelier</span>
-          </div>
         </div>
       </section>
 
