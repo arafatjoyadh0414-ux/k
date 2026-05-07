@@ -55,6 +55,7 @@ from routes import job_cards as _job_cards_routes  # noqa: F401
 from routes import i18n as _i18n_routes  # noqa: F401
 from routes import audit as _audit_routes  # noqa: F401
 from routes import push as _push_routes  # noqa: F401
+from routes import guardian as _guardian_routes  # noqa: F401
 from routes.recurring import start_recurring_worker
 
 # Pydantic models (kept here for back-compat). Authoritative copies live in server_models.py.

@@ -274,13 +274,6 @@ const Landing = () => {
             </div>
           </Link>
           <nav className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-            <Link
-              to="/catalog"
-              className="hidden sm:inline-flex items-center px-3 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
-              data-testid="header-catalog-link"
-            >
-              Catalogue
-            </Link>
             <HeaderSearchTrigger />
             <ThemeToggle />
             <InstallPwaButton testid="landing-install-pwa" className="hidden sm:inline-flex" />
@@ -314,7 +307,7 @@ const Landing = () => {
         <div className="inline-flex items-center gap-3 mb-4">
           <span className="block w-8 h-px bg-[#E11D48]" aria-hidden="true" />
           <span className="font-mono text-[10px] sm:text-[11px] tracking-[0.24em] uppercase text-[#E11D48] font-semibold">
-            Bangladesh's first AI-powered auto parts commerce
+            Bangladesh's first AI-powered auto parts commerce &amp; data platform
           </span>
         </div>
         <h1 className="font-display text-4xl sm:text-5xl lg:text-[64px] leading-[1.02] tracking-tighter max-w-4xl">
@@ -342,6 +335,20 @@ const Landing = () => {
              className="inline-flex items-center gap-2 bg-white border border-zinc-300 hover:border-zinc-900 text-zinc-900 px-5 sm:px-6 py-3 rounded-full text-sm font-semibold transition-colors">
             Visit retail store →
           </a>
+        </div>
+
+        {/* Sophisticated 4-pillar trust strip — hairline separators, monospaced overline */}
+        <div className="mt-8 sm:mt-10 pt-5 sm:pt-6 border-t border-zinc-200" data-testid="hero-pillars">
+          <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500 mb-3">The JOY ecosystem</div>
+          <div className="flex flex-wrap items-center gap-x-5 sm:gap-x-7 gap-y-2 text-sm sm:text-[15px] text-zinc-700">
+            <span className="inline-flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-[#E11D48]" /> <span className="font-semibold text-zinc-900">B2B</span> wholesale</span>
+            <span className="text-zinc-300 hidden sm:inline">/</span>
+            <span className="inline-flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-zinc-900" /> <span className="font-semibold text-zinc-900">B2C</span> retail</span>
+            <span className="text-zinc-300 hidden sm:inline">/</span>
+            <span className="inline-flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-zinc-900" /> Experience Centre</span>
+            <span className="text-zinc-300 hidden sm:inline">/</span>
+            <span className="inline-flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-[#E11D48]" /> <span className="font-semibold text-zinc-900">JOY BEAST</span> atelier</span>
+          </div>
         </div>
       </section>
 

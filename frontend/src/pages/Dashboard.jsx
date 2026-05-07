@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { ShieldAlert, Wallet, ArrowUpRight, Package, ShoppingCart, Sparkles, Zap, Search } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { toast } from "sonner";
+import DashboardSearchBar from "../components/DashboardSearchBar";
 
 const KycBanner = ({ status, onSubmit }) => {
   if (status === "approved") return null;
@@ -149,6 +150,9 @@ const Dashboard = () => {
             </Link>
           </div>
         </div>
+
+        {/* Bay-floor search — sits between greeting and KYC alert per UX spec */}
+        <DashboardSearchBar />
 
         <KycBanner status={ws?.kyc_status || "not_submitted"} />
 

@@ -1,0 +1,27 @@
+{
+  "summary": "Iter 23 — All 4 changes verified end-to-end. Backend: 8/8 Guardian endpoint tests PASS (basic, empty 400, whitespace 400, >1500 chars 400, history persistence + ordering, no-session 400, rate-limit 429 within first 9 calls, reply quality keywords). Frontend Landing: hero overline contains 'Bangladesh' + 'AI-powered auto parts commerce' + 'data platform'; hero-pillars renders with all 4 labels (B2B, B2C, Experience Centre, JOY BEAST); header-catalog-link absent; mobile chip nav has exactly 6 chips in correct order [hero, joy-beast, experience-centre, tech-stack, catalogue, bd-news] with chip-catalogue data-chip-type='link' navigating to /catalog. GuardianBot: trigger fixed bottom-left (x=20, y near viewport bottom), opens panel with 4 starter buttons + input + send, starter click renders user msg immediately and assistant reply within 25s (Claude returned a real high-quality AC-diagnosis answer), localStorage 'joy_guardian_sid' persists 'grd_*' format, typed Enter flow works, reload restores prior conversation via /api/guardian/history (4 messages preserved). Dashboard: dashboard-search-bar renders BELOW the 'bay floor' heading (heading_top=108, search_top=172), 'brake' query → dropdown → first result navigates to /products/{id}. Both ChatWidget (bottom-right) and GuardianBot (bottom-left) coexist on Landing AND Dashboard without overlap.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_iter23_guardian.py",
+    "/app/test_reports/pytest/iter23_guardian.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Guardian rate-limit is in-memory (dict) — resets on backend restart. Acceptable per problem statement but for production scale move to Redis with TTL, otherwise multi-replica deployments will let abusive sessions through.",
+    "Guardian bot persists every visitor message+reply in MongoDB (db.guardian_messages) keyed by session_id with no TTL — recommend adding a periodic cleanup or Mongo TTL index on created_at to keep collection size bounded.",
+    "DashboardSearchBar fetches the entire /api/products list on first focus and filters client-side. Fine for current ~38 SKUs but will need a server-side ?q= search endpoint once catalogue exceeds a few hundred parts.",
+    "GuardianBot re-fetches history on every panel open (when messages.length===0) — fine, but the panel does not show a per-session 'Clear conversation' control. Minor UX gap.",
+    "Landing.jsx is still 1000+ lines (carried over from prior iters) — extract Hero, Tech, Value-prop into sub-components.",
+    "guardian.py reads EMERGENT_LLM_KEY at import-time into a module-level constant — if the .env is rotated the backend must be restarted to pick up the new key (acceptable but worth noting)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter23_guardian.py (NEW — 8 pytest cases for /api/guardian/{message,history})"
+  ],
+  "success_rate": {"backend": "100% (8/8)", "frontend": "100% (all 13 review-request items verified)"},
+  "test_credentials": "Workshop dashboard tested with Bearer test-token-workshop-1 / localStorage ja_session_token (per /app/memory/test_credentials.md).",
+  "seed_data_creation": "None. Guardian sessions auto-created with grd_* prefix; rate-limit test used unique grd_ratetest_{ts} to avoid collision.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Iter 23 fully green. Selectors confirmed: [data-testid='hero-pillars'] (Landing), [data-testid='chip-catalogue'][data-chip-type='link'] in mobile-scroll-spy (between chip-tech-stack and chip-bd-news), [data-testid='guardian-bot-trigger'] (fixed bottom-5 left-5 z-40 — coexists with ChatWidget bottom-right), [data-testid='guardian-bot-panel'], [data-testid='guardian-starter-0..3'], [data-testid='guardian-input'], [data-testid='guardian-send'], [data-testid='guardian-msg-{role}-{i}'], [data-testid='guardian-messages'], [data-testid='guardian-typing']. localStorage key 'joy_guardian_sid'. Dashboard: [data-testid='dashboard-search-bar'] / -input / -dropdown / -result-{i} / -clear / -cta / -request-quote. Backend endpoints: POST /api/guardian/message (no auth, 8/min/session in-memory rate-limit), GET /api/guardian/history?session_id=... — both verified. Workshop1 is KYC-approved so KycBanner does NOT render on /dashboard for that user (expected). Guardian Claude integration uses emergentintegrations LlmChat with model claude-sonnet-4-5-20250929 via EMERGENT_LLM_KEY — replies are high quality and topical."
+}

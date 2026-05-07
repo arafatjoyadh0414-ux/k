@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 /*
  * MobileScrollSpyChips — horizontal-scroll chip nav that highlights the
@@ -6,9 +7,13 @@ import React, { useEffect, useRef, useState } from "react";
  * Only renders on mobile/tablet (hidden lg:hidden on >=1024px) where the
  * top header nav already covers desktop navigation.
  *
+ * In addition to scroll-spy section chips, supports "link" chips that
+ * navigate to other routes (e.g. Catalogue). Link chips never become
+ * active via scroll; they are static navigation actions.
+ *
  * Each chip taps a section id; clicking a chip smooth-scrolls there.
- * Uses IntersectionObserver to highlight the active chip with no scroll
- * jank and zero layout shift on the surrounding content.
+ * Uses a rAF-throttled scroll listener to highlight the active chip with
+ * no scroll jank and zero layout shift on the surrounding content.
  */
 
 const SECTIONS = [
@@ -16,21 +21,24 @@ const SECTIONS = [
   { id: "joy-beast", label: "JOY BEAST" },
   { id: "experience-centre", label: "Experience" },
   { id: "tech-stack", label: "Tech" },
+  { id: "catalogue", label: "Catalogue", type: "link", to: "/catalog" },
   { id: "bd-news", label: "BD News" },
 ];
 
 export default function MobileScrollSpyChips() {
-  const [active, setActive] = useState(SECTIONS[0].id);
+  const navigate = useNavigate();
+  const scrollSections = SECTIONS.filter((s) => s.type !== "link");
+  const [active, setActive] = useState(scrollSections[0]?.id || SECTIONS[0].id);
   const railRef = useRef(null);
   const chipRefs = useRef({});
 
   // Active-section detection: on every scroll, pick the section whose top
-  // is closest to (and at/above) the header offset. This is more reliable
-  // than intersectionRatio when multiple sections are partially visible.
+  // is closest to (and at/above) the header offset. Link-type chips are
+  // ignored since they don't correspond to in-page sections.
   useEffect(() => {
     const headerOffset = 100; // sticky header (~72px) + chip rail (~40px)
     const computeActive = () => {
-      const rects = SECTIONS
+      const rects = scrollSections
         .map((s) => {
           const el = document.getElementById(s.id);
           if (!el) return null;
@@ -38,15 +46,11 @@ export default function MobileScrollSpyChips() {
         })
         .filter(Boolean);
       if (!rects.length) return;
-      // Sort by current top position so the candidate loop is robust to
-      // DOM ordering changes (e.g., a section moved without updating SECTIONS).
       rects.sort((a, b) => a.top - b.top);
-      // Prefer the last section whose top has crossed the header line.
       let candidate = rects[0].id;
       for (const r of rects) {
         if (r.top - headerOffset <= 1) candidate = r.id;
       }
-      // Edge case: at very bottom of page, snap to last section
       if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
         candidate = rects[rects.length - 1].id;
       }
@@ -78,12 +82,15 @@ export default function MobileScrollSpyChips() {
     rail.scrollTo({ left: target, behavior: "smooth" });
   }, [active]);
 
-  const onChip = (id) => {
-    const target = document.getElementById(id);
+  const onChip = (s) => {
+    if (s.type === "link" && s.to) {
+      navigate(s.to);
+      return;
+    }
+    const target = document.getElementById(s.id);
     if (!target) return;
-    // Optimistic highlight — IntersectionObserver will reconcile after scroll
-    setActive(id);
-    const headerOffset = 72; // sticky header height
+    setActive(s.id);
+    const headerOffset = 72;
     const top = target.getBoundingClientRect().top + window.scrollY - headerOffset - 12;
     window.scrollTo({ top, behavior: "smooth" });
   };
@@ -98,7 +105,8 @@ export default function MobileScrollSpyChips() {
         className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 flex items-center justify-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar"
       >
         {SECTIONS.map((s) => {
-          const isActive = s.id === active;
+          const isLink = s.type === "link";
+          const isActive = !isLink && s.id === active;
           return (
             <button
               key={s.id}
@@ -106,23 +114,26 @@ export default function MobileScrollSpyChips() {
               type="button"
               data-testid={`chip-${s.id}`}
               data-active={isActive ? "true" : "false"}
-              onClick={() => onChip(s.id)}
+              data-chip-type={isLink ? "link" : "section"}
+              onClick={() => onChip(s)}
               aria-current={isActive ? "true" : undefined}
               className={`shrink-0 px-3 sm:px-3.5 py-1.5 text-[10px] sm:text-[11px] font-display tracking-[0.04em] transition-all duration-300 relative ${
                 isActive
                   ? "text-zinc-900 dark:text-white font-semibold"
+                  : isLink
+                  ? "text-[#E11D48] dark:text-[#FFB1C1] hover:text-[#BE123C] dark:hover:text-white font-medium"
                   : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
               }`}
             >
               <span className="relative z-[1]">{s.label}</span>
-              {/* underline indicator — refined and minimal */}
-              <span
-                className={`absolute left-1/2 -translate-x-1/2 bottom-0.5 h-[2px] rounded-full transition-all duration-300 ${
-                  isActive
-                    ? "w-5 sm:w-6 bg-[#E11D48]"
-                    : "w-0 bg-transparent"
-                }`}
-              />
+              {/* Underline indicator — only on scroll-spy chips */}
+              {!isLink && (
+                <span
+                  className={`absolute left-1/2 -translate-x-1/2 bottom-0.5 h-[2px] rounded-full transition-all duration-300 ${
+                    isActive ? "w-5 sm:w-6 bg-[#E11D48]" : "w-0 bg-transparent"
+                  }`}
+                />
+              )}
             </button>
           );
         })}
