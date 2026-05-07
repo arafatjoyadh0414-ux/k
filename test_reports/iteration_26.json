@@ -1,0 +1,36 @@
+{
+  "summary": "Iter 26 Mr Genius commerce actions verified end-to-end. Backend pytest 4 passed + 1 expected skip (Genius non-determinism). Frontend playwright: add_to_cart click updates ja_cart, toasts, flips chip to 'ADDED' emerald state with data-consumed=true; view_order click closes panel and navigates to /orders/{id}; public users get NO action chips; reload + reopen rehydrates persisted action chips from /guardian/history.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iter26_genius_actions.py",
+    "/app/test_reports/pytest/iter26_genius_actions.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Minor parser edge-case: _ACTIONS_RE in /app/backend/routes/guardian.py requires inner brackets [...] to match. If Genius emits a malformed open-but-no-close-bracket block (e.g. '[ACTIONS]\\n[ {bad json\\n[/ACTIONS]'), the regex never matches and the [ACTIONS]/[/ACTIONS] tags leak into the visible reply. In practice Claude does not produce this shape, but a defensive fallback regex (\\[ACTIONS\\][\\s\\S]*?\\[/ACTIONS\\]) for the strip step would be safer.",
+    "Frontend GuardianBot.jsx: action chips don't truncate long product names beyond 4 words via .split(' ').slice(0,4) — looks fine for current catalogue but could clip non-English (Bangla) names since split is whitespace-only. Minor i18n nit.",
+    "Backend insert_many on guardian_messages persists actions on the assistant doc even though the schema migration is implicit — fine for Mongo but worth documenting in README that the field can be missing on pre-iter26 docs (frontend already defaults to []).",
+    "No rate-limiting differentiation between authenticated and unauthenticated genius calls — auth users share the same _RATE_MAX=12/min. Consider higher cap for paying workshops in a future iter."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iter26_genius_actions.py"
+  ],
+  "success_rate": {
+    "backend": "100% (4 passed, 1 skipped due to Genius non-determinism — view_order action did not emit on the run for the auth user; covered manually via frontend test which DID get a view_order chip and successful navigation to /orders/ORD-20260506-8BDB59)",
+    "frontend": "100% (3/3 scenarios — public no-chips, auth add_to_cart, auth view_order navigation, history rehydration all pass)"
+  },
+  "test_credentials": "Bearer test-token-workshop-1 (workshop1@test.com, gold tier, 16 orders)",
+  "seed_data_creation": "none — used existing seeded workshop1 + 16 existing orders",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Iter 26 acceptance criteria all pass. Verified live: (1) auth Genius emitted 2 add_to_cart actions for 'Recommend exactly 2 popular brake pads...' — JA-BRK-002 Brake Pad Set Ceramic BDT 1,980 + JA-PRF-002 Performance Brake Caliper BDT 78,300, both SKUs cross-checked against /api/products. [ACTIONS] block stripped from visible reply. (2) Click on add_to_cart chip writes correct enriched payload to localStorage 'ja_cart' (includes product_id, sku, name, image_url, price_bdt, quantity, moq), toast 'Added 1 × Brake Pad Set (Ceramic)' appears, button gets data-consumed='true' + emerald-500/15 bg + 'ADDED' text + Check icon. (3) view_order chip rendered with data-action-type='view_order', data-testid='guardian-action-{i}-{j}'; click closed panel (panel_open=False) and navigated to /orders/ORD-20260506-8BDB59 (real order_id from this user's orders). (4) Public landing — public Genius reply did NOT include any [data-testid^='guardian-actions-'] containers. (5) Reload + reopen hydrated 4 persisted messages with 1 action container restored from /guardian/history (actions field present on assistant docs). (6) Backend parser unit tests cover: malformed JSON inside valid brackets → empty actions + tag stripped; 5 actions → cap at 3; unknown SKU dropped; invalid order_id dropped; valid mixed add_to_cart + view_order enriched correctly with product metadata. Regression branding/hero/mobile-nav/Cyber-Beast unchanged from iter 25 — not re-tested as no related code changed in iter 26.",
+  "rca of the issue": "n/a — no bugs found"
+}

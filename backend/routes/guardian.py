@@ -8,6 +8,9 @@ The same Claude Sonnet 4.5 model serves the public Genius and the
 authenticated portal Genius — one bot, one brain, scaled by context.
 """
 
+import json
+import re
+
 import logging
 import time
 import uuid
@@ -116,6 +119,8 @@ def _build_authenticated_prompt(workshop: dict, tier: str, orders: list[dict], p
         )
     catalogue_block = "\n".join(catalogue_lines) if catalogue_lines else "  (catalogue empty)"
 
+    last_order_id = orders[0].get("order_id") if orders else ""
+
     return PUBLIC_PROMPT + f"""
 
 — PORTAL CONTEXT (this user is signed in) —
@@ -134,12 +139,98 @@ items, USE the data above. Reference order numbers, SKUs and tier prices
 verbatim. For credit queries, give the exact available figure. Never
 hallucinate prices or stock counts that aren't in the snapshot — say
 "check the catalogue page for the latest" if asked about something
-outside the snapshot."""
+outside the snapshot.
+
+— ACTION BUTTONS (one-tap commerce) —
+When you recommend a SPECIFIC product the user might want to order
+(e.g. "you should reorder these brake pads", "here's a popular oil
+filter that fits"), append a JSON ACTIONS block at the END of your
+reply on its own lines. Use this exact format:
+
+[ACTIONS]
+[
+  {{"type": "add_to_cart", "sku": "JA-XXX-001", "qty": 1}},
+  {{"type": "add_to_cart", "sku": "JA-YYY-002", "qty": 2}}
+]
+[/ACTIONS]
+
+When the user asks "where's my last order?" or "track my last order",
+end the reply with:
+
+[ACTIONS]
+[{{"type": "view_order", "order_id": "{last_order_id}"}}]
+[/ACTIONS]
+
+RULES for actions:
+- Only emit actions for SKUs/order_ids that exist in the snapshots above.
+  Never invent SKUs.
+- Maximum 3 actions per reply.
+- Only emit when actionable — pure diagnostic answers don't need actions.
+- The ACTIONS block must appear after a blank line at the end of your
+  reply. Don't reference [ACTIONS] in your prose.
+- If you have no actions, omit the block entirely."""
 
 
 class GeniusRequest(BaseModel):
     session_id: Optional[str] = ""
     message: str
+
+
+_ACTIONS_RE = re.compile(r"\[ACTIONS\]\s*(\[.*?\])\s*\[/ACTIONS\]", re.DOTALL | re.IGNORECASE)
+
+
+def _extract_actions(reply_text: str, products: list[dict], orders: list[dict]) -> tuple[list[dict], str]:
+    """Pull the Genius-emitted [ACTIONS]...[/ACTIONS] tail, validate against
+    the snapshots passed to the prompt, enrich each action with full product
+    metadata (name, image, your-price, stock) and return (actions, reply
+    with the block stripped). Silently drops any malformed/unknown actions
+    so a bad Genius reply never breaks the chat UI."""
+    m = _ACTIONS_RE.search(reply_text)
+    if not m:
+        return [], reply_text
+
+    raw = m.group(1)
+    try:
+        parsed = json.loads(raw)
+    except Exception:
+        # Malformed JSON — strip the block but emit no actions
+        return [], _ACTIONS_RE.sub("", reply_text).strip()
+
+    if not isinstance(parsed, list):
+        return [], _ACTIONS_RE.sub("", reply_text).strip()
+
+    by_sku = {p.get("sku"): p for p in products if p.get("sku")}
+    valid_order_ids = {o.get("order_id") for o in orders if o.get("order_id")}
+
+    enriched: list[dict] = []
+    for a in parsed[:3]:  # cap at 3 actions per reply
+        if not isinstance(a, dict):
+            continue
+        atype = (a.get("type") or "").strip().lower()
+        if atype == "add_to_cart":
+            sku = (a.get("sku") or "").strip()
+            qty = max(1, int(a.get("qty", 1) or 1))
+            p = by_sku.get(sku)
+            if not p:
+                continue
+            enriched.append({
+                "type": "add_to_cart",
+                "sku": sku,
+                "qty": qty,
+                "product_id": p.get("product_id"),
+                "name": p.get("name"),
+                "image_url": p.get("image_url"),
+                "price_bdt": p.get("your_price_bdt", p.get("price_bdt", 0)),
+                "category": p.get("category"),
+                "stock": p.get("stock", 0),
+            })
+        elif atype == "view_order":
+            oid = (a.get("order_id") or "").strip()
+            if oid and oid in valid_order_ids:
+                enriched.append({"type": "view_order", "order_id": oid})
+
+    cleaned = _ACTIONS_RE.sub("", reply_text).strip()
+    return enriched, cleaned
 
 
 @api_router.post("/guardian/message")
@@ -213,6 +304,13 @@ async def guardian_message(payload: GeniusRequest, request: Request):
 
     reply_text = (raw if isinstance(raw, str) else str(raw)).strip()
 
+    # Parse [ACTIONS]...[/ACTIONS] tail (auth users only) and enrich with
+    # full product objects so the frontend can render real Add-to-cart /
+    # Reorder buttons. Strip the block from the visible reply.
+    actions: list[dict] = []
+    if user:
+        actions, reply_text = _extract_actions(reply_text, products, orders)
+
     now = datetime.now(timezone.utc).isoformat()
     try:
         await db.guardian_messages.insert_many([
@@ -221,7 +319,8 @@ async def guardian_message(payload: GeniusRequest, request: Request):
              "user_id": (user or {}).get("user_id")},
             {"session_id": session_id, "role": "assistant",
              "content": reply_text[:6000], "created_at": now,
-             "user_id": (user or {}).get("user_id")},
+             "user_id": (user or {}).get("user_id"),
+             "actions": actions},
         ])
     except Exception:
         logger.exception("genius: failed to persist messages (non-fatal)")
@@ -230,6 +329,7 @@ async def guardian_message(payload: GeniusRequest, request: Request):
         "session_id": session_id,
         "reply": reply_text,
         "authenticated": bool(user),
+        "actions": actions,
     }
 
 
@@ -239,6 +339,6 @@ async def guardian_history(session_id: str):
         raise HTTPException(400, "session_id required")
     msgs = await db.guardian_messages.find(
         {"session_id": session_id.strip()},
-        {"_id": 0, "role": 1, "content": 1, "created_at": 1},
+        {"_id": 0, "role": 1, "content": 1, "created_at": 1, "actions": 1},
     ).sort("created_at", 1).to_list(50)
     return {"session_id": session_id.strip(), "messages": msgs}

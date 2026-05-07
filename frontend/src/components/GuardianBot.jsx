@@ -1,7 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Sparkles, X, Send, Loader2, Bot } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Sparkles, X, Send, Loader2, Bot, ShoppingCart, Package, Check } from "lucide-react";
+import { toast } from "sonner";
 import api from "../lib/api";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 
 /*
  * GuardianBot (rebranded JOY Genius / "Mr Genius") — the single unified AI
@@ -41,6 +44,8 @@ const formatTime = (iso) => {
 
 const GuardianBot = () => {
   const { user } = useAuth();
+  const { add: addToCart } = useCart();
+  const navigate = useNavigate();
   const isAuth = !!user;
   const starters = isAuth ? PORTAL_STARTERS : PUBLIC_STARTERS;
 
@@ -67,7 +72,7 @@ const GuardianBot = () => {
         .then((r) => {
           if (cancelled) return;
           const msgs = (r.data?.messages || []).map((m) => ({
-            role: m.role, content: m.content, ts: m.created_at,
+            role: m.role, content: m.content, ts: m.created_at, actions: m.actions || [],
           }));
           setMessages(msgs);
         })
@@ -110,6 +115,7 @@ const GuardianBot = () => {
         role: "assistant",
         content: r.data?.reply || "Sorry, I had no answer for that.",
         ts: new Date().toISOString(),
+        actions: r.data?.actions || [],
       }]);
     } catch (e) {
       const detail = e.response?.data?.detail || "Connection lost. Please try again.";
@@ -124,6 +130,89 @@ const GuardianBot = () => {
       e.preventDefault();
       send();
     }
+  };
+
+  // One-tap actions emitted by Genius (auth-only). Each action carries enriched
+  // product data so we can hand it straight to the cart context.
+  const handleAction = (msgIdx, actionIdx, action) => {
+    if (action.type === "add_to_cart") {
+      addToCart(
+        {
+          product_id: action.product_id,
+          name: action.name,
+          sku: action.sku,
+          image_url: action.image_url,
+          price_bdt: action.price_bdt,
+          moq: 1,
+        },
+        action.qty || 1,
+      );
+      toast.success(`Added ${action.qty || 1} × ${action.name}`, { duration: 2200 });
+    } else if (action.type === "view_order") {
+      setOpen(false);
+      navigate(`/orders/${action.order_id}`);
+      return;
+    }
+    // Mark consumed so the chip flips to a check-mark
+    setMessages((all) =>
+      all.map((m, i) => {
+        if (i !== msgIdx) return m;
+        const next = (m.actions || []).map((a, j) =>
+          j === actionIdx ? { ...a, consumed: true } : a,
+        );
+        return { ...m, actions: next };
+      }),
+    );
+  };
+
+  const renderActions = (msgIdx, actions) => {
+    if (!actions || actions.length === 0) return null;
+    return (
+      <div className="mt-2 flex flex-wrap gap-1.5" data-testid={`guardian-actions-${msgIdx}`}>
+        {actions.map((a, j) => {
+          if (a.type === "add_to_cart") {
+            const consumed = !!a.consumed;
+            return (
+              <button
+                key={j}
+                type="button"
+                disabled={consumed}
+                data-testid={`guardian-action-${msgIdx}-${j}`}
+                data-action-type="add_to_cart"
+                data-consumed={consumed ? "true" : "false"}
+                onClick={() => handleAction(msgIdx, j, a)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-mono uppercase tracking-[0.14em] transition-all ${
+                  consumed
+                    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30"
+                    : "bg-[#E11D48] hover:bg-[#BE123C] text-white border border-[#E11D48] shadow-sm hover:-translate-y-0.5"
+                }`}
+              >
+                {consumed ? <Check className="w-3 h-3" /> : <ShoppingCart className="w-3 h-3" />}
+                {consumed ? "Added" : `Add ${a.qty || 1} × ${(a.name || "").split(" ").slice(0, 4).join(" ")}`}
+                {!consumed && a.price_bdt > 0 && (
+                  <span className="opacity-80">·BDT {Math.round(a.price_bdt).toLocaleString()}</span>
+                )}
+              </button>
+            );
+          }
+          if (a.type === "view_order") {
+            return (
+              <button
+                key={j}
+                type="button"
+                data-testid={`guardian-action-${msgIdx}-${j}`}
+                data-action-type="view_order"
+                onClick={() => handleAction(msgIdx, j, a)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-mono uppercase tracking-[0.14em] bg-zinc-900 hover:bg-zinc-700 text-white border border-zinc-900 dark:border-zinc-700 shadow-sm hover:-translate-y-0.5 transition-all"
+              >
+                <Package className="w-3 h-3" /> View order
+              </button>
+            );
+          }
+          return null;
+        })}
+      </div>
+    );
   };
 
   const showStarters = messages.length === 0 && !sending;
@@ -229,7 +318,7 @@ const GuardianBot = () => {
               <div
                 key={i}
                 data-testid={`guardian-msg-${m.role}-${i}`}
-                className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+                className={`flex flex-col ${m.role === "user" ? "items-end" : "items-start"}`}
               >
                 <div
                   className={`max-w-[88%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
@@ -247,6 +336,7 @@ const GuardianBot = () => {
                     </div>
                   )}
                 </div>
+                {m.role === "assistant" && renderActions(i, m.actions)}
               </div>
             ))}
 
