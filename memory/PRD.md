@@ -33,22 +33,42 @@
 - Header height bumped (60→68 / 76→88)
 
 **Tri-pillar manifesto** (between CTAs and ecosystem):
-- "Bangladesh's First AI-Powered" eyebrow — now larger (13/15/17px) flanked by 8/12px red rules
+- "Bangladesh's First AI-Powered" eyebrow — large 15/19/22px font, longer red rules
 - 3-card grid: 01 Automotive Commerce · 02 Data Infrastructure · 03 Iconic Experience Platform
 
-**The JOY Automart Ecosystem** (replaces previous H1+verb-table+BD-badge block):
-- Section title: "The JOY Automart Ecosystem" with red leading rule + trailing gradient
-- 5-row hairline-divider list, magazine-grade layout:
+**The JOY Automart Ecosystem** (replaces previous H1+verb-table+BD-badge):
+- Section title: "The JOY Automart Ecosystem" with red leading rule
+- 5-row hairline-divider list with original business names + descriptors
   - 01 B2B Platform — Workshops & car dealers
   - 02 B2C — E-commerce auto parts retail
   - 03 Experience Centre — Flagship store
   - 04 AI-Driven Data Co. — Industry intelligence layer
-  - 05 JOY Beast Atelier — Body kits · forged rims · bespoke & tuning
-- Red 01-05 numerals, display-font business names (20→32px), zinc-600 descriptors
-- Removed: H1 ("Bangladesh's automotive AI, data & commerce infrastructure"), verb-only ecosystem, "Built in Bangladesh" badge
-- Footer tagline: "Built in Bangladesh · Engineered for the world"
+  - 05 JOY Beast Atelier — Body kits · forged & bespoke rims · tuning brand
 
-**Test IDs:** `header-logo-link`, `hero-tripillar`, `hero-tripillar-0X`, `hero-ecosystem-section`, `hero-ecosystem-title`, `hero-ecosystem-list`, `hero-eco-0X`
+**Other refinements:**
+- JOY Automart logo overlay removed from hero image (clean Toyota Harrier shot)
+- Mr Genius FAB redesigned: smaller, dark with red sparkle node, label shortened to "Mr Genius"
+
+## 2026-05-07 — Landing.jsx refactor (P1 complete)
+**Refactor**: Monolithic Landing.jsx (836 LOC) → thin composer (92 LOC) + 14 modular section components.
+
+**New module structure** under `/app/frontend/src/components/landing/`:
+- `landingHelpers.jsx` — LOGO, buildTicker, formatAgo, StatCounter, ExpTile, Stat, ThemeToggle (129 LOC)
+- `LiveTickerStrip.jsx` (26)
+- `StickyHeader.jsx` (55)
+- `HeroSection.jsx` — image + CTAs + tri-pillar (79)
+- `EcosystemSection.jsx` (54)
+- `WhatWeDoBento.jsx` (83)
+- `JoyBeastSection.jsx` (87)
+- `ExperienceCentreTeaser.jsx` (54)
+- `TechStackSection.jsx` (94)
+- `ValuePropSection.jsx` (55)
+- `LiveOrderShowcase.jsx` (66)
+- `BottomCTASection.jsx` (26)
+- `BangladeshNewsSection.jsx` (108)
+- `LandingFooter.jsx` (84)
+
+**Verified**: testing_agent_v3_fork iter-31 — all 21 acceptance items PASS, 0 issues, retest not needed.
 
 ## What's Been Implemented (2026-02-09)
 **Backend (`/app/backend/server.py`)**
