@@ -762,3 +762,45 @@ Inspired by the strategic audit. Most audit items were already built (catalog, K
 - EDITED `/app/frontend/src/pages/Landing.jsx` (header logo, hero CTAs, tech CTAs, section spacing)
 - EDITED `/app/frontend/src/components/BodyKitsShowcase.jsx` (atelier inline-style clip)
 
+
+## What's Been Implemented (2026-02-10) — Hero Polish + Catalogue Chip + Dashboard Search + Guardian Bot (iter 23)
+
+**Hero copy enriched** (`/app/frontend/src/pages/Landing.jsx`)
+- Overline updated: "Bangladesh's first AI-powered auto parts commerce & data platform".
+- New 4-pillar trust strip below CTAs (`data-testid="hero-pillars"`): hairline separators with bullet dots calling out **B2B wholesale · B2C retail · Experience Centre · JOY BEAST atelier**.
+
+**Catalogue moved to chip nav** (`/app/frontend/src/components/MobileScrollSpyChips.jsx`)
+- Removed `Catalogue` link from Landing header. Mobile chip nav now has 6 chips in DOM order: Home → JOY BEAST → Experience → Tech → Catalogue → BD News.
+- Catalogue is a special `type:"link"` chip (`data-chip-type="link"`, red text, no scroll-spy underline). Clicking it routes to `/catalog` via `useNavigate`.
+- Header on Landing simplified: logo + name + Search trigger + theme + install + Sign in.
+
+**Dashboard bay-floor search** (`/app/frontend/src/components/DashboardSearchBar.jsx` NEW)
+- Authenticated search mounted between the "Welcome back / {Name} — your bay floor" heading and the KYC banner (per user UX spec).
+- Hits `GET /api/products`, debounced 200ms, dropdown of 6 best matches with workshop tier price highlighted in red.
+- Keyboard nav (↑↓Enter), no-match → "Submit part request" CTA → `/part-requests?new=1&q=...`.
+- data-testids: `dashboard-search-bar`, `dashboard-search-input`, `dashboard-search-clear`, `dashboard-search-cta`, `dashboard-search-dropdown`, `dashboard-search-results`, `dashboard-search-result-{i}`, `dashboard-search-request-quote`.
+
+**🤖 GUARDIAN BOT — public AI car expert** (NEW)
+- Backend `/app/backend/routes/guardian.py`:
+  - `POST /api/guardian/message` (no auth) — Claude Sonnet 4.5 via emergentintegrations + EMERGENT_LLM_KEY.
+  - System prompt scoped to automotive expertise: diagnostics, maintenance, parts compatibility, BD-market context (LRP, BRTA, monsoon prep, recon vs new), workshop quote sanity-checks, gentle hand-offs to JOY catalogue.
+  - In-memory rate limit: 8 messages / 60s / session_id (returns 429 when exceeded).
+  - Persists every turn to `db.guardian_messages` keyed by session_id (no PII captured beyond message content).
+  - `GET /api/guardian/history?session_id=...` — restores conversation on reload.
+- Frontend `/app/frontend/src/components/GuardianBot.jsx`:
+  - Floating "ASK GUARDIAN" bubble bottom-LEFT (bottom-right reserved for existing authenticated `ChatWidget`).
+  - Mounted globally in `App.js` so it appears on every page (Landing, Catalogue, EC, Dashboard, etc.).
+  - Slide-in panel with 4 starter prompts (engine oil, AC, battery, brake-pad pricing); typing + Send + Enter; auto-scroll; localStorage `joy_guardian_sid` for cross-page session.
+  - Bengali supported (system prompt mirrors user language).
+  - data-testids: `guardian-bot-trigger`, `guardian-bot-panel`, `guardian-starter-{i}`, `guardian-input`, `guardian-send`, `guardian-msg-{role}-{i}`, `guardian-typing`, `guardian-messages`.
+
+**Tests** (iter 23 — 100% on both surfaces, no retest)
+- Backend pytest: 8/8 — happy path, validation (empty/whitespace/length), rate limit 429, history persistence + ordering.
+- Frontend Playwright: 13/13 — hero pillars, chip-nav reorder + link chip, GuardianBot end-to-end (real Claude reply, localStorage persistence, reload restoration), Dashboard search positioned correctly + working result navigation, ChatWidget + GuardianBot coexist without overlap.
+
+**Files touched**
+- NEW `/app/backend/routes/guardian.py`
+- NEW `/app/frontend/src/components/GuardianBot.jsx`
+- NEW `/app/frontend/src/components/DashboardSearchBar.jsx`
+- EDITED `/app/backend/server.py`, `/app/frontend/src/App.js`, `/app/frontend/src/pages/Landing.jsx`, `/app/frontend/src/pages/Dashboard.jsx`, `/app/frontend/src/components/MobileScrollSpyChips.jsx`
+
