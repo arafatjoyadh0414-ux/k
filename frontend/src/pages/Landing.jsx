@@ -276,14 +276,22 @@ const Landing = () => {
 
       {/* Glassmorphic sticky header — refined logo lockup, larger more legible */}
       <header className="sticky top-0 z-30 backdrop-blur-xl bg-white/80 dark:bg-zinc-950/80 border-b hairline dark:border-white/10">
-        <div className="max-w-7xl mx-auto px-3 sm:px-5 lg:px-7 h-[60px] sm:h-[76px] flex items-center justify-between gap-2 sm:gap-4">
-          <Link to="/" className="flex items-center gap-2.5 sm:gap-3.5 lg:gap-4 group min-w-0 flex-shrink overflow-hidden" data-testid="header-logo-link" aria-label="JOY Automart — Go to home">
-            <div className="relative flex-shrink-0">
-              <img src={LOGO} alt="JOY Automart" className="w-12 h-12 sm:w-16 sm:h-16 lg:w-[72px] lg:h-[72px] object-contain transition-transform group-hover:scale-105 drop-shadow-sm" />
+        <div className="max-w-7xl mx-auto px-3 sm:px-5 lg:px-7 h-[68px] sm:h-[88px] flex items-center justify-between gap-2 sm:gap-4">
+          <Link to="/" className="flex items-center gap-3 sm:gap-4 lg:gap-5 group min-w-0 flex-shrink overflow-hidden" data-testid="header-logo-link" aria-label="JOY Automart — The Automotive Intelligence Company">
+            <div className="relative flex-shrink-0 flex items-center justify-center">
+              <img src={LOGO} alt="JOY Automart" className="w-14 h-14 sm:w-[68px] sm:h-[68px] lg:w-[76px] lg:h-[76px] object-contain transition-transform group-hover:scale-105" style={{ filter: "drop-shadow(0 2px 8px rgba(225,29,72,0.18))" }} />
             </div>
-            <div className="leading-tight min-w-0 hidden xs:block">
-              <div className="font-display text-[17px] sm:text-2xl lg:text-[26px] text-zinc-950 dark:text-white tracking-[-0.02em] font-bold whitespace-nowrap truncate">JOY Automart</div>
-              <div className="hidden sm:block font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.28em] text-zinc-600 dark:text-zinc-400 mt-0.5 whitespace-nowrap font-medium">Bangladesh</div>
+            <div className="leading-[1.1] min-w-0 hidden xs:block">
+              <div className="font-display text-[18px] sm:text-[24px] lg:text-[28px] text-zinc-950 dark:text-white tracking-[-0.025em] font-bold whitespace-nowrap truncate">JOY Automart</div>
+              <div className="hidden sm:flex items-center gap-1.5 mt-1">
+                <span aria-hidden="true" className="block w-3 h-px bg-[#E11D48]" />
+                <span className="font-mono text-[9.5px] lg:text-[10.5px] uppercase tracking-[0.32em] text-[#E11D48] font-bold whitespace-nowrap">
+                  The Automotive Intelligence Company
+                </span>
+              </div>
+              <div className="sm:hidden font-mono text-[9px] uppercase tracking-[0.28em] text-[#E11D48] font-bold mt-0.5 whitespace-nowrap">
+                Automotive Intelligence Co.
+              </div>
             </div>
           </Link>
           <nav className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
@@ -339,18 +347,41 @@ const Landing = () => {
             Visit retail store →
           </a>
         </div>
+
+        {/* Tri-pillar manifesto — Bangladesh's First AI-Powered: Commerce · Data · Experience */}
+        <div className="max-w-5xl mx-auto px-5 sm:px-6 pt-8 sm:pt-12" data-testid="hero-tripillar">
+          <div className="flex items-center justify-center gap-3 mb-4 sm:mb-5">
+            <span aria-hidden="true" className="block w-6 sm:w-10 h-px bg-[#E11D48]" />
+            <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.32em] text-[#E11D48] font-bold whitespace-nowrap">
+              Bangladesh's First AI-Powered
+            </span>
+            <span aria-hidden="true" className="block w-6 sm:w-10 h-px bg-[#E11D48]" />
+          </div>
+          <ul className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4 text-center" data-testid="hero-tripillar-list">
+            {[
+              { n: "01", t: "Automotive Commerce" },
+              { n: "02", t: "Data Infrastructure" },
+              { n: "03", t: "Iconic Experience Platform" },
+            ].map((p) => (
+              <li
+                key={p.n}
+                data-testid={`hero-tripillar-${p.n}`}
+                className="group relative px-4 py-3 sm:py-4 rounded-2xl bg-white/70 dark:bg-white/[0.04] border border-zinc-200/80 dark:border-white/10 backdrop-blur-sm hover:border-[#E11D48]/40 hover:bg-white dark:hover:bg-white/[0.06] transition-all"
+              >
+                <span className="font-mono text-[9.5px] sm:text-[10px] tracking-[0.28em] uppercase text-zinc-400 dark:text-zinc-500 font-bold block mb-1">
+                  {p.n}
+                </span>
+                <span className="font-display text-[14.5px] sm:text-[15.5px] lg:text-[17px] tracking-[-0.015em] font-semibold text-zinc-950 dark:text-white block">
+                  {p.t}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </section>
 
-      {/* Hero narrative — Eyebrow · H1 · Ecosystem verbs · Built-in-Bangladesh badge */}
-      <section className="max-w-7xl mx-auto px-5 sm:px-6 pt-10 sm:pt-14 pb-10 sm:pb-12 reveal" data-testid="hero-narrative">
-        {/* Eyebrow — category statement */}
-        <div className="inline-flex items-center gap-3 mb-5 sm:mb-6" data-testid="hero-eyebrow">
-          <span className="block w-8 h-px bg-[#E11D48]" aria-hidden="true" />
-          <span className="font-mono text-[10px] sm:text-[11px] tracking-[0.28em] uppercase text-[#E11D48] font-bold">
-            The Automotive Intelligence Company
-          </span>
-        </div>
-
+      {/* Hero narrative — H1 · Ecosystem · Built-in-Bangladesh badge */}
+      <section className="max-w-7xl mx-auto px-5 sm:px-6 pt-12 sm:pt-16 pb-10 sm:pb-12 reveal" data-testid="hero-narrative">
         {/* H1 — billion-dollar one-liner */}
         <h1
           data-testid="hero-h1"
@@ -361,37 +392,49 @@ const Landing = () => {
           <span className="text-zinc-950 dark:text-white"> infrastructure.</span>
         </h1>
 
-        {/* Ecosystem verbs — 5 pillars distilled to 5 words */}
-        <div className="mt-7 sm:mt-9" data-testid="hero-ecosystem-verbs">
-          <div className="flex items-center gap-3 mb-3">
-            <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.28em] text-zinc-500 dark:text-zinc-400 font-bold whitespace-nowrap">
+        {/* JOY Ecosystem — verb-led, magazine-grade descriptor lines */}
+        <div className="mt-9 sm:mt-12" data-testid="hero-ecosystem">
+          <div className="flex items-center gap-3 mb-5 sm:mb-6">
+            <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.32em] text-zinc-500 dark:text-zinc-400 font-bold whitespace-nowrap">
               The JOY Ecosystem
             </span>
             <div className="flex-1 h-px bg-gradient-to-r from-zinc-300 to-transparent dark:from-white/15" />
+            <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.24em] text-zinc-400 dark:text-zinc-500 font-medium hidden sm:inline">
+              Five businesses · One platform
+            </span>
           </div>
-          <div className="flex flex-wrap items-baseline gap-x-3 sm:gap-x-5 gap-y-1 font-display text-[20px] xs:text-[22px] sm:text-3xl lg:text-[34px] tracking-[-0.02em] leading-tight">
+          <ul className="divide-y divide-zinc-200 dark:divide-white/10 border-y border-zinc-200 dark:border-white/10" data-testid="hero-ecosystem-list">
             {[
-              { v: "Procure", k: "01" },
-              { v: "Retail", k: "02" },
-              { v: "Experience", k: "03" },
-              { v: "Compute", k: "04" },
-              { v: "Craft", k: "05" },
-            ].map((p, i, arr) => (
-              <React.Fragment key={p.k}>
-                <span className="inline-flex items-baseline gap-1.5" data-testid={`hero-eco-verb-${p.k}`}>
-                  <span className="font-mono text-[10px] sm:text-[11px] tracking-[0.18em] text-zinc-400 dark:text-zinc-500 font-bold align-top relative -top-2">{p.k}</span>
-                  <span className="text-zinc-950 dark:text-white font-semibold">{p.v}.</span>
+              { n: "01", v: "Procure", d: "Wholesale parts on credit — for workshops & dealers." },
+              { n: "02", v: "Retail", d: "Direct-to-consumer e-commerce, nationwide." },
+              { n: "03", v: "Experience", d: "Bangladesh's flagship automotive showroom." },
+              { n: "04", v: "Compute", d: "The data & intelligence layer of an industry." },
+              { n: "05", v: "Craft", d: "Bespoke atelier — body kits, forged rims, tuning." },
+            ].map((p) => (
+              <li
+                key={p.n}
+                data-testid={`hero-eco-${p.n}`}
+                className="grid grid-cols-[auto_1fr] sm:grid-cols-[auto_minmax(0,200px)_1fr] items-baseline gap-3 sm:gap-6 py-3 sm:py-4 group hover:bg-zinc-50/60 dark:hover:bg-white/[0.03] transition-colors px-1 sm:px-2"
+              >
+                <span className="font-mono text-[10px] sm:text-[11px] tracking-[0.22em] text-zinc-400 dark:text-zinc-500 font-bold pt-1">
+                  {p.n}
                 </span>
-                {i < arr.length - 1 && (
-                  <span aria-hidden="true" className="text-zinc-300 dark:text-zinc-700 font-light hidden sm:inline">·</span>
-                )}
-              </React.Fragment>
+                <span className="font-display text-[18px] sm:text-[22px] lg:text-[26px] tracking-[-0.02em] font-semibold text-zinc-950 dark:text-white col-span-2 sm:col-span-1">
+                  {p.v}.
+                </span>
+                <span className="hidden sm:block text-zinc-600 dark:text-zinc-400 text-[14px] lg:text-[15px] font-medium tracking-[-0.005em] leading-snug col-start-3">
+                  {p.d}
+                </span>
+                <span className="sm:hidden text-zinc-600 dark:text-zinc-400 text-[13px] font-medium leading-snug col-span-2 col-start-1 -mt-1">
+                  {p.d}
+                </span>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
 
         {/* Built-in-Bangladesh badge — closing layer */}
-        <div className="mt-7 sm:mt-9 inline-flex items-center gap-3 px-4 py-2.5 rounded-full border border-zinc-300 dark:border-white/15 bg-white/60 dark:bg-white/5 backdrop-blur-sm shadow-sm" data-testid="hero-bd-badge">
+        <div className="mt-8 sm:mt-10 inline-flex items-center gap-3 px-4 py-2.5 rounded-full border border-zinc-300 dark:border-white/15 bg-white/60 dark:bg-white/5 backdrop-blur-sm shadow-sm" data-testid="hero-bd-badge">
           <span className="text-base leading-none" aria-hidden="true">🇧🇩</span>
           <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.24em] font-bold leading-tight">
             <span className="text-zinc-950 dark:text-white">Built in Bangladesh.</span>

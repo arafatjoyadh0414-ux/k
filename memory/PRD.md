@@ -24,16 +24,33 @@
 - Mark payment received (admin), credit auto-released on payment
 
 
-## 2026-05-07 — Billion-Dollar Brand Narrative Hero
-**Landing.jsx hero rewrite — investor-grade positioning shift from "auto parts platform" to "automotive intelligence company".**
+## 2026-05-07 — Billion-Dollar Brand Narrative Hero (final)
+**Full Landing.jsx hero rewrite — investor-grade "Automotive Intelligence Company" positioning.**
 
-- **Eyebrow**: "THE AUTOMOTIVE INTELLIGENCE COMPANY" (red mono, tracked-wider)
-- **H1**: "Bangladesh's automotive AI, data & commerce infrastructure." — red accent on "AI, data & commerce" pillar words
-- **Sub (5-verb ecosystem)**: 01 Procure · 02 Retail · 03 Experience · 04 Compute · 05 Craft (replaces verbose 5-pillar strip; each verb maps to one ecosystem business)
-- **Closing badge**: 🇧🇩 "Built in Bangladesh. Engineered for the world." (pill, backdrop-blur)
+**Header lockup:**
+- Logo larger (w-14 → lg:w-[76px]) with subtle rose drop-shadow
+- New tagline replaces "BANGLADESH": red rule + "The Automotive Intelligence Company" (mono, tracked-wider)
+- Header height bumped (60→68 / 76→88) to accommodate two-line lockup
+
+**Tri-pillar manifesto** (NEW, between CTAs and H1):
+- "Bangladesh's First AI-Powered" eyebrow flanked by red rules
+- 3-card grid: 01 Automotive Commerce · 02 Data Infrastructure · 03 Iconic Experience Platform
+- Soft glassy cards with hover red-border accent
+
+**H1**: "Bangladesh's automotive AI, data & commerce infrastructure." (red accent on pillar words)
+
+**JOY Ecosystem** (upgraded from verb-only → magazine-grade table):
+- Hairline-divider list. Each row: 01 mono # · Verb (display) · Prose descriptor
+  - 01 Procure — Wholesale parts on credit — for workshops & dealers.
+  - 02 Retail — Direct-to-consumer e-commerce, nationwide.
+  - 03 Experience — Bangladesh's flagship automotive showroom.
+  - 04 Compute — The data & intelligence layer of an industry.
+  - 05 Craft — Bespoke atelier — body kits, forged rims, tuning.
+- Right-rail label: "Five businesses · One platform"
+
+**Closing badge**: 🇧🇩 Built in Bangladesh. Engineered for the world.
 - Footer tagline updated to match
-- Old "Smarter parts. Stronger journey. One platform." headline retired
-- All elements have `data-testid` (`hero-narrative`, `hero-eyebrow`, `hero-h1`, `hero-ecosystem-verbs`, `hero-eco-verb-0X`, `hero-bd-badge`)
+- All elements have `data-testid`: `header-logo-link`, `hero-tripillar`, `hero-tripillar-0X`, `hero-narrative`, `hero-h1`, `hero-ecosystem`, `hero-ecosystem-list`, `hero-eco-0X`, `hero-bd-badge`
 
 ## What's Been Implemented (2026-02-09)
 **Backend (`/app/backend/server.py`)**
