@@ -100,43 +100,48 @@ export default function MobileScrollSpyChips() {
       data-testid="mobile-scroll-spy"
       className="lg:hidden sticky top-16 sm:top-[72px] z-20 backdrop-blur-xl bg-white/90 dark:bg-zinc-950/90 border-b hairline dark:border-white/10"
     >
-      <div
-        ref={railRef}
-        className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 flex items-center justify-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar"
-      >
-        {SECTIONS.map((s) => {
-          const isLink = s.type === "link";
-          const isActive = !isLink && s.id === active;
-          return (
-            <button
-              key={s.id}
-              ref={(el) => (chipRefs.current[s.id] = el)}
-              type="button"
-              data-testid={`chip-${s.id}`}
-              data-active={isActive ? "true" : "false"}
-              data-chip-type={isLink ? "link" : "section"}
-              onClick={() => onChip(s)}
-              aria-current={isActive ? "true" : undefined}
-              className={`shrink-0 px-3 sm:px-3.5 py-1.5 text-[10px] sm:text-[11px] font-display tracking-[0.04em] transition-all duration-300 relative ${
-                isActive
-                  ? "text-zinc-900 dark:text-white font-semibold"
-                  : isLink
-                  ? "text-[#E11D48] dark:text-[#FFB1C1] hover:text-[#BE123C] dark:hover:text-white font-medium"
-                  : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
-              }`}
-            >
-              <span className="relative z-[1]">{s.label}</span>
-              {/* Underline indicator — only on scroll-spy chips */}
-              {!isLink && (
-                <span
-                  className={`absolute left-1/2 -translate-x-1/2 bottom-0.5 h-[2px] rounded-full transition-all duration-300 ${
-                    isActive ? "w-5 sm:w-6 bg-[#E11D48]" : "w-0 bg-transparent"
-                  }`}
-                />
-              )}
-            </button>
-          );
-        })}
+      <div className="relative">
+        {/* Soft fade masks on left/right so the rail visually fades into the
+            container edges instead of getting clipped. */}
+        <div aria-hidden="true" className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-white dark:from-zinc-950 to-transparent z-[1]" />
+        <div aria-hidden="true" className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-white dark:from-zinc-950 to-transparent z-[1]" />
+        <div
+          ref={railRef}
+          className="max-w-7xl mx-auto px-4 sm:px-5 py-2.5 flex items-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar"
+        >
+          {SECTIONS.map((s) => {
+            const isLink = s.type === "link";
+            const isActive = !isLink && s.id === active;
+            return (
+              <button
+                key={s.id}
+                ref={(el) => (chipRefs.current[s.id] = el)}
+                type="button"
+                data-testid={`chip-${s.id}`}
+                data-active={isActive ? "true" : "false"}
+                data-chip-type={isLink ? "link" : "section"}
+                onClick={() => onChip(s)}
+                aria-current={isActive ? "true" : undefined}
+                className={`shrink-0 px-2.5 sm:px-3 py-1.5 text-[10px] sm:text-[11px] font-display tracking-[0.04em] transition-all duration-300 relative whitespace-nowrap ${
+                  isActive
+                    ? "text-zinc-900 dark:text-white font-semibold"
+                    : isLink
+                    ? "text-[#E11D48] dark:text-[#FFB1C1] hover:text-[#BE123C] dark:hover:text-white font-medium"
+                    : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+                }`}
+              >
+                <span className="relative z-[1]">{s.label}</span>
+                {!isLink && (
+                  <span
+                    className={`absolute left-1/2 -translate-x-1/2 bottom-0.5 h-[2px] rounded-full transition-all duration-300 ${
+                      isActive ? "w-5 sm:w-6 bg-[#E11D48]" : "w-0 bg-transparent"
+                    }`}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

@@ -265,12 +265,12 @@ const Landing = () => {
 
       {/* Glassmorphic sticky header */}
       <header className="sticky top-0 z-30 backdrop-blur-xl bg-white/70 dark:bg-zinc-950/70 border-b hairline dark:border-white/10">
-        <div className="max-w-7xl mx-auto px-5 sm:px-6 h-16 sm:h-[72px] flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-3 sm:gap-4 group min-w-0 flex-shrink" data-testid="header-logo-link" aria-label="JOY Automart — Go to home">
-            <img src={LOGO} alt="JOY Automart" className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 object-contain rounded-sm transition-transform group-hover:scale-105 flex-shrink-0" />
-            <div className="leading-tight min-w-0">
-              <div className="font-display text-lg sm:text-xl lg:text-2xl text-zinc-900 dark:text-white tracking-tight font-semibold whitespace-nowrap">JOY Automart</div>
-              <div className="hidden xs:block font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.22em] text-zinc-500 dark:text-zinc-400 mt-0.5 whitespace-nowrap">Bangladesh</div>
+        <div className="max-w-7xl mx-auto px-3 sm:px-5 lg:px-6 h-16 sm:h-[72px] flex items-center justify-between gap-2 sm:gap-4">
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 lg:gap-4 group min-w-0 flex-shrink overflow-hidden" data-testid="header-logo-link" aria-label="JOY Automart — Go to home">
+            <img src={LOGO} alt="JOY Automart" className="w-10 h-10 sm:w-14 sm:h-14 lg:w-16 lg:h-16 object-contain rounded-sm transition-transform group-hover:scale-105 flex-shrink-0" />
+            <div className="leading-tight min-w-0 hidden xs:block">
+              <div className="font-display text-[15px] sm:text-xl lg:text-2xl text-zinc-900 dark:text-white tracking-tight font-semibold whitespace-nowrap truncate">JOY Automart</div>
+              <div className="hidden sm:block font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.22em] text-zinc-500 dark:text-zinc-400 mt-0.5 whitespace-nowrap">Bangladesh</div>
             </div>
           </Link>
           <nav className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
@@ -280,7 +280,7 @@ const Landing = () => {
             <button
               data-testid="top-login-button"
               onClick={handleLogin}
-              className="magnetic inline-flex items-center bg-zinc-950 dark:bg-[#E11D48] hover:bg-[#E11D48] dark:hover:bg-[#BE123C] text-white text-[13px] sm:text-sm font-medium px-3.5 sm:px-5 lg:px-6 py-2 sm:py-2.5 rounded-full whitespace-nowrap"
+              className="magnetic inline-flex items-center bg-zinc-950 dark:bg-[#E11D48] hover:bg-[#E11D48] dark:hover:bg-[#BE123C] text-white text-[12px] sm:text-sm font-medium px-3 sm:px-5 lg:px-6 py-1.5 sm:py-2.5 rounded-full whitespace-nowrap"
             >
               Sign in
             </button>

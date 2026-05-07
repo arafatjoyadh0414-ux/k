@@ -18,6 +18,14 @@ img, video, svg {
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 
+/* Safe bottom padding so the floating Genius bot bubble (bottom-left,
+   ~64px tall on small screens) never visually overlaps the footer or
+   the last section's content on mobile. */
+@media (max-width: 640px) {
+    body { padding-bottom: env(safe-area-inset-bottom, 0); }
+    footer { padding-bottom: 80px !important; }
+}
+
 /* Hide Emergent platform-injected "Made with Emergent" badge */
 #emergent-badge,
 [id^="emergent-badge"],

@@ -224,18 +224,18 @@ const GuardianBot = () => {
         type="button"
         data-testid="guardian-bot-trigger"
         onClick={() => setOpen((v) => !v)}
-        className={`fixed bottom-5 left-5 z-40 group inline-flex items-center gap-2.5 pl-3 pr-4 py-2.5 sm:py-3 rounded-full shadow-2xl backdrop-blur-md transition-all hover:-translate-y-0.5 ${
+        className={`fixed bottom-4 left-3 sm:bottom-5 sm:left-5 z-40 group inline-flex items-center gap-2 sm:gap-2.5 pl-2.5 sm:pl-3 pr-3 sm:pr-4 py-2 sm:py-3 rounded-full shadow-2xl backdrop-blur-md transition-all hover:-translate-y-0.5 ${
           open
             ? "bg-zinc-900 text-white"
             : "bg-gradient-to-br from-[#E11D48] via-[#BE123C] to-zinc-900 text-white hover:shadow-[#E11D48]/40"
         }`}
         aria-label="Ask Mr Genius — JOY's AI automotive assistant"
       >
-        <span className={`relative grid place-items-center w-7 h-7 rounded-full ${open ? "bg-white/10" : "bg-white/20"}`}>
-          {open ? <X className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
+        <span className={`relative grid place-items-center w-6 h-6 sm:w-7 sm:h-7 rounded-full ${open ? "bg-white/10" : "bg-white/20"}`}>
+          {open ? <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
           {!open && <span className="absolute inset-0 rounded-full bg-white/30 animate-ping opacity-50" />}
         </span>
-        <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.22em] font-bold whitespace-nowrap">
+        <span className="font-mono text-[9px] sm:text-[11px] uppercase tracking-[0.2em] sm:tracking-[0.22em] font-bold whitespace-nowrap">
           {open ? "Close" : "Ask Mr Genius"}
         </span>
       </button>

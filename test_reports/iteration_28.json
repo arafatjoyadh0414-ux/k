@@ -1,0 +1,40 @@
+{
+  "summary": "Iter 28 visual production-readiness pass tested across 320/375/390/768/1440 viewports. Header overlap fixed (gap 114-722px at all sizes - no overlap). Chip nav clipping fixed (Home/BD News/all chips render full text - 'me'/'BD No' regression no longer occurs). Mr Genius bubble shrunk on mobile (147.6px wide, ≤16px from edges, click opens panel). Fade masks present (2). However, ONE CRITICAL ISSUE: xs breakpoint mismatch — tailwind.config.js has xs:400px while the test plan & developer intent state xs:360px. Result: at 375px (Galaxy Z Fold front) and 390px viewports, the 'JOY Automart' wordmark is HIDDEN (display:none) because xs:block only kicks in at >=400px. The test requirement explicitly says wordmark must be visible at 375px.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Landing.jsx header / tailwind.config.js",
+        "issue": "CRITICAL: xs breakpoint defined as 400px in tailwind.config.js, but Landing.jsx uses 'xs:block' on the wordmark group expecting xs=360px (per the agent_to_agent_context_note: 'Tailwind xs breakpoint is 360px in this project'). At 375px (Galaxy Z Fold front) and 390px viewports, the entire wordmark group ('JOY Automart' + Bangladesh subtitle) has display:none — only logo image is visible. This directly fails the test requirement: 'Same viewport (375x800): JOY Automart wordmark text content is visible (not clipped to JOY Automar)'. Measured wordmark_visible=false at 375 and 390. At 768/1440 wordmark renders correctly.",
+        "selector": "[data-testid='header-logo-link'] div.leading-tight (xs:block)",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "320x800: No header overlap (logo.right=52, search.left=166, gap=114px). Wordmark hidden as required. body_scrollWidth==320 (no overflow).",
+    "375x800: No overlap (gap=169px). Bangladesh subtitle hidden (correct). NO BODY OVERFLOW (scrollWidth==375). BUT wordmark hidden when it should be visible — see ui_bugs above.",
+    "390x844 chip nav: All 6 chips render full labels. 'Home' fully visible (width 49px), 'BD News' text is 'BD News' not clipped to 'BD No', scrollClipped=false on every chip. Chip nav is horizontally scrollable. 2 gradient fade masks present (left+right) with pointer-events-none + from-white-to-transparent.",
+    "390x844 Mr Genius bubble: left=12px (≤16 ok), bottom_from_viewport=16px (≤16 ok), width=147.6px (≤165 ok). Click on guardian-bot-trigger opens guardian-bot-panel.",
+    "Footer mobile padding-bottom: 80px applied via index.css @media(max-width:640px). CSS rule confirmed.",
+    "1440x900 desktop: 'JOY Automart' wordmark + 'Bangladesh' subtitle both visible. Search trigger label 'Search parts' visible. Sign-in pill full-size. Mobile chip nav hidden (lg:hidden — width=0). JOY Ecosystem micro-strip renders (5 pillars).",
+    "768x1024 tablet: Wordmark + subtitle both visible. Header gap=259px."
+  ],
+  "test_report_links": [],
+  "action_items": [
+    "FIX: Update tailwind.config.js — change `xs: '400px'` → `xs: '360px'` to match developer intent stated in iter 28 spec. This will make the wordmark visible at 360px+ (Galaxy Z Fold front 344px will still hide it cleanly, while 375/390 mobile viewports will show 'JOY Automart'). Verify no other component relies on xs being 400px."
+  ],
+  "critical_code_review_comments": [
+    "Breakpoint discrepancy between code (xs=400px) and design intent (xs=360px) causes wordmark to disappear on every standard mobile viewport (iPhone 13/14/15 mini etc are 375px). This is a high-impact branding regression — the brand wordmark vanishes on the most common phones.",
+    "Suggestion: After changing xs to 360px, also consider hiding the entire wordmark only at <320px (e.g. use `hidden xs:block` with xs=360, OR explicit `min-[360px]:block`), since at 320px the logo+text still has 114px gap to search button so it could even render."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "85%"},
+  "seed_data_creation": "",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Iter 28 fix needed: in /app/frontend/tailwind.config.js change xs breakpoint from 400px to 360px. After fix, retest at 375x800 — wordmark should become visible. All other production-readiness items (header overlap, chip clipping, fade masks, Genius bubble size, footer safe padding) verified working. Public URL: https://workshop-dashboard-1.preview.emergentagent.com",
+  "rca of the issue": "Root cause: developer wrote header markup using `xs:block` Tailwind utility intending xs=360px breakpoint, but tailwind.config.js defines xs=400px. As a result the wordmark group's `display:none` only flips to `display:block` at viewports >=400px. iPhone 13/14/15 (375), iPhone 14 Plus (430 — works), Galaxy S series (360-400 — partial), and Galaxy Z Fold front (344px) all hide the wordmark. Reproduction: open https://workshop-dashboard-1.preview.emergentagent.com at 375x800, inspect [data-testid='header-logo-link'] > div.leading-tight — computed display:none. Mitigation: change xs token to 360px (one line) and run a quick visual sweep across 320/360/375/390/400/640/768/1024."
+}
