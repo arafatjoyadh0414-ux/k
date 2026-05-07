@@ -6,7 +6,7 @@ import { LOGO, ThemeToggle } from "./landingHelpers";
 
 const StickyHeader = ({ onLogin }) => (
   <header className="sticky top-0 z-30 backdrop-blur-xl bg-white/80 dark:bg-zinc-950/80 border-b hairline dark:border-white/10">
-    <div className="max-w-7xl mx-auto px-3 sm:px-5 lg:px-7 h-[68px] sm:h-[88px] flex items-center justify-between gap-2 sm:gap-4">
+    <div className="max-w-7xl mx-auto px-3 sm:px-5 lg:px-7 h-[80px] sm:h-[100px] lg:h-[112px] flex items-center justify-between gap-2 sm:gap-4">
       <Link
         to="/"
         className="flex items-center gap-3 sm:gap-4 lg:gap-5 group min-w-0 flex-shrink overflow-hidden"
@@ -17,17 +17,17 @@ const StickyHeader = ({ onLogin }) => (
           <img
             src={LOGO}
             alt="JOY Automart"
-            className="w-14 h-14 sm:w-[68px] sm:h-[68px] lg:w-[76px] lg:h-[76px] object-contain transition-transform group-hover:scale-105"
-            style={{ filter: "drop-shadow(0 2px 8px rgba(225,29,72,0.18))" }}
+            className="w-[72px] h-[72px] sm:w-[92px] sm:h-[92px] lg:w-[108px] lg:h-[108px] object-contain transition-transform duration-300 group-hover:scale-105"
+            style={{ filter: "drop-shadow(0 4px 14px rgba(225,29,72,0.28)) drop-shadow(0 1px 2px rgba(0,0,0,0.08))" }}
           />
         </div>
-        <div className="leading-[1.1] min-w-0 hidden xs:block">
-          <div className="font-display text-[18px] sm:text-[24px] lg:text-[28px] text-zinc-950 dark:text-white tracking-[-0.025em] font-bold whitespace-nowrap truncate">
+        <div className="leading-[1.05] min-w-0 hidden xs:block">
+          <div className="font-display text-[20px] sm:text-[28px] lg:text-[32px] text-zinc-950 dark:text-white tracking-[-0.028em] font-bold whitespace-nowrap truncate">
             JOY Automart
           </div>
-          <div className="flex items-center gap-1.5 mt-1">
-            <span aria-hidden="true" className="block w-2.5 sm:w-3 h-px bg-[#E11D48] flex-shrink-0" />
-            <span className="font-mono text-[8px] xs:text-[8.5px] sm:text-[9.5px] lg:text-[10.5px] uppercase tracking-[0.18em] sm:tracking-[0.24em] lg:tracking-[0.26em] text-[#E11D48] font-bold whitespace-nowrap">
+          <div className="flex items-center gap-1.5 mt-1.5">
+            <span aria-hidden="true" className="block w-3 sm:w-4 h-px bg-[#E11D48] flex-shrink-0" />
+            <span className="font-mono text-[8.5px] xs:text-[9px] sm:text-[10.5px] lg:text-[11.5px] uppercase tracking-[0.2em] sm:tracking-[0.26em] lg:tracking-[0.28em] text-[#E11D48] font-bold whitespace-nowrap">
               The Automotive Intelligence Company
             </span>
           </div>

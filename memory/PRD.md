@@ -24,6 +24,13 @@
 - Mark payment received (admin), credit auto-released on payment
 
 
+## 2026-05-07 — Header logo polish + hero/kit image cleanup
+**Three asks shipped after deployment-readiness pass:**
+
+1. **Header logo enlarged & polished** (StickyHeader): logo bumped from 76px → 108px (lg) with refined rose drop-shadow + secondary subtle dark drop-shadow for depth. "JOY Automart" wordmark increased to 32px (lg), tagline "The Automotive Intelligence Company" upsized to 11.5px with cleaner tracking. Header height bumped 88→112px to accommodate.
+2. **Hero image cleanup** (HeroSection): Toyota Harrier image's embedded "JOY Automart" building logo cropped out via `object-position: center 78%` + `scale(1.08)` from bottom + soft top vignette gradient. Pure street-level car shot.
+3. **JOY BEAST kit images cleanup** (BodyKitsShowcase): For non-atelier kits, embedded building logos (BYD/Cyber Beast / Shadow GT / Wide Body) masked by an opaque top fade gradient covering 34-36% of the image height. Added a small classy "JOY" pill (logo + JOY mono text) positioned bottom-right near the water reflection — replaces the prominent in-image branding with a discreet, premium watermark.
+
 ## 2026-05-07 — Mobile header tweaks (post-refactor)
 **Three quick UX fixes after Landing.jsx refactor:**
 

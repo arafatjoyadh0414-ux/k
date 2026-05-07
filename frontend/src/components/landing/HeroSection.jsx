@@ -9,12 +9,18 @@ const TRI_PILLARS = [
 
 const HeroSection = ({ onLogin }) => (
   <section id="hero" className="relative scroll-mt-28">
-    {/* Full-width hero image — clean, no overlays */}
+    {/* Full-width hero image — clean, building/logo cropped out via object-position */}
     <div className="w-full overflow-hidden relative">
       <img
         src={HARRIER_HERO}
-        alt="Aggressive 2022 Toyota Harrier sport SUV with Modelista body kit — JOY Automart brand campaign for car dealers, workshops & suppliers"
+        alt="Aggressive 2022 Toyota Harrier sport SUV with Modelista body kit — JOY Automart brand campaign"
         className="w-full h-[280px] sm:h-[400px] md:h-[500px] lg:h-[560px] object-cover"
+        style={{ objectPosition: "center 78%", transform: "scale(1.08)", transformOrigin: "center bottom" }}
+      />
+      {/* Soft top vignette to seamlessly blend the cropped top edge */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 top-0 h-24 sm:h-32 bg-gradient-to-b from-white via-white/40 to-transparent dark:from-zinc-950 dark:via-zinc-950/40 pointer-events-none"
       />
     </div>
 

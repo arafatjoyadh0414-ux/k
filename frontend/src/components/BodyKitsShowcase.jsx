@@ -4,6 +4,8 @@ import CYBER_BEAST from "../assets/byd-cyberbeast.jpg";
 import WIDE_BODY_KIT from "../assets/body-kits/wide-body-bydkit.png";
 import CYBER_RIMS from "../assets/body-kits/cyber-beast-rims.png";
 
+const LOGO = "https://customer-assets.emergentagent.com/job_458d530b-69c9-4d64-8b89-03923696b1c8/artifacts/gnewd2f2_IMG-20260209-WA0017.jpg";
+
 /*
  * BodyKitsShowcase — interactive tabbed showcase for JOY BEAST body kits.
  * Tabs swap the showcased hero image. Shadow GT tab is a multi-image gallery
@@ -113,13 +115,9 @@ export default function BodyKitsShowcase() {
               loading={i === 0 ? "eager" : "lazy"}
               onLoad={() => i === galleryIdx && setImgLoaded(true)}
               style={
-                // Custom Atelier source is a 6-panel composite where the bottom row
-                // shows extra rear views with duplicate BYD logos. Render the image at
-                // 2x container height anchored to the top so only the top row
-                // (clean front 3/4 + rear 3/4) is visible — no distortion.
                 active.id === "atelier"
                   ? { height: "200%", objectFit: "cover", objectPosition: "center top" }
-                  : undefined
+                  : { objectPosition: "center 65%" }
               }
               className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-out ${
                 i === galleryIdx ? "opacity-100" : "opacity-0"
@@ -127,6 +125,28 @@ export default function BodyKitsShowcase() {
               data-testid={`kit-image-${active.id}-${i}`}
             />
           ))}
+
+          {/* Top mask — fully covers the upper portion of the source image (where embedded brand text/buildings sit), fades into the car cleanly */}
+          {active.id !== "atelier" && (
+            <div
+              aria-hidden="true"
+              className="absolute inset-x-0 top-0 h-[34%] sm:h-[36%] pointer-events-none z-[1]"
+              style={{
+                background:
+                  "linear-gradient(to bottom, rgb(244 244 245) 0%, rgb(244 244 245) 55%, rgba(244,244,245,0.6) 80%, rgba(244,244,245,0) 100%)",
+              }}
+            />
+          )}
+
+          {/* Subtle JOY brand mark — bottom-right, near the water reflection */}
+          <div
+            aria-hidden="true"
+            className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-[2] flex items-center gap-1.5 backdrop-blur-md bg-black/40 border border-white/15 rounded-full px-2.5 py-1 shadow-lg pointer-events-none"
+            data-testid="kit-image-watermark"
+          >
+            <img src={LOGO} alt="" className="w-4 h-4 sm:w-5 sm:h-5 object-contain" />
+            <span className="font-mono text-[9px] sm:text-[10px] tracking-[0.18em] uppercase text-white/95 font-bold">JOY</span>
+          </div>
 
           {/* Skeleton shimmer until first image loads */}
           {!imgLoaded && (
