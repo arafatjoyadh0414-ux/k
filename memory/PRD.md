@@ -24,6 +24,31 @@
 - Mark payment received (admin), credit auto-released on payment
 
 
+## 2026-05-07 — P2: Search-intent capture (COMPLETE)
+**New "Search Intelligence" admin module — first piece of the AI-Driven Data Co. layer.**
+
+**Backend** (`/app/backend/routes/search_analytics.py`):
+- New collection `public_search_logs` with indexes on `log_id` (unique), `created_at`, `(query_norm, created_at)`, `(zero_result, created_at)`
+- `POST /api/public/search-log` — fire-and-forget capture: stores query, normalized query, source page, hit_count, zero_result flag, hashed IP (salted SHA-256, never raw), user-agent, ISO timestamp
+- `GET /api/admin/search-analytics?days=N` — aggregates: total_logs, unique_queries, unique_visitors, zero_result_rate, top_queries (top 25 with zero counts), zero_result_queries (top 25 sourcing leads), daily_volume time series, by_source breakdown
+- All queries gated via `require_admin`
+
+**Frontend wiring** (`PublicSearchBar.jsx`):
+- After 350ms debounce settles, fire `POST /public/search-log` with hit_count and source
+- Logs once per unique query string per session (lastLoggedRef guard)
+- Non-blocking — search UX never waits on logging
+
+**Admin dashboard** (`AdminSearchIntelligence.jsx` at `/admin/search-intelligence`):
+- 4 KPI tiles: total / unique queries / unique visitors / zero-result %
+- Bar-chart daily volume with 7d/30d/90d window switcher
+- Side-by-side: Top Queries (with zero-count badges) + Zero-Result Demand (rose-tinted, sourcing leads)
+- Search by source breakdown
+- CSV export on both panels
+- Empty state with explainer
+- Sidebar nav: "Search Intel" linked from admin Layout
+
+**Tested**: 5 sample searches logged, analytics endpoint returned correct aggregates, dashboard rendered all sections live.
+
 ## 2026-05-07 — Header logo polish + hero/kit image cleanup
 **Three asks shipped after deployment-readiness pass:**
 

@@ -78,6 +78,24 @@ const PublicSearchBar = ({ variant = "hero" }) => {
     return catalog.filter((p) => matches(p, debouncedQuery)).slice(0, MAX_RESULTS);
   })();
 
+  // Fire-and-forget search-intent capture — only after the debounce settles,
+  // and only once per unique query. Powers the admin "Search Intelligence"
+  // dashboard (top queries, zero-result demand signals).
+  const lastLoggedRef = useRef("");
+  useEffect(() => {
+    const q = (debouncedQuery || "").trim();
+    if (!q || q.length < 2 || catalog === null) return;
+    if (lastLoggedRef.current === q) return;
+    lastLoggedRef.current = q;
+    api
+      .post("/public/search-log", {
+        query: q,
+        source: variant === "hero" ? "landing" : "catalog",
+        hit_count: results.length,
+      })
+      .catch(() => {});
+  }, [debouncedQuery, catalog, results.length, variant]);
+
   const onKeyDown = (e) => {
     if (!open) return;
     if (e.key === "Escape") { setOpen(false); return; }

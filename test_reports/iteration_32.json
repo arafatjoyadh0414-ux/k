@@ -1,0 +1,42 @@
+{
+  "summary": "P2 Search-intent capture full-stack testing. Backend: 9/10 pytest passed (90%). 1 bug found: query truncation does not work — Pydantic max_length rejects oversized payloads with 422 instead of truncating to 120 chars as documented in route code (q[:120] is dead code). Frontend: 100% — Admin Search Intelligence dashboard at /admin/search-intelligence renders all required data-testids (admin-search-intelligence root, 4 KPI cards, search-volume-chart, search-top-list/rows, search-zero-list, search-window-7d/30d/90d, search-top-export, search-zero-export, nav-admin-search-intel). CSV download fires correctly (top-queries-90d.csv captured). PublicSearchBar dedup via lastLoggedRef verified — typing 'brake' twice + 'harrier engine' yielded only 2 POSTs to /api/public/search-log (one per unique query). Empty state rendered correctly when total_logs=0 (initial visit before seeding).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "POST /api/public/search-log",
+        "issue": "Spec says 'truncates query to 120 chars and source to 40 chars' but Pydantic Field(max_length=120/40) rejects oversized inputs with HTTP 422 instead of truncating. The truncation in route code (q[:120], source[:40]) is dead code — never reached for oversize input. Either remove max_length from Pydantic Field (rely on slicing) or update spec to say 'rejects oversized'."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_search_analytics.py",
+    "/app/test_reports/pytest/search_analytics_results.xml"
+  ],
+  "action_items": [
+    "Decide truncation contract: either remove Pydantic max_length from SearchLogIn (so q[:120]/source[:40] truncation actually runs) OR update spec/documentation to declare 422 on oversize. Recommend removing max_length since the route code already slices — current behavior contradicts the documented test case."
+  ],
+  "critical_code_review_comments": [
+    "search_analytics.py:27-28 — Pydantic max_length validators clash with route truncation logic on lines 56-58. Truncation slicing (q[:120], source[:40]) is unreachable because Pydantic short-circuits with 422 first. Pick one approach.",
+    "search_analytics.py:106 — distinct() loaded into memory may be expensive at scale (>100k rows). Consider $group + count instead. Acceptable for current scale.",
+    "search_analytics.py:90 — created_at is stored as ISO string and compared lexicographically. Works because ISO-8601 sorts correctly but losing timezone normalization could bite later. Consider storing as native datetime in Mongo.",
+    "PublicSearchBar.jsx:84-97 — useEffect dep includes results.length which can change after the same debouncedQuery (e.g., catalog finishes loading). lastLoggedRef guards re-fire of same query — verified working: 'brake' typed twice produced 1 log only.",
+    "AdminSearchIntelligence.jsx:7 — KPI testid uses label.toLowerCase().replace(/\\s+/g,'-') so the produced testids are 'search-kpi-total-searches', 'search-kpi-unique-queries', 'search-kpi-unique-visitors', 'search-kpi-zero-result-rate'. Matches review spec exactly. ✓",
+    "AdminSearchIntelligence.jsx:17-31 downloadCSV — uses JSON.stringify per cell which double-quotes & escapes correctly; safe. ✓"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_search_analytics.py (created)"
+  ],
+  "success_rate": {"backend": "90% (9/10 pytest)", "frontend": "100%"},
+  "test_credentials": "Admin Bearer 'test-token-admin-1' from /app/memory/test_credentials.md (used as cookie+header)",
+  "seed_data_creation": "Test created ~5 search logs (cleaned up via log_id) + 5 logs from frontend Playwright (left in DB intentionally for visual demo). Visible logs: 'rare turbo widget' (2 zero), 'engine oil filter', 'brake pad toyota', 'suspension spring honda', 'brake', 'harrier engine'.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All P2 search-intent acceptance items pass except oversize-query truncation contract (minor 422-vs-truncate mismatch — flagged as code design choice for E1). Auth gate works: unauth=403, workshop=403, admin=200. Window switcher (7d/30d/90d) works. CSV export confirmed via Playwright download event. PublicSearchBar dedup working — only logs once per unique debounced query per session via lastLoggedRef. Tests live at /app/backend/tests/test_search_analytics.py — re-run with: pytest backend/tests/test_search_analytics.py -v",
+  "rca of the issue": "Truncation bug RCA — backend/routes/search_analytics.py defines `query: str = Field(..., max_length=120)` and `source: str = Field(default='landing', max_length=40)`. Pydantic v2 enforces max_length at model validation BEFORE the route handler runs. Therefore the slicing on lines 56-58 (`q[:120]`, `(payload.source or 'landing')[:40]`) is unreachable for oversized inputs — they get rejected with 422 first. Reproduction: POST /api/public/search-log with query of 200 chars → 422. Mitigation: remove max_length from Field declarations OR change spec to expect 422. Recommend removing max_length so author's intent (graceful truncation) actually happens."
+}
