@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../lib/api";
 
 const BangladeshNewsSection = () => {
   const [items, setItems] = useState([]);
@@ -7,8 +7,8 @@ const BangladeshNewsSection = () => {
 
   useEffect(() => {
     let mounted = true;
-    axios
-      .get(`${process.env.REACT_APP_BACKEND_URL}/api/public/cars-news/bangladesh`)
+    api
+      .get("/public/cars-news/bangladesh")
       .then((r) => {
         if (mounted) setItems(r.data?.items || []);
       })

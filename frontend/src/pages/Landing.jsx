@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { Navigate } from "react-router-dom";
-import axios from "axios";
+import api from "../lib/api";
 import { useScrollReveal } from "../hooks/useScrollReveal";
 import MobileScrollSpyChips from "../components/MobileScrollSpyChips";
 
@@ -28,14 +28,14 @@ const Landing = () => {
 
   useEffect(() => {
     let mounted = true;
-    axios
-      .get(`${process.env.REACT_APP_BACKEND_URL}/api/public/stats`)
+    api
+      .get("/public/stats")
       .then((r) => {
         if (mounted) setStats(r.data);
       })
       .catch(() => {});
-    axios
-      .get(`${process.env.REACT_APP_BACKEND_URL}/api/public/cars-news`)
+    api
+      .get("/public/cars-news")
       .then((r) => {
         if (mounted) setNews(r.data?.items || []);
       })
