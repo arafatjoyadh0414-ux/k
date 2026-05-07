@@ -244,6 +244,17 @@ const Landing = () => {
       {/* Subtle SVG noise grain — fixed, behind interactive layers */}
       <div className="grain-overlay" aria-hidden="true" />
 
+      {/* JOY Automart watermark — fixed-position low-opacity brand mark that
+          stays visible behind content as the user scrolls through the
+          home page. Hidden on mobile to keep small screens uncluttered. */}
+      <div
+        aria-hidden="true"
+        data-testid="hero-watermark"
+        className="hidden lg:block fixed pointer-events-none select-none z-[1] right-6 bottom-1/3 opacity-[0.045] dark:opacity-[0.07]"
+      >
+        <img src={LOGO} alt="" className="w-[480px] h-[480px] object-contain" />
+      </div>
+
       {/* Top live activity ribbon — Worldwide automotive news (1h refresh) with platform stats fallback */}
       <div className="bg-zinc-950 dark:bg-black text-zinc-400 dark:text-[#FFB1C1] text-[10px] tracking-[0.18em] uppercase overflow-hidden h-7 flex items-center border-b border-transparent dark:border-[#E11D48]/30 relative" aria-label={news.length ? "Worldwide automotive news ticker" : "Live platform activity ticker"}>
         <div className="hidden sm:flex items-center gap-1.5 bg-[#E11D48] text-white font-mono text-[9px] tracking-[0.22em] uppercase font-bold px-2.5 h-full pl-3 pr-3 flex-shrink-0 relative z-[2] shadow-[2px_0_8px_rgba(0,0,0,0.45)]">
@@ -263,14 +274,16 @@ const Landing = () => {
         </div>
       </div>
 
-      {/* Glassmorphic sticky header */}
-      <header className="sticky top-0 z-30 backdrop-blur-xl bg-white/70 dark:bg-zinc-950/70 border-b hairline dark:border-white/10">
-        <div className="max-w-7xl mx-auto px-3 sm:px-5 lg:px-6 h-16 sm:h-[72px] flex items-center justify-between gap-2 sm:gap-4">
-          <Link to="/" className="flex items-center gap-2 sm:gap-3 lg:gap-4 group min-w-0 flex-shrink overflow-hidden" data-testid="header-logo-link" aria-label="JOY Automart — Go to home">
-            <img src={LOGO} alt="JOY Automart" className="w-10 h-10 sm:w-14 sm:h-14 lg:w-16 lg:h-16 object-contain rounded-sm transition-transform group-hover:scale-105 flex-shrink-0" />
+      {/* Glassmorphic sticky header — refined logo lockup, larger more legible */}
+      <header className="sticky top-0 z-30 backdrop-blur-xl bg-white/80 dark:bg-zinc-950/80 border-b hairline dark:border-white/10">
+        <div className="max-w-7xl mx-auto px-3 sm:px-5 lg:px-7 h-[60px] sm:h-[76px] flex items-center justify-between gap-2 sm:gap-4">
+          <Link to="/" className="flex items-center gap-2.5 sm:gap-3.5 lg:gap-4 group min-w-0 flex-shrink overflow-hidden" data-testid="header-logo-link" aria-label="JOY Automart — Go to home">
+            <div className="relative flex-shrink-0">
+              <img src={LOGO} alt="JOY Automart" className="w-12 h-12 sm:w-16 sm:h-16 lg:w-[72px] lg:h-[72px] object-contain transition-transform group-hover:scale-105 drop-shadow-sm" />
+            </div>
             <div className="leading-tight min-w-0 hidden xs:block">
-              <div className="font-display text-[15px] sm:text-xl lg:text-2xl text-zinc-900 dark:text-white tracking-tight font-semibold whitespace-nowrap truncate">JOY Automart</div>
-              <div className="hidden sm:block font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.22em] text-zinc-500 dark:text-zinc-400 mt-0.5 whitespace-nowrap">Bangladesh</div>
+              <div className="font-display text-[17px] sm:text-2xl lg:text-[26px] text-zinc-950 dark:text-white tracking-[-0.02em] font-bold whitespace-nowrap truncate">JOY Automart</div>
+              <div className="hidden sm:block font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.28em] text-zinc-600 dark:text-zinc-400 mt-0.5 whitespace-nowrap font-medium">Bangladesh</div>
             </div>
           </Link>
           <nav className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
@@ -280,7 +293,7 @@ const Landing = () => {
             <button
               data-testid="top-login-button"
               onClick={handleLogin}
-              className="magnetic inline-flex items-center bg-zinc-950 dark:bg-[#E11D48] hover:bg-[#E11D48] dark:hover:bg-[#BE123C] text-white text-[12px] sm:text-sm font-medium px-3 sm:px-5 lg:px-6 py-1.5 sm:py-2.5 rounded-full whitespace-nowrap"
+              className="magnetic inline-flex items-center bg-zinc-900 dark:bg-[#E11D48] hover:bg-zinc-800 dark:hover:bg-[#BE123C] text-white text-[12px] sm:text-sm font-semibold px-3.5 sm:px-5 lg:px-6 py-2 sm:py-2.5 rounded-full whitespace-nowrap shadow-sm hover:shadow-md transition-all"
             >
               Sign in
             </button>
@@ -293,38 +306,62 @@ const Landing = () => {
 
       {/* Full-width hero image at the very top — clean, no overlays on the picture */}
       <section id="hero" className="relative scroll-mt-28">
-        <div className="w-full overflow-hidden">
+        <div className="w-full overflow-hidden relative">
           <img
             src={HERO}
             alt="Aggressive 2022 Toyota Harrier sport SUV with Modelista body kit — JOY Automart brand campaign for car dealers, workshops & suppliers"
             className="w-full h-[280px] sm:h-[400px] md:h-[500px] lg:h-[560px] object-cover"
           />
+          {/* Defined logo overlay on the building — bottom-right with subtle backdrop */}
+          <div className="absolute bottom-3 right-3 sm:bottom-5 sm:right-5 z-[1] flex items-center gap-2 backdrop-blur-md bg-black/40 border border-white/15 rounded-md px-2.5 sm:px-3 py-1.5 sm:py-2">
+            <img src={LOGO} alt="" className="w-6 h-6 sm:w-7 sm:h-7 object-contain" />
+            <span className="font-display text-white text-[11px] sm:text-sm font-semibold tracking-tight">JOY Automart</span>
+          </div>
+        </div>
+
+        {/* Hero CTAs — now mounted JUST BELOW the image for stronger conversion */}
+        <div className="max-w-5xl mx-auto px-5 sm:px-6 pt-6 sm:pt-8 flex flex-wrap items-center justify-center gap-3" data-testid="hero-cta-row">
+          <button
+            data-testid="hero-google-login-button"
+            onClick={handleLogin}
+            className="magnetic inline-flex items-center gap-2.5 bg-zinc-800 hover:bg-zinc-700 text-white px-5 sm:px-6 py-3 rounded-full text-sm font-semibold shadow-md hover:shadow-xl transition-all"
+          >
+            <svg className="w-[18px] h-[18px]" viewBox="0 0 48 48" aria-hidden="true">
+              <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.4 5.5-5 7.2l7.7 6c4.5-4.2 7.1-10.4 7.1-17.7z"/>
+              <path fill="#34A853" d="M24 47.5c6 0 11.4-2 15.4-5.4l-7.7-6c-2.1 1.4-4.8 2.3-7.7 2.3-6.5 0-11.6-4.1-13.4-9.6l-7.7 6C6.7 42.2 14.7 47.5 24 47.5z"/>
+              <path fill="#FBBC05" d="M10.6 28.4c-.5-1.4-.8-2.9-.8-4.4s.3-3 .8-4.4l-7.7-6C1.3 17 0 20.4 0 24s1.3 7 2.9 10.4l7.7-6z"/>
+              <path fill="#EA4335" d="M24 9.5c3.4 0 6.4 1.2 8.8 3.4l6.6-6.6C35.4 2.6 30 .5 24 .5 14.7.5 6.7 5.8 2.9 13.6l7.7 6c1.8-5.5 6.9-9.6 13.4-9.6z"/>
+            </svg>
+            Open the B2B portal
+          </button>
+          <a href="https://www.joyautomart.com" target="_blank" rel="noreferrer" data-testid="hero-retail-link"
+             className="inline-flex items-center gap-2 bg-white border border-zinc-300 hover:border-zinc-900 text-zinc-900 px-5 sm:px-6 py-3 rounded-full text-sm font-semibold transition-colors shadow-sm">
+            Visit retail store →
+          </a>
         </div>
       </section>
 
-      {/* Headline + copy — sophisticated, L'Oréal-style positioning */}
-      <section className="max-w-5xl mx-auto px-5 sm:px-6 pt-12 sm:pt-16 pb-10 sm:pb-12 reveal">
+      {/* Headline + concise positioning — tight, sophisticated, less wordy */}
+      <section className="max-w-6xl mx-auto px-5 sm:px-6 pt-10 sm:pt-14 pb-10 sm:pb-12 reveal">
         <div className="inline-flex items-center gap-3 mb-4">
           <span className="block w-8 h-px bg-[#E11D48]" aria-hidden="true" />
-          <span className="font-mono text-[10px] sm:text-[11px] tracking-[0.24em] uppercase text-[#E11D48] font-semibold">
-            Bangladesh's first AI-powered auto parts commerce &amp; data platform
+          <span className="font-mono text-[10px] sm:text-[11px] tracking-[0.24em] uppercase text-[#E11D48] font-bold">
+            Bangladesh's first AI-powered auto parts platform
           </span>
         </div>
 
-        {/* THE JOY ECOSYSTEM — minimalist micro-strip in same overline style
-            as the red AI-powered tag above. Tiny mono caps, hairline divider,
-            5 pillars on a single fluid line that wraps on mobile. */}
-        <div className="mt-4 sm:mt-5" data-testid="hero-ecosystem">
+        {/* JOY ECOSYSTEM — refined, darker palette, consistent typography */}
+        <div className="mt-3 sm:mt-4" data-testid="hero-ecosystem">
           <div className="flex items-center gap-3 mb-2">
-            <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.24em] text-zinc-500 font-semibold whitespace-nowrap">
+            <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.24em] text-zinc-700 dark:text-zinc-300 font-bold whitespace-nowrap">
               The JOY Ecosystem
             </span>
-            <div className="flex-1 h-px bg-gradient-to-r from-zinc-300 via-zinc-200 to-transparent" />
+            <div className="flex-1 h-px bg-gradient-to-r from-zinc-400 via-zinc-300 to-transparent dark:from-white/20 dark:via-white/10" />
           </div>
           <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1.5 font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.16em] leading-relaxed">
             {[
               { n: "01", t: "B2B Platform", d: "Workshops & car dealers", featured: true },
-              { n: "02", t: "B2C", d: "E-commerce automobiles for retail" },
+              { n: "02", t: "B2C", d: "E-commerce auto parts retail" },
               { n: "03", t: "Experience Centre", d: "Flagship store" },
               { n: "04", t: "AI-Driven Data Co.", d: "Industry intelligence layer" },
               { n: "05", t: "JOY BEAST Atelier", d: "Body kits · forged rims · bespoke & tuning", featured: true },
@@ -334,44 +371,30 @@ const Landing = () => {
                   className="inline-flex items-baseline gap-1.5"
                   data-testid={`hero-eco-pillar-${p.n}`}
                 >
-                  <span className={`font-bold ${p.featured ? "text-[#E11D48]" : "text-zinc-400"}`}>{p.n}</span>
-                  <span className="font-bold text-zinc-900">{p.t}</span>
-                  <span className="text-zinc-500 normal-case tracking-[0.04em] font-sans">— {p.d}</span>
+                  <span className={`font-bold ${p.featured ? "text-[#E11D48]" : "text-zinc-600 dark:text-zinc-400"}`}>{p.n}</span>
+                  <span className="font-bold text-zinc-950 dark:text-white">{p.t}</span>
+                  <span className="text-zinc-700 dark:text-zinc-300 normal-case tracking-[0.04em] font-sans font-medium">— {p.d}</span>
                 </span>
                 {i < arr.length - 1 && (
-                  <span aria-hidden="true" className="text-zinc-300">/</span>
+                  <span aria-hidden="true" className="text-zinc-400 dark:text-zinc-600">/</span>
                 )}
               </React.Fragment>
             ))}
           </div>
         </div>
 
-        <h1 className="font-display text-4xl sm:text-5xl lg:text-[64px] leading-[1.02] tracking-tighter max-w-4xl mt-7 sm:mt-9">
-          Smarter parts.{" "}
-          <span className="text-zinc-900">Stronger journeys.</span>{" "}
+        {/* Single-line headline — Smarter parts. STRONGER journey. One platform. */}
+        <h1 className="font-display text-[28px] xs:text-[32px] sm:text-5xl lg:text-[60px] xl:text-[68px] leading-[1.04] tracking-[-0.025em] mt-6 sm:mt-8 max-w-none">
+          <span className="text-zinc-950 dark:text-white">Smarter parts.</span>{" "}
+          <span className="text-zinc-950 dark:text-white">Stronger journey.</span>{" "}
           <span className="text-[#E11D48]">One platform.</span>
         </h1>
-        <p className="text-base sm:text-lg text-zinc-500 mt-5 sm:mt-6 max-w-2xl leading-relaxed">
-          JOY Automart is rebuilding Bangladesh's automotive aftermarket end-to-end —
-          B2B parts supply for car dealers and workshops, B2C retail for car owners,
-          a flagship Experience Centre, and an AI-driven data layer that gives the
-          industry intelligence it has never had before.
-        </p>
 
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          <button
-            data-testid="hero-google-login-button"
-            onClick={handleLogin}
-            className="magnetic inline-flex items-center gap-2.5 bg-zinc-950 hover:bg-[#E11D48] text-white px-5 sm:px-6 py-3 rounded-full text-sm font-semibold"
-          >
-            <svg className="w-4 h-4" viewBox="0 0 48 48"><path fill="#fff" d="M24 9.5c3.4 0 6.4 1.2 8.8 3.4l6.6-6.6C35.4 2.6 30 .5 24 .5 14.7.5 6.7 5.8 2.9 13.6l7.7 6c1.8-5.5 6.9-9.6 13.4-9.6z"/><path fill="#fff" opacity=".8" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.4 5.5-5 7.2l7.7 6c4.5-4.2 7.1-10.4 7.1-17.7z"/><path fill="#fff" opacity=".6" d="M10.6 28.4c-.5-1.4-.8-2.9-.8-4.4s.3-3 .8-4.4l-7.7-6C1.3 17 0 20.4 0 24s1.3 7 2.9 10.4l7.7-6z"/><path fill="#fff" opacity=".9" d="M24 47.5c6 0 11.4-2 15.4-5.4l-7.7-6c-2.1 1.4-4.8 2.3-7.7 2.3-6.5 0-11.6-4.1-13.4-9.6l-7.7 6C6.7 42.2 14.7 47.5 24 47.5z"/></svg>
-            Open the B2B portal
-          </button>
-          <a href="https://www.joyautomart.com" target="_blank" rel="noreferrer" data-testid="hero-retail-link"
-             className="inline-flex items-center gap-2 bg-white border border-zinc-300 hover:border-zinc-900 text-zinc-900 px-5 sm:px-6 py-3 rounded-full text-sm font-semibold transition-colors">
-            Visit retail store →
-          </a>
-        </div>
+        {/* Tightened sub-copy — darker text, fewer words, on-point */}
+        <p className="text-base sm:text-lg text-zinc-700 dark:text-zinc-300 mt-4 sm:mt-5 max-w-2xl leading-relaxed font-medium">
+          One verified network for dealers, workshops and car owners — wholesale parts on
+          credit, AI-matched fitments, and the country's flagship retail experience.
+        </p>
       </section>
 
       {/* What we do — 5 pillars in Swiss hairline bento grid */}

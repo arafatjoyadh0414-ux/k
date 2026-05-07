@@ -1,0 +1,42 @@
+{
+  "summary": "Iter-30 Landing redesign frontend verification — 10/11 acceptance criteria pass on light mode at 1440 desktop, 768 tablet, 390 mobile. Single regression: H1 headline still wraps to 2 lines on desktop 1440 and 1920 (h1.clientHeight=136px, expected <100px) because section is constrained by max-w-6xl (1152px) while the 68px headline content needs ~1300px+ to fit 'Smarter parts. Stronger journey. One platform.' on one line. All other items (logo sizing, wordmark, BANGLADESH subtitle, hero overlay, hero CTA placement below image, zinc-800 Google G button with 4 brand colors, fixed watermark with correct opacity & mobile-hidden, sub-copy text/color/length, JOY Ecosystem darker palette, modern search bar padding/font-size, 6 mobile chips, Mr Genius bot, ticker) all verified working as specified.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Landing.jsx hero section H1",
+        "issue": "Headline wraps to 2 lines on desktop 1440 (and 1920). Measured h1.clientHeight=136px (line-height 68px × 2). Acceptance criterion required single-line on desktop (<100px). Root cause: outer <section> uses max-w-6xl (1152px) but the three-phrase 68px headline with tracking-[-0.025em] needs ~1280–1300px to fit on one line. Adding max-w-none on the H1 has no effect because the section parent already clips it.",
+        "selector": "section.max-w-6xl h1",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Landing hero (desktop 1440 light mode)",
+        "issues": [
+          "Visually 'One platform.' drops to a 2nd line at 1440 and even at 1920 (see screenshot). Suggested fixes: (a) widen the section to max-w-7xl or remove the cap; (b) reduce xl size from text-[68px] to text-[56px]/text-6xl; (c) shorten the third phrase. Pick whichever preserves the 'Smarter parts. Stronger journey. One platform.' single-line intent."
+        ]
+      }
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Fix H1 wrap: change <section class='max-w-6xl ...'> to max-w-7xl (or max-w-none with px padding) on the headline section in /app/frontend/src/pages/Landing.jsx (line 345) so the 68px headline fits on one line at 1440+. Alternatively cap headline at text-5xl lg:text-[56px] xl:text-[60px] to fit within max-w-6xl."
+  ],
+  "critical_code_review_comments": [
+    "Landing.jsx is now 815 lines — exceeds 700-line guideline. Recommend extracting BangladeshNewsSection, ThemeToggle, hero block, JOY-BEAST block, value-prop block, footer into focused components.",
+    "Headline section uses `max-w-6xl` but H1 carries `max-w-none` — the H1's max-w-none is dead CSS because the parent already constrains width. Either lift the constraint on the section or drop max-w-none on h1.",
+    "/app/frontend/src/pages/Landing.jsx line 282 — the sub-line text is 'Bangladesh' (capitalized React text), the spec called for 'BANGLADESH' all-caps; visually it works because the class adds `uppercase`, but consider hard-coding the capitalized form to align with copy intent and prevent accidental removal of the uppercase class.",
+    "Two separate Sign-in/Open-the-B2B-portal CTAs both call handleLogin and route through the same Google OAuth flow — this is fine, but the bottom-cta-button has hover:bg-[#E11D48] (red on hover) while top-login-button has hover:bg-zinc-800 — inconsistent hover styling across primary CTAs.",
+    "PublicSearchBar caches the catalog at module-scope (`_catalogPromise`). Acceptable for SPA but means the catalog never refreshes within the same browser session unless the user reloads."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "skipped", "frontend": "91% (10/11 visual-spec items pass)"},
+  "test_credentials": "n/a — public landing page, no auth flows tested",
+  "seed_data_creation": "none",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All redesign items 1-6 + 8-10 (logo, wordmark, hero overlay, CTA-row below image, Google G colors, watermark, sub-copy, ecosystem palette, search bar) are confirmed PASS at 1440/768/390 light mode. The only failing acceptance is item 7: single-line headline. Measured h1.clientHeight=136 (not <100). Re-run that one assertion after fix. Mobile chips test should use selector '[data-testid^=chip-]' (NOT 'mobile-chip-' — the actual testid pattern is 'chip-{section-id}'). Mr Genius FAB confirmed present (button with text 'ASK MR GENIUS').",
+  "rca of the issue": "H1 has classes `text-[28px] xs:text-[32px] sm:text-5xl lg:text-[60px] xl:text-[68px] ... max-w-none` inside `<section class='max-w-6xl mx-auto px-5 sm:px-6 ...'>`. At >=1280px viewport, max-w-6xl=1152px caps the inner content; at xl breakpoint (1280+), font-size jumps to 68px. Rendered text width with tracking-[-0.025em] needs ~1280px+ for 'Smarter parts. Stronger journey. One platform.' single-line. So the third phrase wraps. Reproduction: open / on viewport 1440x900, inspect first <h1> below hero image — clientHeight is 136px (2 lines × 68px line-height). Mitigation: widen section to max-w-7xl (1280px) or reduce xl font size to 60px or remove max-w cap on the section when xl active."
+}

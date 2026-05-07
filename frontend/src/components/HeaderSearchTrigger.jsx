@@ -48,7 +48,7 @@ const HeaderSearchTrigger = () => {
         data-testid="header-search-trigger"
         onClick={() => setOpen(true)}
         aria-label="Search parts"
-        className="inline-flex items-center gap-2 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white border border-zinc-200 dark:border-white/15 hover:border-zinc-900 dark:hover:border-white/40 px-2.5 sm:px-3.5 h-9 rounded-full text-xs sm:text-sm font-medium transition-colors bg-white/60 dark:bg-white/[0.04]"
+        className="inline-flex items-center gap-2 text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white border border-zinc-200 dark:border-white/15 hover:border-zinc-300 hover:shadow-md dark:hover:border-white/40 px-3 sm:px-4 h-10 rounded-full text-xs sm:text-sm font-medium transition-all bg-white/90 dark:bg-white/[0.04]"
       >
         <Search className="w-4 h-4" />
         <span className="hidden sm:inline">Search parts</span>

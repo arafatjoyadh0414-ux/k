@@ -97,13 +97,13 @@ const PublicSearchBar = ({ variant = "hero" }) => {
       data-testid="public-search-bar"
     >
       <div
-        className={`relative flex items-center gap-2 ${
+        className={`relative flex items-center gap-2.5 ${
           isHero
-            ? "bg-white border border-zinc-300 hover:border-zinc-900 focus-within:border-zinc-900 dark:bg-zinc-900 dark:border-white/15 dark:hover:border-white/40 dark:focus-within:border-[#E11D48]"
+            ? "bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 hover:border-zinc-300 hover:shadow-[0_4px_24px_rgba(0,0,0,0.08)] focus-within:border-zinc-300 focus-within:shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:hover:border-white/30 dark:focus-within:border-[#E11D48]/60 dark:focus-within:shadow-[0_8px_32px_rgba(225,29,72,0.18)]"
             : "bg-zinc-50 border border-zinc-200 dark:bg-zinc-900 dark:border-white/10"
-        } rounded-full pl-4 sm:pl-5 pr-1.5 py-1.5 transition-colors`}
+        } rounded-full pl-5 sm:pl-6 pr-1.5 py-2 transition-all duration-300`}
       >
-        <Search className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-400 dark:text-zinc-500 shrink-0" />
+        <Search className="w-[18px] h-[18px] sm:w-5 sm:h-5 text-zinc-400 dark:text-zinc-500 shrink-0" />
         <input
           type="search"
           placeholder='Search parts — try "brake pad", "Harrier", "JA-ACC-001"…'
@@ -113,7 +113,7 @@ const PublicSearchBar = ({ variant = "hero" }) => {
           onFocus={() => { ensureCatalog(); setOpen(true); }}
           onChange={(e) => { setQuery(e.target.value); setOpen(true); setActiveIdx(0); }}
           onKeyDown={onKeyDown}
-          className="flex-1 min-w-0 bg-transparent outline-none text-sm sm:text-base text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
+          className="flex-1 min-w-0 bg-transparent outline-none text-[15px] sm:text-base text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
         />
         {query && (
           <button
