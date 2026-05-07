@@ -676,3 +676,26 @@ Inspired by the strategic audit. Most audit items were already built (catalog, K
 - EDITED `/app/frontend/src/components/ExperienceCentreContent.jsx`, `/app/frontend/src/components/BodyKitsShowcase.jsx`
 - EDITED `/app/frontend/src/pages/VinLookup.jsx`, `/app/frontend/src/pages/Dashboard.jsx`, `/app/frontend/src/pages/Products.jsx`, `/app/frontend/src/pages/AdminProducts.jsx`, `/app/frontend/src/pages/PublicCatalog.jsx`, `/app/frontend/src/pages/VisualSearch.jsx`
 
+
+## What's Been Implemented (2026-02-10) — Public Search Bar + Production Deploy Diagnosis (iter 19)
+
+**Deployment diagnostic** (production https://b2bjoymart.com):
+- User reported `/catalog`, `/dashboard`, `/terms`, `/privacy` showing homepage on production. Verified all routes are correctly registered in `/app/frontend/src/App.js` and return HTTP 200 with correct content on PREVIEW. Verified `/api/public/catalog`, `/api/public/categories`, `/api/public/cars-news`, `/api/public/cars-news/bangladesh`, `/api/public/stats` all work in preview.
+- Root cause: production is running a stale build that pre-dates the routes & public endpoints. Resolution: user must redeploy with the latest preview code.
+
+**NEW — PublicSearchBar** (`/app/frontend/src/components/PublicSearchBar.jsx`)
+- Hero-mounted live parts search visible to ANY visitor (no sign-in). Lets dealers verify if a part is stocked before signing up.
+- Calls `GET /api/public/catalog` once per page (in-module promise cache), filters client-side by name / SKU / brand / category / car_fits with 220ms debounce.
+- Renders an autocomplete dropdown (max 6 results) with image, name, SKU/brand/category meta, and "Sign in for tier price" CTA per result.
+- No-match state surfaces a "Request a quote" CTA → `/inquire?q={query}`.
+- Keyboard accessible: ↑ ↓ navigation, Enter to open `/inquire/{sku}`, ESC to close, click-outside to close.
+- Mobile responsive: full-width with red "Browse all →" pill (hidden on <640px to keep input legible).
+- data-testids: `public-search-bar`, `public-search-input`, `public-search-clear`, `public-search-browse-all`, `public-search-dropdown`, `public-search-results`, `public-search-result-{i}`, `public-search-request-quote`, `public-search-view-all`.
+- Mounted on Landing inside `[data-testid="hero-public-search-wrap"]` between the hero description paragraph and the CTA button row, with a "✓ No sign-in required · Live stock from our warehouse" trust line below.
+
+**Tests** (iter 19 — frontend 100%, 13/13 passed). Optional cosmetic dev-warning in Inquire.jsx noted (visual-editor span inside `<option>`) — not blocking.
+
+**Files touched**
+- NEW `/app/frontend/src/components/PublicSearchBar.jsx`
+- EDITED `/app/frontend/src/pages/Landing.jsx` (import + mount in hero)
+
