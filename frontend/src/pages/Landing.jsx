@@ -311,45 +311,39 @@ const Landing = () => {
           </span>
         </div>
 
-        {/* THE JOY ECOSYSTEM — sophisticated 5-pillar showcase placed above
-            the headline. Premium horizontal-scroll strip with numbered chips,
-            hairline separators, dot accents and sliding red underline on hover. */}
-        <div className="mt-7 sm:mt-9" data-testid="hero-ecosystem">
-          <div className="flex items-center gap-3 mb-3 sm:mb-4">
-            <div className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.28em] text-zinc-500">
+        {/* THE JOY ECOSYSTEM — minimalist micro-strip in same overline style
+            as the red AI-powered tag above. Tiny mono caps, hairline divider,
+            5 pillars on a single fluid line that wraps on mobile. */}
+        <div className="mt-4 sm:mt-5" data-testid="hero-ecosystem">
+          <div className="flex items-center gap-3 mb-2">
+            <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.24em] text-zinc-500 font-semibold whitespace-nowrap">
               The JOY Ecosystem
-            </div>
+            </span>
             <div className="flex-1 h-px bg-gradient-to-r from-zinc-300 via-zinc-200 to-transparent" />
           </div>
-          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-px bg-zinc-200 border border-zinc-200 rounded-md overflow-hidden">
+          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1.5 font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.16em] leading-relaxed">
             {[
               { n: "01", t: "B2B Platform", d: "Workshops & car dealers", featured: true },
-              { n: "02", t: "B2C Commerce", d: "E-commerce automobiles for retail" },
-              { n: "03", t: "Experience Centre", d: "Madani Avenue · 100 ft flagship" },
+              { n: "02", t: "B2C", d: "E-commerce automobiles for retail" },
+              { n: "03", t: "Experience Centre", d: "Flagship store" },
               { n: "04", t: "AI-Driven Data Co.", d: "Industry intelligence layer" },
-              { n: "05", t: "JOY BEAST Atelier", d: "Body kits · forged · bespoke", featured: true },
-            ].map((p) => (
-              <li
-                key={p.n}
-                data-testid={`hero-eco-pillar-${p.n}`}
-                className="group relative bg-white px-4 sm:px-5 py-3.5 sm:py-4 cursor-default transition-colors hover:bg-zinc-50"
-              >
-                <div className="flex items-baseline gap-2.5">
-                  <span className={`font-mono text-[10px] tracking-[0.16em] ${p.featured ? "text-[#E11D48]" : "text-zinc-400"}`}>
-                    {p.n}
-                  </span>
-                  <span className={`font-display text-sm sm:text-[15px] tracking-tight font-semibold ${p.featured ? "text-zinc-900" : "text-zinc-900"}`}>
-                    {p.t}
-                  </span>
-                </div>
-                <div className="text-[11px] sm:text-xs text-zinc-500 leading-snug mt-1">
-                  {p.d}
-                </div>
-                {/* Sliding red accent on hover */}
-                <span className="absolute left-4 sm:left-5 right-4 sm:right-5 bottom-0 h-[2px] bg-[#E11D48] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
-              </li>
+              { n: "05", t: "JOY BEAST Atelier", d: "Body kits · forged rims · bespoke & tuning", featured: true },
+            ].map((p, i, arr) => (
+              <React.Fragment key={p.n}>
+                <span
+                  className="inline-flex items-baseline gap-1.5"
+                  data-testid={`hero-eco-pillar-${p.n}`}
+                >
+                  <span className={`font-bold ${p.featured ? "text-[#E11D48]" : "text-zinc-400"}`}>{p.n}</span>
+                  <span className="font-bold text-zinc-900">{p.t}</span>
+                  <span className="text-zinc-500 normal-case tracking-[0.04em] font-sans">— {p.d}</span>
+                </span>
+                {i < arr.length - 1 && (
+                  <span aria-hidden="true" className="text-zinc-300">/</span>
+                )}
+              </React.Fragment>
             ))}
-          </ul>
+          </div>
         </div>
 
         <h1 className="font-display text-4xl sm:text-5xl lg:text-[64px] leading-[1.02] tracking-tighter max-w-4xl mt-7 sm:mt-9">
