@@ -23,6 +23,18 @@
 - Order history per workshop, all-orders view for admin
 - Mark payment received (admin), credit auto-released on payment
 
+
+## 2026-05-07 — Billion-Dollar Brand Narrative Hero
+**Landing.jsx hero rewrite — investor-grade positioning shift from "auto parts platform" to "automotive intelligence company".**
+
+- **Eyebrow**: "THE AUTOMOTIVE INTELLIGENCE COMPANY" (red mono, tracked-wider)
+- **H1**: "Bangladesh's automotive AI, data & commerce infrastructure." — red accent on "AI, data & commerce" pillar words
+- **Sub (5-verb ecosystem)**: 01 Procure · 02 Retail · 03 Experience · 04 Compute · 05 Craft (replaces verbose 5-pillar strip; each verb maps to one ecosystem business)
+- **Closing badge**: 🇧🇩 "Built in Bangladesh. Engineered for the world." (pill, backdrop-blur)
+- Footer tagline updated to match
+- Old "Smarter parts. Stronger journey. One platform." headline retired
+- All elements have `data-testid` (`hero-narrative`, `hero-eyebrow`, `hero-h1`, `hero-ecosystem-verbs`, `hero-eco-verb-0X`, `hero-bd-badge`)
+
 ## What's Been Implemented (2026-02-09)
 **Backend (`/app/backend/server.py`)**
 - Emergent Google Auth (`/auth/session`, `/auth/me`, `/auth/logout`)

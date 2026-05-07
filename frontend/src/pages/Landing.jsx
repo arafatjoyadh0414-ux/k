@@ -341,60 +341,63 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Headline + concise positioning — tight, sophisticated, less wordy */}
-      <section className="max-w-7xl mx-auto px-5 sm:px-6 pt-10 sm:pt-14 pb-10 sm:pb-12 reveal">
-        <div className="inline-flex items-center gap-3 mb-4">
+      {/* Hero narrative — Eyebrow · H1 · Ecosystem verbs · Built-in-Bangladesh badge */}
+      <section className="max-w-7xl mx-auto px-5 sm:px-6 pt-10 sm:pt-14 pb-10 sm:pb-12 reveal" data-testid="hero-narrative">
+        {/* Eyebrow — category statement */}
+        <div className="inline-flex items-center gap-3 mb-5 sm:mb-6" data-testid="hero-eyebrow">
           <span className="block w-8 h-px bg-[#E11D48]" aria-hidden="true" />
-          <span className="font-mono text-[10px] sm:text-[11px] tracking-[0.24em] uppercase text-[#E11D48] font-bold">
-            Bangladesh's first AI-powered auto parts platform
+          <span className="font-mono text-[10px] sm:text-[11px] tracking-[0.28em] uppercase text-[#E11D48] font-bold">
+            The Automotive Intelligence Company
           </span>
         </div>
 
-        {/* JOY ECOSYSTEM — refined, darker palette, consistent typography */}
-        <div className="mt-3 sm:mt-4" data-testid="hero-ecosystem">
-          <div className="flex items-center gap-3 mb-2">
-            <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.24em] text-zinc-700 dark:text-zinc-300 font-bold whitespace-nowrap">
+        {/* H1 — billion-dollar one-liner */}
+        <h1
+          data-testid="hero-h1"
+          className="font-display text-[30px] xs:text-[34px] sm:text-5xl lg:text-[60px] xl:text-[68px] leading-[1.04] tracking-[-0.028em] max-w-none"
+        >
+          <span className="text-zinc-950 dark:text-white">Bangladesh's automotive </span>
+          <span className="text-[#E11D48]">AI, data &amp; commerce</span>
+          <span className="text-zinc-950 dark:text-white"> infrastructure.</span>
+        </h1>
+
+        {/* Ecosystem verbs — 5 pillars distilled to 5 words */}
+        <div className="mt-7 sm:mt-9" data-testid="hero-ecosystem-verbs">
+          <div className="flex items-center gap-3 mb-3">
+            <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.28em] text-zinc-500 dark:text-zinc-400 font-bold whitespace-nowrap">
               The JOY Ecosystem
             </span>
-            <div className="flex-1 h-px bg-gradient-to-r from-zinc-400 via-zinc-300 to-transparent dark:from-white/20 dark:via-white/10" />
+            <div className="flex-1 h-px bg-gradient-to-r from-zinc-300 to-transparent dark:from-white/15" />
           </div>
-          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1.5 font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.16em] leading-relaxed">
+          <div className="flex flex-wrap items-baseline gap-x-3 sm:gap-x-5 gap-y-1 font-display text-[20px] xs:text-[22px] sm:text-3xl lg:text-[34px] tracking-[-0.02em] leading-tight">
             {[
-              { n: "01", t: "B2B Platform", d: "Workshops & car dealers", featured: true },
-              { n: "02", t: "B2C", d: "E-commerce auto parts retail" },
-              { n: "03", t: "Experience Centre", d: "Flagship store" },
-              { n: "04", t: "AI-Driven Data Co.", d: "Industry intelligence layer" },
-              { n: "05", t: "JOY BEAST Atelier", d: "Body kits · forged rims · bespoke & tuning", featured: true },
+              { v: "Procure", k: "01" },
+              { v: "Retail", k: "02" },
+              { v: "Experience", k: "03" },
+              { v: "Compute", k: "04" },
+              { v: "Craft", k: "05" },
             ].map((p, i, arr) => (
-              <React.Fragment key={p.n}>
-                <span
-                  className="inline-flex items-baseline gap-1.5"
-                  data-testid={`hero-eco-pillar-${p.n}`}
-                >
-                  <span className={`font-bold ${p.featured ? "text-[#E11D48]" : "text-zinc-600 dark:text-zinc-400"}`}>{p.n}</span>
-                  <span className="font-bold text-zinc-950 dark:text-white">{p.t}</span>
-                  <span className="text-zinc-700 dark:text-zinc-300 normal-case tracking-[0.04em] font-sans font-medium">— {p.d}</span>
+              <React.Fragment key={p.k}>
+                <span className="inline-flex items-baseline gap-1.5" data-testid={`hero-eco-verb-${p.k}`}>
+                  <span className="font-mono text-[10px] sm:text-[11px] tracking-[0.18em] text-zinc-400 dark:text-zinc-500 font-bold align-top relative -top-2">{p.k}</span>
+                  <span className="text-zinc-950 dark:text-white font-semibold">{p.v}.</span>
                 </span>
                 {i < arr.length - 1 && (
-                  <span aria-hidden="true" className="text-zinc-400 dark:text-zinc-600">/</span>
+                  <span aria-hidden="true" className="text-zinc-300 dark:text-zinc-700 font-light hidden sm:inline">·</span>
                 )}
               </React.Fragment>
             ))}
           </div>
         </div>
 
-        {/* Single-line headline — Smarter parts. STRONGER journey. One platform. */}
-        <h1 className="font-display text-[28px] xs:text-[32px] sm:text-5xl lg:text-[60px] xl:text-[68px] leading-[1.04] tracking-[-0.025em] mt-6 sm:mt-8 max-w-none">
-          <span className="text-zinc-950 dark:text-white">Smarter parts.</span>{" "}
-          <span className="text-zinc-950 dark:text-white">Stronger journey.</span>{" "}
-          <span className="text-[#E11D48]">One platform.</span>
-        </h1>
-
-        {/* Tightened sub-copy — darker text, fewer words, on-point */}
-        <p className="text-base sm:text-lg text-zinc-700 dark:text-zinc-300 mt-4 sm:mt-5 max-w-2xl leading-relaxed font-medium">
-          One verified network for dealers, workshops and car owners — wholesale parts on
-          credit, AI-matched fitments, and the country's flagship retail experience.
-        </p>
+        {/* Built-in-Bangladesh badge — closing layer */}
+        <div className="mt-7 sm:mt-9 inline-flex items-center gap-3 px-4 py-2.5 rounded-full border border-zinc-300 dark:border-white/15 bg-white/60 dark:bg-white/5 backdrop-blur-sm shadow-sm" data-testid="hero-bd-badge">
+          <span className="text-base leading-none" aria-hidden="true">🇧🇩</span>
+          <span className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.24em] font-bold leading-tight">
+            <span className="text-zinc-950 dark:text-white">Built in Bangladesh.</span>
+            <span className="text-zinc-500 dark:text-zinc-400"> Engineered for the world.</span>
+          </span>
+        </div>
       </section>
 
       {/* What we do — 5 pillars in Swiss hairline bento grid */}
@@ -804,7 +807,7 @@ const Landing = () => {
           </div>
           <div className="border-t border-zinc-200 mt-8 pt-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-zinc-500">
             <div>© {new Date().getFullYear()} JOY Automart · Dhaka, Bangladesh</div>
-            <div>Smarter parts · Stronger journeys</div>
+            <div>Built in Bangladesh · Engineered for the world</div>
           </div>
         </div>
       </footer>
